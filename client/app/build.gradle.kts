@@ -81,9 +81,11 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.preference)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.preference.ktx)
     
     implementation("io.grpc:grpc-okhttp:1.61.0")
     implementation("io.grpc:grpc-protobuf-lite:1.61.0")

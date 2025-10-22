@@ -11,6 +11,8 @@ import android.view.Menu
 import android.util.Log
 import android.view.MenuItem
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.preference.PreferenceManager
 import xyz.jdubiel.migawka.databinding.ActivityMainBinding
 
 import io.grpc.ManagedChannelBuilder
@@ -20,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,11 +32,17 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        val channel = ManagedChannelBuilder.forAddress("192.168.5.158", 50051)
+//        TODO: recreate channel when the IP changes (in the settings)
+//        TODO: add validation to the IP address when it is set in the settings
+//        val serverAddress = PreferenceManager.getDefaultSharedPreferences(this)
+//            .getString("server_address", "192.168.5.158")
+        val serverAddress = "192.168.5.158"
+        Log.d("serverAddress", serverAddress)
+        val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
             .usePlaintext()
             .build()
 
@@ -59,14 +68,6 @@ class MainActivity : AppCompatActivity() {
                     Log.e("gRPC", "Error: ${e.message}", e)
                 }
             }
-
-
-
-
-//            lifecycleScope.launch {
-//                val response = stub.sayHello(HelloRequest.newBuilder().setName("Kuba").build())
-//                println(response.message)
-//            }
         }
     }
 
@@ -76,12 +77,19 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    fun openSettings(): Boolean {
+        Snackbar.make(binding.root, "Settings clicked", Snackbar.LENGTH_LONG)
+            .setAnchorView(R.id.fab).show()
+        navController.navigate(R.id.settingsFragment)
+        return true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> openSettings()
             else -> super.onOptionsItemSelected(item)
         }
     }
