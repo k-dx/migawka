@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka
 
+import android.widget.Gallery
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -51,7 +52,7 @@ fun MigawkaApp(
             }
 
             composable(route = MigawkaScreen.Gallery.name) {
-                ImageGalleryScreen()
+                GalleryPermissionWrapper()
             }
         }
     }
