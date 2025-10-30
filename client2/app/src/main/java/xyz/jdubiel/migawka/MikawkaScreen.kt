@@ -22,7 +22,8 @@ import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 enum class MigawkaScreen {
     Start,
-    Second
+    Second,
+    Gallery
 }
 
 
@@ -40,12 +41,17 @@ fun MigawkaApp(
             composable(route = MigawkaScreen.Start.name) {
                 Migawka(
                     name = "Android",
-                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Second.name) }
+                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
+                    onGalleryButtonClick = { navController.navigate(MigawkaScreen.Gallery.name) }
                 )
             }
 
             composable(route = MigawkaScreen.Second.name) {
                 SecondScreen(content = "Second screen! Yay!")
+            }
+
+            composable(route = MigawkaScreen.Gallery.name) {
+                ImageGalleryScreen()
             }
         }
     }
@@ -73,13 +79,20 @@ fun MyText(name: String, counter: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Migawka(name: String, onSettingsButtonClick: () -> Unit, modifier: Modifier = Modifier) {
+fun Migawka(
+    name: String,
+    onGalleryButtonClick: () -> Unit,
+    onSettingsButtonClick: () -> Unit,
+    modifier: Modifier = Modifier) {
     var counter by remember { mutableIntStateOf(0) }
     Column {
         MyText(name = name, counter = counter, modifier = modifier)
         MyButton(onButtonClick = { counter++ }, modifier = modifier)
         Button(onClick = { onSettingsButtonClick() }) {
             Text(text = stringResource(R.string.settings))
+        }
+        Button(onClick = { onGalleryButtonClick() }) {
+            Text(text = "Gallery")
         }
     }
 
@@ -89,6 +102,6 @@ fun Migawka(name: String, onSettingsButtonClick: () -> Unit, modifier: Modifier 
 @Composable
 fun MigawkaPreview() {
     MigawkaTheme {
-        Migawka(name = "Android", onSettingsButtonClick = {})
+        Migawka(name = "Android", onSettingsButtonClick = {}, onGalleryButtonClick = {})
     }
 }
