@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,15 +16,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
+import androidx.core.net.toUri
 
 enum class MigawkaScreen {
     Start,
     Second,
-    Gallery
+    Gallery,
+    SingleMediaView
 }
 
 
@@ -32,6 +37,7 @@ fun MigawkaApp(
     navController: NavHostController = rememberNavController()
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        val uriArg = "imageUri"
 
         NavHost(
             navController = navController,
@@ -51,7 +57,27 @@ fun MigawkaApp(
             }
 
             composable(route = MigawkaScreen.Gallery.name) {
-                GalleryPermissionWrapper()
+                GalleryPermissionWrapper(
+                    onImageClick = { imageUri ->
+                        // URL-encode the URI string to handle special characters safely
+                        val encodedUri = Uri.encode(imageUri.toString())
+                        navController.navigate("${MigawkaScreen.SingleMediaView.name}/$encodedUri")
+                    }
+                )
+            }
+
+            composable(
+                route = "${MigawkaScreen.SingleMediaView.name}/{$uriArg}",
+                arguments = listOf(navArgument(uriArg) { type = NavType.StringType })
+            ) { backStackEntry ->
+                // Extract the argument, decode it, and pass it to the screen
+                val imageUriString = backStackEntry.arguments?.getString(uriArg)
+                val decodedUri = imageUriString?.toUri()
+                if (decodedUri != null) {
+                    SingleMediaViewScreen(imageUri = decodedUri)
+                } else {
+                    Text("Error: image not found.")
+                }
             }
         }
     }

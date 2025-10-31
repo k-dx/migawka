@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka
 
 import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,7 +29,11 @@ import kotlinx.coroutines.launch
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
-fun ImageGalleryScreen(modifier: Modifier = Modifier, viewModel: ImageListViewModel = viewModel()) {
+fun ImageGalleryScreen(
+    onImageClick: (Uri) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ImageListViewModel = viewModel()
+) {
     val context = LocalContext.current
     val uiState = viewModel.uiState
     val coroutineScope = rememberCoroutineScope()
@@ -53,13 +58,20 @@ fun ImageGalleryScreen(modifier: Modifier = Modifier, viewModel: ImageListViewMo
         if (uiState.isLoading) {
             CircularProgressIndicator()
         } else {
-            ImageGrid(images = uiState.images)
+            ImageGrid(
+                images = uiState.images,
+                onImageClick = onImageClick
+            )
         }
     }
 }
 
 @Composable
-fun ImageGrid(images: List<Uri>, modifier: Modifier = Modifier) {
+fun ImageGrid(
+    images: List<Uri>,
+    onImageClick: (Uri) -> Unit,
+    modifier: Modifier = Modifier
+) {
     if (images.isEmpty()) {
         Text("No images found.", modifier = modifier.padding(16.dp))
     } else {
@@ -76,7 +88,8 @@ fun ImageGrid(images: List<Uri>, modifier: Modifier = Modifier) {
                     contentDescription = "Gallery Image",
                     modifier = Modifier
                         .aspectRatio(1f) // Make it square
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .clickable { onImageClick(imageUri) },
                     contentScale = ContentScale.Crop // Crop to fill the square
                 )
             }
@@ -87,5 +100,5 @@ fun ImageGrid(images: List<Uri>, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun ImageGallery() {
-    ImageGalleryScreen()
+    ImageGalleryScreen(onImageClick = {})
 }

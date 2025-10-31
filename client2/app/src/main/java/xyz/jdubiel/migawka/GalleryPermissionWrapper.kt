@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +19,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-fun GalleryPermissionWrapper() {
+fun GalleryPermissionWrapper(
+    onImageClick: (Uri) -> Unit
+) {
     val context = LocalContext.current
     val activity = context as Activity
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -72,7 +75,9 @@ fun GalleryPermissionWrapper() {
     when {
         // If we have permission, show the main gallery screen
         hasPermission -> {
-            ImageGalleryScreen()
+            ImageGalleryScreen(
+                onImageClick = onImageClick
+            )
         }
         // If user denied, show the rationale screen
         showRationale -> {
