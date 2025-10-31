@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.protobuf")
+    alias(libs.plugins.google.protobuf)
 }
 
 android {
@@ -95,10 +95,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    implementation("io.grpc:grpc-okhttp:1.61.0")
-    implementation("io.grpc:grpc-protobuf-lite:1.61.0")
-    implementation("io.grpc:grpc-stub:1.61.0")
-    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
-    implementation("com.google.protobuf:protobuf-javalite:3.25.1")
+    implementation(libs.grpc.okhttp)
+    implementation(libs.grpc.protobuf.lite)
+    implementation(libs.grpc.stub)
+    implementation(libs.grpc.kotlin.stub)
+    implementation(libs.javax.annotation.api)
+    implementation(libs.protobuf.javalite)
 }

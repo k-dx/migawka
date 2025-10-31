@@ -11,6 +11,11 @@ composeBom = "2024.09.00"
 preference = "1.2.1"
 navigationCompose = "2.9.5"
 coilCompose = "3.2.0"
+protobuf = "0.9.5"
+grpc = "1.61.0"
+grpcKotlin = "1.4.1"
+protobufLite = "3.25.1"
+javaxAnnotation = "1.3.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -30,9 +35,19 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilCompose" }
+# gRPC Libraries
+grpc-okhttp = { group = "io.grpc", name = "grpc-okhttp", version.ref = "grpc" }
+grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.ref = "grpc" }
+grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpc" }
+grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
+# Protobuf Lite Library
+protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobufLite" }
+# Javax Annotation API
+javax-annotation-api = { group = "javax.annotation", name = "javax.annotation-api", version.ref = "javaxAnnotation" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
+google-protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
