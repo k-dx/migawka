@@ -21,7 +21,6 @@ import androidx.navigation.navArgument
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 enum class MigawkaScreen {
-    Start,
     Second,
     Gallery,
     SingleMediaView
@@ -37,28 +36,22 @@ fun MigawkaApp(
 
         NavHost(
             navController = navController,
-            startDestination = MigawkaScreen.Start.name,
+            startDestination = MigawkaScreen.Gallery.name,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(route = MigawkaScreen.Start.name) {
+            composable(route = MigawkaScreen.Gallery.name) {
                 Migawka(
                     onSettingsButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
-                    onGalleryButtonClick = { navController.navigate(MigawkaScreen.Gallery.name) }
-                )
-            }
-
-            composable(route = MigawkaScreen.Second.name) {
-                SecondScreen(content = "Second screen! Yay!")
-            }
-
-            composable(route = MigawkaScreen.Gallery.name) {
-                GalleryPermissionWrapper(
                     onImageClick = { imageUri ->
                         // URL-encode the URI string to handle special characters safely
                         val encodedUri = Uri.encode(imageUri.toString())
                         navController.navigate("${MigawkaScreen.SingleMediaView.name}/$encodedUri")
                     }
                 )
+            }
+
+            composable(route = MigawkaScreen.Second.name) {
+                SecondScreen(content = "Second screen! Yay!")
             }
 
             composable(
@@ -80,7 +73,7 @@ fun MigawkaApp(
 
 @Composable
 fun Migawka(
-    onGalleryButtonClick: () -> Unit,
+    onImageClick: (Uri) -> Unit,
     onSettingsButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -88,9 +81,9 @@ fun Migawka(
         Button(onClick = { onSettingsButtonClick() }) {
             Text(text = stringResource(R.string.settings))
         }
-        Button(onClick = { onGalleryButtonClick() }) {
-            Text(text = "Gallery")
-        }
+        GalleryPermissionWrapper(
+            onImageClick = onImageClick
+        )
     }
 
 }
@@ -99,6 +92,6 @@ fun Migawka(
 @Composable
 fun MigawkaPreview() {
     MigawkaTheme {
-        Migawka(onSettingsButtonClick = {}, onGalleryButtonClick = {})
+        Migawka(onSettingsButtonClick = {}, onImageClick = {})
     }
 }
