@@ -8,13 +8,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,7 +19,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
-import androidx.core.net.toUri
 
 enum class MigawkaScreen {
     Start,
@@ -46,7 +42,6 @@ fun MigawkaApp(
         ) {
             composable(route = MigawkaScreen.Start.name) {
                 Migawka(
-                    name = "Android",
                     onSettingsButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
                     onGalleryButtonClick = { navController.navigate(MigawkaScreen.Gallery.name) }
                 )
@@ -83,37 +78,13 @@ fun MigawkaApp(
     }
 }
 
-
-@Composable
-fun MyButton(onButtonClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        onClick = onButtonClick,
-        modifier = modifier
-    ) {
-        Text(
-            text = stringResource(R.string.settings)
-        )
-    }
-}
-
-@Composable
-fun MyText(name: String, counter: Int, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name! x $counter",
-        modifier = modifier
-    )
-}
-
 @Composable
 fun Migawka(
-    name: String,
     onGalleryButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
-    modifier: Modifier = Modifier) {
-    var counter by remember { mutableIntStateOf(0) }
-    Column {
-        MyText(name = name, counter = counter, modifier = modifier)
-        MyButton(onButtonClick = { counter++ }, modifier = modifier)
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
         Button(onClick = { onSettingsButtonClick() }) {
             Text(text = stringResource(R.string.settings))
         }
@@ -128,6 +99,6 @@ fun Migawka(
 @Composable
 fun MigawkaPreview() {
     MigawkaTheme {
-        Migawka(name = "Android", onSettingsButtonClick = {}, onGalleryButtonClick = {})
+        Migawka(onSettingsButtonClick = {}, onGalleryButtonClick = {})
     }
 }
