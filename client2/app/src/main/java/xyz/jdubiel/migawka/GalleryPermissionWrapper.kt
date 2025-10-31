@@ -4,12 +4,15 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
@@ -20,7 +23,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
 fun GalleryPermissionWrapper(
-    onImageClick: (Uri) -> Unit
+    viewModel: ImageListViewModel,
+    onImageClick: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as Activity
@@ -76,6 +80,7 @@ fun GalleryPermissionWrapper(
         // If we have permission, show the main gallery screen
         hasPermission -> {
             ImageGalleryScreen(
+                viewModel = viewModel,
                 onImageClick = onImageClick
             )
         }

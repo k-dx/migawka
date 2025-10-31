@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -30,7 +29,7 @@ import kotlinx.coroutines.launch
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
 fun ImageGalleryScreen(
-    onImageClick: (Uri) -> Unit,
+    onImageClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ImageListViewModel = viewModel()
 ) {
@@ -69,7 +68,7 @@ fun ImageGalleryScreen(
 @Composable
 fun ImageGrid(
     images: List<Uri>,
-    onImageClick: (Uri) -> Unit,
+    onImageClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (images.isEmpty()) {
@@ -82,14 +81,15 @@ fun ImageGrid(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = PaddingValues(4.dp)
         ) {
-            items(images) { imageUri ->
+            items(images.size) { index ->
+                val imageUri = images[index]
                 AsyncImage(
                     model = imageUri,
                     contentDescription = "Gallery Image",
                     modifier = Modifier
                         .aspectRatio(1f) // Make it square
                         .fillMaxWidth()
-                        .clickable { onImageClick(imageUri) },
+                        .clickable { onImageClick(index) },
                     contentScale = ContentScale.Crop // Crop to fill the square
                 )
             }
