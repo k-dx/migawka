@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.protobuf")
 }
 
 android {
@@ -39,6 +40,40 @@ android {
     }
 }
 
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.1"
+    }
+    plugins {
+        // Correct way to define plugins using create
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.61.0"
+        }
+        create("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                // Correct way to apply the created plugins
+                it.plugins.create("grpc") {
+                    option("lite")
+                }
+                it.plugins.create("grpckt") {
+                    option("lite")
+                }
+            }
+            it.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -59,4 +94,11 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation("io.grpc:grpc-okhttp:1.61.0")
+    implementation("io.grpc:grpc-protobuf-lite:1.61.0")
+    implementation("io.grpc:grpc-stub:1.61.0")
+    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
+    implementation("com.google.protobuf:protobuf-javalite:3.25.1")
 }
