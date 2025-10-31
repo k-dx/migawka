@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,10 +11,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.launch
 
 @Composable
 fun SingleMediaViewScreen(
@@ -21,6 +25,8 @@ fun SingleMediaViewScreen(
     initialIndex: Int,
     modifier: Modifier = Modifier
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     // Get the list of images from the ViewModel's state
     val images = viewModel.uiState.images
 
@@ -57,7 +63,32 @@ fun SingleMediaViewScreen(
             )
         }
 
-        Button(onClick = {}) {
+        Button(onClick = {
+            val serverAddress = "192.168.5.158"
+            Log.d("serverAddress", serverAddress)
+            val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+                .usePlaintext()
+                .build()
+
+            val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+
+            coroutineScope.launch {
+                try {
+                    val request = HelloRequest.newBuilder()
+                        .setName("Android User")
+                        .build()
+
+                    val response = stub.sayHello(request)
+
+                    // Update the UI with the response on the main thread
+                    Log.i("gRPC", "Response: ${response.message}")
+
+                } catch (e: Exception) {
+                    Log.e("gRPC", "Error: ${e.message}", e)
+                }
+            }
+
+        }) {
             Text("Upload")
         }
     }
