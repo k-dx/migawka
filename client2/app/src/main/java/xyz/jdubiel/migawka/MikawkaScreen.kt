@@ -8,6 +8,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,6 +19,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 enum class MigawkaScreen {
@@ -77,9 +80,38 @@ fun Migawka(
     onSettingsButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Column(modifier = modifier) {
         Button(onClick = { onSettingsButtonClick() }) {
             Text(text = stringResource(R.string.settings))
+        }
+        Button(onClick = {
+            val serverAddress = "192.168.5.158"
+            Log.d("serverAddress", serverAddress)
+            val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+                .usePlaintext()
+                .build()
+
+            val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+
+            coroutineScope.launch {
+                try {
+                    val request = FileDownloadRequest.newBuilder()
+                        .setFilename("test.jpg")
+                        .build()
+
+                    val response = stub.downloadFile(request)
+
+                    // Update the UI with the response on the main thread
+                    Log.i("gRPC", "Response: ${response.filename} ${response.message} ${response.content}")
+
+                } catch (e: Exception) {
+                    Log.e("gRPC", "Error: ${e.message}", e)
+                }
+            }
+        } ) {
+            Text(text = "Download")
         }
         GalleryPermissionWrapper(
             viewModel = viewModel,

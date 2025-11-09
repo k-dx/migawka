@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	port = flag.Int("port", 50051, "The server port")
+	file []byte = nil
+	port        = flag.Int("port", 50051, "The server port")
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -25,6 +26,24 @@ type server struct {
 func (s *server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.GetName())
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+}
+
+func (s *server) UploadFile(_ context.Context, in *pb.FileUploadRequest) (*pb.FileUploadReply, error) {
+	log.Printf("Received: %v", in.GetFilename())
+
+	file = in.GetContent()
+
+	return &pb.FileUploadReply{Message: "File " + in.GetFilename() + " uploaded successfully"}, nil
+}
+
+func (s *server) DownloadFile(_ context.Context, in *pb.FileDownloadRequest) (*pb.FileDownloadReply, error) {
+	log.Printf("Received: %v", in.GetFilename())
+
+	if file == nil {
+		return &pb.FileDownloadReply{Message: "No file uploaded"}, nil
+	}
+
+	return &pb.FileDownloadReply{Message: "File " + in.GetFilename() + " downloaded successfully", Content: file}, nil
 }
 
 func main() {

@@ -11,6 +11,8 @@ option java_multiple_files = true;
 service Greeter {
   // Sends a greeting
   rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc UploadFile(FileUploadRequest) returns (FileUploadReply);
+  rpc DownloadFile(FileDownloadRequest) returns (FileDownloadReply);
 }
 
 // The request message containing the user's name.
@@ -22,3 +24,23 @@ message HelloRequest {
 message HelloReply {
   string message = 1;
 }
+
+message FileUploadRequest {
+  string filename = 1;
+  bytes content = 2;
+}
+
+message FileUploadReply {
+  string message = 1;
+}
+
+message FileDownloadRequest {
+  string filename = 1;
+}
+
+message FileDownloadReply {
+  string filename = 1;
+  bytes content = 2;
+  string message = 3;
+}
+

@@ -111,6 +111,206 @@ func (x *HelloReply) GetMessage() string {
 	return ""
 }
 
+type FileUploadRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
+	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileUploadRequest) Reset() {
+	*x = FileUploadRequest{}
+	mi := &file_grpc_grpc_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileUploadRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileUploadRequest) ProtoMessage() {}
+
+func (x *FileUploadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileUploadRequest.ProtoReflect.Descriptor instead.
+func (*FileUploadRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *FileUploadRequest) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
+func (x *FileUploadRequest) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+type FileUploadReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileUploadReply) Reset() {
+	*x = FileUploadReply{}
+	mi := &file_grpc_grpc_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileUploadReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileUploadReply) ProtoMessage() {}
+
+func (x *FileUploadReply) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileUploadReply.ProtoReflect.Descriptor instead.
+func (*FileUploadReply) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *FileUploadReply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type FileDownloadRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileDownloadRequest) Reset() {
+	*x = FileDownloadRequest{}
+	mi := &file_grpc_grpc_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileDownloadRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileDownloadRequest) ProtoMessage() {}
+
+func (x *FileDownloadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileDownloadRequest.ProtoReflect.Descriptor instead.
+func (*FileDownloadRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *FileDownloadRequest) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
+type FileDownloadReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
+	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileDownloadReply) Reset() {
+	*x = FileDownloadReply{}
+	mi := &file_grpc_grpc_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileDownloadReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileDownloadReply) ProtoMessage() {}
+
+func (x *FileDownloadReply) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileDownloadReply.ProtoReflect.Descriptor instead.
+func (*FileDownloadReply) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *FileDownloadReply) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
+func (x *FileDownloadReply) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *FileDownloadReply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_grpc_grpc_proto protoreflect.FileDescriptor
 
 const file_grpc_grpc_proto_rawDesc = "" +
@@ -120,9 +320,24 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"&\n" +
 	"\n" +
 	"HelloReply\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage23\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"I\n" +
+	"\x11FileUploadRequest\x12\x1a\n" +
+	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent\"+\n" +
+	"\x0fFileUploadReply\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"1\n" +
+	"\x13FileDownloadRequest\x12\x1a\n" +
+	"\bfilename\x18\x01 \x01(\tR\bfilename\"c\n" +
+	"\x11FileDownloadReply\x12\x1a\n" +
+	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage2\xa1\x01\n" +
 	"\aGreeter\x12(\n" +
-	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00B\x15Z\x13migawka-server/grpcb\x06proto3"
+	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
+	"\n" +
+	"UploadFile\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\x128\n" +
+	"\fDownloadFile\x12\x14.FileDownloadRequest\x1a\x12.FileDownloadReplyB,\n" +
+	"\x13xyz.jdubiel.migawkaP\x01Z\x13migawka-server/grpcb\x06proto3"
 
 var (
 	file_grpc_grpc_proto_rawDescOnce sync.Once
@@ -136,16 +351,24 @@ func file_grpc_grpc_proto_rawDescGZIP() []byte {
 	return file_grpc_grpc_proto_rawDescData
 }
 
-var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_grpc_grpc_proto_goTypes = []any{
-	(*HelloRequest)(nil), // 0: HelloRequest
-	(*HelloReply)(nil),   // 1: HelloReply
+	(*HelloRequest)(nil),        // 0: HelloRequest
+	(*HelloReply)(nil),          // 1: HelloReply
+	(*FileUploadRequest)(nil),   // 2: FileUploadRequest
+	(*FileUploadReply)(nil),     // 3: FileUploadReply
+	(*FileDownloadRequest)(nil), // 4: FileDownloadRequest
+	(*FileDownloadReply)(nil),   // 5: FileDownloadReply
 }
 var file_grpc_grpc_proto_depIdxs = []int32{
 	0, // 0: Greeter.SayHello:input_type -> HelloRequest
-	1, // 1: Greeter.SayHello:output_type -> HelloReply
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: Greeter.UploadFile:input_type -> FileUploadRequest
+	4, // 2: Greeter.DownloadFile:input_type -> FileDownloadRequest
+	1, // 3: Greeter.SayHello:output_type -> HelloReply
+	3, // 4: Greeter.UploadFile:output_type -> FileUploadReply
+	5, // 5: Greeter.DownloadFile:output_type -> FileDownloadReply
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -162,7 +385,7 @@ func file_grpc_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_grpc_grpc_proto_rawDesc), len(file_grpc_grpc_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

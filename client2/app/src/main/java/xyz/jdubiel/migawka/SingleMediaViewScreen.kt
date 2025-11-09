@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import com.google.protobuf.ByteString
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
 
@@ -74,11 +75,12 @@ fun SingleMediaViewScreen(
 
             coroutineScope.launch {
                 try {
-                    val request = HelloRequest.newBuilder()
-                        .setName("Android User")
+                    val request = FileUploadRequest.newBuilder()
+                        .setFilename("test.jpg")
+                        .setContent(ByteString.copyFrom(byteArrayOf(1, 2, 3)))
                         .build()
 
-                    val response = stub.sayHello(request)
+                    val response = stub.uploadFile(request)
 
                     // Update the UI with the response on the main thread
                     Log.i("gRPC", "Response: ${response.message}")
