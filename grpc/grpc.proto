@@ -2,6 +2,9 @@ syntax = "proto3";
 
 option go_package = "migawka-server/grpc";
 
+option java_package = "xyz.jdubiel.migawka";
+option java_multiple_files = true;
+
 // package helloworld;
 
 // The greeting service definition.
