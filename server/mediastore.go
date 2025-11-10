@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/nfnt/resize"
+	"github.com/rs/zerolog/log"
 )
 
 const sha256HashSize = 32
@@ -84,8 +85,7 @@ func (ms *mediaStoreImpl) getThumbnailsByIDs(ids []sha256Hash) ([]Thumbnail, err
 	for _, id := range ids {
 		thumbnail, ok := ms.thumbnails[id]
 		if !ok {
-			// TODO: make proper logging
-			fmt.Fprintf(os.Stderr, "Thumbnail with ID %x not found\n", id)
+			log.Error().Str("ID", id.String()).Msg("Thumbnail with ID not found")
 			continue
 		}
 		thumbnails = append(thumbnails, thumbnail)
@@ -162,7 +162,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		var hash sha256Hash
 		err = hash.FromString(filenameWithoutExt)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "ignoring bad thumbnail filename %s, %v\n", filePath, err) // TODO: logging
+			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
 		} else {
 			ms.thumbnails[hash] = Thumbnail{
 				ID:      hash,
@@ -222,7 +222,10 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		// Calculate SHA256 hash
 		hash := sha256.Sum256(content)
 
-		fmt.Printf("Loaded media item %s with hash %x\n", filePath, hash) // TODO: logging
+		log.Debug().
+			Str("file", filePath).
+			Str("hash", hex.EncodeToString(hash[:])).
+			Msg("Loaded media item")
 
 		// Store in map
 		ms.items[hash] = MediaItem{
@@ -244,7 +247,10 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			// generate thumbnail
 			thumbnailContent, err := generateThumbnail(item.Content)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to generate thumbnail for item %x: %v\n", id, err) // TODO: logging
+				log.Error().
+					Str("ID", id.String()).
+					Err(err).
+					Msg("failed to generate thumbnail")
 				continue
 			}
 			// store thumbnail in map
@@ -256,7 +262,10 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			thumbnailFilePath := filepath.Join(thumbnailPath, id.String()+".jpg")
 			err = os.WriteFile(thumbnailFilePath, thumbnailContent, os.ModePerm)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to write thumbnail %s: %v\n", thumbnailFilePath, err) // TODO: logging
+				log.Error().
+					Str("file", thumbnailFilePath).
+					Err(err).
+					Msg("failed to write thumbnail")
 			}
 		}
 	}

@@ -6,7 +6,16 @@ import (
 	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
+
+func TestMain(m *testing.M) {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 func copyDir(t *testing.T, src string, dst string) {
 	cmd := exec.Command("cp", "-r", src, dst)
