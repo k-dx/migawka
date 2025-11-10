@@ -1,15 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"image"
+	"image/draw"
+	"image/jpeg"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/nfnt/resize"
 )
 
 const sha256HashSize = 32
@@ -31,6 +37,8 @@ type MediaItem struct {
 type MediaStore interface {
 	GetThumbnailsFromDate(date time.Time, count int) ([]Thumbnail, error)
 	GetMediaItem(id sha256Hash) (MediaItem, error)
+
+	GetMediaItemsCountForTest() int
 }
 
 type mediaStoreImpl struct {
@@ -95,7 +103,8 @@ func (ms *mediaStoreImpl) GetMediaItem(id sha256Hash) (MediaItem, error) {
 
 func NewMediaStore(path string) (MediaStore, error) {
 	ms := &mediaStoreImpl{
-		items: make(map[sha256Hash]MediaItem),
+		items:      make(map[sha256Hash]MediaItem),
+		thumbnails: make(map[sha256Hash]Thumbnail),
 	}
 	err := ms.loadMediaItems(path, filepath.Join(path, ".thumbnails"))
 	if err != nil {
@@ -104,7 +113,7 @@ func NewMediaStore(path string) (MediaStore, error) {
 	return ms, nil
 }
 
-func (h sha256Hash) FromString(s string) error {
+func (h *sha256Hash) FromString(s string) error {
 	data, err := hex.DecodeString(s)
 	if err != nil {
 		return err
@@ -114,6 +123,10 @@ func (h sha256Hash) FromString(s string) error {
 	}
 	copy(h[:], data)
 	return nil
+}
+
+func (h *sha256Hash) String() string {
+	return hex.EncodeToString(h[:])
 }
 
 func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string) error {
@@ -130,6 +143,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	}
 
 	// TODO: change both to WalkDir for better performance with many files
+	// TODO: change both to follow symlinks
+
 	// walk through thumbnail directory and load thumbnails
 	err := filepath.Walk(thumbnailPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -143,9 +158,9 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			return fmt.Errorf("failed to read file %s: %w", filePath, err)
 		}
 
-		filename := info.Name()
+		filenameWithoutExt := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 		var hash sha256Hash
-		err = hash.FromString(filename)
+		err = hash.FromString(filenameWithoutExt)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "ignoring bad thumbnail filename %s, %v\n", filePath, err) // TODO: logging
 		} else {
@@ -162,18 +177,29 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	}
 
 	// walk through the directory and load media items
-	return filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
+	err = filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Skip directories
 		if info.IsDir() {
+			// Skip all files in the thumbnail directory
+			absFilePath, err1 := filepath.Abs(filePath)
+			absThumbnailPath, err2 := filepath.Abs(thumbnailPath)
+			if err1 == nil && err2 == nil && absFilePath == absThumbnailPath {
+				return filepath.SkipDir
+			}
+
+			// Skip directory itself
 			return nil
 		}
 
 		// Check if file is a media file (basic check by extension)
 		ext := strings.ToLower(filepath.Ext(filePath))
+
+		// TODO: support more file types
+		// TODO: consider using a library for better file type detection
+		// TODO: save type in MediaItem
 		// validExts := []string{".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov", ".avi", ".mkv"}
 		validExts := []string{".jpg", ".jpeg"}
 		isMedia := false
@@ -196,6 +222,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		// Calculate SHA256 hash
 		hash := sha256.Sum256(content)
 
+		fmt.Printf("Loaded media item %s with hash %x\n", filePath, hash) // TODO: logging
+
 		// Store in map
 		ms.items[hash] = MediaItem{
 			ID:           hash,
@@ -206,4 +234,91 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("failed to load media items: %w", err)
+	}
+
+	// generate thumbnails for media items without thumbnails
+	for id, item := range ms.items {
+		if _, ok := ms.thumbnails[id]; !ok {
+			// generate thumbnail
+			thumbnailContent, err := generateThumbnail(item.Content)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to generate thumbnail for item %x: %v\n", id, err) // TODO: logging
+				continue
+			}
+			// store thumbnail in map
+			ms.thumbnails[id] = Thumbnail{
+				ID:      id,
+				Content: thumbnailContent,
+			}
+			// save thumbnail to disk
+			thumbnailFilePath := filepath.Join(thumbnailPath, id.String()+".jpg")
+			err = os.WriteFile(thumbnailFilePath, thumbnailContent, os.ModePerm)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write thumbnail %s: %v\n", thumbnailFilePath, err) // TODO: logging
+			}
+		}
+	}
+
+	return nil
+}
+
+func generateThumbnail(data []byte) ([]byte, error) {
+	return ResizeTo256(data)
+}
+
+// ResizeTo256 takes raw image bytes and returns JPEG-encoded bytes of a 256x256
+// image. It center-crops non-square images, then resizes with good quality.
+// Supported input formats: JPEG, PNG, GIF.
+//
+// Returns JPEG bytes and any error.
+func ResizeTo256(in []byte) ([]byte, error) {
+	img, format, err := image.Decode(bytes.NewReader(in))
+	if err != nil {
+		return nil, err
+	}
+
+	// Determine square crop rectangle centered
+	b := img.Bounds()
+	w := b.Dx()
+	h := b.Dy()
+
+	var src image.Image
+	if w == h {
+		src = img
+	} else if w > h {
+		// landscape: crop sides
+		x0 := (w - h) / 2
+		rect := image.Rect(x0, 0, x0+h, h)
+		c := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
+		draw.Draw(c, c.Bounds(), img, rect.Min, draw.Src)
+		src = c
+	} else {
+		// portrait: crop top/bottom
+		y0 := (h - w) / 2
+		rect := image.Rect(0, y0, w, y0+w)
+		c := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
+		draw.Draw(c, c.Bounds(), img, rect.Min, draw.Src)
+		src = c
+	}
+
+	// Resize to 256x256 using github.com/nfnt/resize (Lanczos3)
+	resized := resize.Resize(256, 256, src, resize.Lanczos3)
+
+	// Encode to JPEG
+	var buf bytes.Buffer
+	opts := &jpeg.Options{Quality: 90}
+	if err := jpeg.Encode(&buf, resized, opts); err != nil {
+		return nil, err
+	}
+
+	// If caller wants original format instead of JPEG, you can branch on `format`.
+	_ = format // keep for future use
+	return buf.Bytes(), nil
+}
+
+// In mediastore_test.go or mediastore.go
+func (ms *mediaStoreImpl) GetMediaItemsCountForTest() int {
+	return len(ms.items)
 }
