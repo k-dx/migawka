@@ -102,6 +102,7 @@ func (ms *mediaStoreImpl) GetMediaItem(id sha256Hash) (MediaItem, error) {
 }
 
 func NewMediaStore(path string) (MediaStore, error) {
+	log.Debug().Msg("Creating new MediaStore")
 	ms := &mediaStoreImpl{
 		items:      make(map[sha256Hash]MediaItem),
 		thumbnails: make(map[sha256Hash]Thumbnail),
@@ -130,6 +131,9 @@ func (h *sha256Hash) String() string {
 }
 
 func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string) error {
+	log.Debug().Str("mediaPath", mediaPath).
+		Str("thumbnailPath", thumbnailPath).
+		Msg("Loading media items")
 	// create the thumbnail directory if it doesn't exist
 	if _, err := os.Stat(thumbnailPath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -140,6 +144,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		} else {
 			return fmt.Errorf("failed to stat thumbnail directory %s: %w", thumbnailPath, err)
 		}
+		log.Info().Str("thumbnailPath", thumbnailPath).Msg("Created thumbnail directory")
 	}
 
 	// TODO: change both to WalkDir for better performance with many files
@@ -175,6 +180,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	if err != nil {
 		return fmt.Errorf("failed to load thumbnails: %w", err)
 	}
+	log.Debug().Int("count", len(ms.thumbnails)).Msg("Loaded thumbnails from existing files")
 
 	// walk through the directory and load media items
 	err = filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
@@ -240,6 +246,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	if err != nil {
 		return fmt.Errorf("failed to load media items: %w", err)
 	}
+	log.Debug().Int("count", len(ms.items)).Msg("Loaded media items")
 
 	// generate thumbnails for media items without thumbnails
 	for id, item := range ms.items {
@@ -267,6 +274,9 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 					Err(err).
 					Msg("failed to write thumbnail")
 			}
+			log.Debug().Str("ID", id.String()).
+				Str("file", thumbnailFilePath).
+				Msg("Generated and saved new thumbnail")
 		}
 	}
 
