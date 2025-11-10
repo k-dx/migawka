@@ -174,7 +174,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 
 		// Check if file is a media file (basic check by extension)
 		ext := strings.ToLower(filepath.Ext(filePath))
-		validExts := []string{".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov", ".avi", ".mkv"}
+		// validExts := []string{".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov", ".avi", ".mkv"}
+		validExts := []string{".jpg", ".jpeg"}
 		isMedia := false
 		for _, validExt := range validExts {
 			if ext == validExt {
@@ -199,7 +200,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		ms.items[hash] = MediaItem{
 			ID:           hash,
 			Path:         filePath,
-			CreationTime: getCreationTime(),
+			CreationTime: info.ModTime(), // TODO: use EXIF for images if available
 			Content:      content,
 		}
 
