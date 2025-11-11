@@ -86,7 +86,7 @@ func initLogger(logLevel *string) {
 func main() {
 	logLevel := flag.String("loglevel", "warn", "Log level: debug, info, warn, error, fatal, panic")
 	MEDIA_DIR_ARG := "mediadir"
-	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required)")
+	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
 
 	flag.Parse()
 
