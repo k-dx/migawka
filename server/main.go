@@ -106,8 +106,7 @@ func (s *server) GetMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*p
 	log.Info().Str("id", in.GetId()).Msg("GetMediaItem")
 
 	// parse id
-	var id sha256Hash
-	err := id.FromString(in.GetId())
+	id, err := NewSha256FromString(in.GetId())
 	if err != nil {
 		log.Error().Err(err).Str("id", in.GetId()).Msg("Invalid ID format")
 		return &pb.GetMediaItemResponse{
@@ -119,7 +118,7 @@ func (s *server) GetMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*p
 	}
 
 	// get media item from media store
-	mediaItem, err := s.mediaStore.GetMediaItem(id)
+	mediaItem, err := s.mediaStore.GetMediaItem(*id)
 	if err != nil {
 		log.Error().Err(err).
 			Str("id", in.GetId()).

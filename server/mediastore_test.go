@@ -146,9 +146,11 @@ func TestMediaStore_GetMediaItem(t *testing.T) {
 	}
 
 	// get one of the media item IDs
-	var testID sha256Hash
-	testID.FromString("0bce366acd5c95aaf3d6c97b0b79645dec870870624ada0f74af1c871d7bef8b") // lake.jpg
-	mediaItem, err := mediaStore.GetMediaItem(testID)
+	testId, err := NewSha256FromString("0bce366acd5c95aaf3d6c97b0b79645dec870870624ada0f74af1c871d7bef8b") // lake.jpg
+	if err != nil {
+		t.Fatalf("Failed to create sha256Hash from string: %v", err)
+	}
+	mediaItem, err := mediaStore.GetMediaItem(*testId)
 	if err != nil {
 		t.Fatalf("Failed to get media item: %v", err)
 	}

@@ -19,10 +19,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const sha256HashSize = 32
-
-type sha256Hash [sha256HashSize]byte
-
 type Thumbnail struct {
 	ID      sha256Hash
 	Content []byte
@@ -112,22 +108,6 @@ func NewMediaStore(path string) (MediaStore, error) {
 		return nil, err
 	}
 	return ms, nil
-}
-
-func (h *sha256Hash) FromString(s string) error {
-	data, err := hex.DecodeString(s)
-	if err != nil {
-		return err
-	}
-	if len(data) != sha256HashSize {
-		return fmt.Errorf("invalid hash length: got %d, want %d", len(data), sha256HashSize)
-	}
-	copy(h[:], data)
-	return nil
-}
-
-func (h *sha256Hash) String() string {
-	return hex.EncodeToString(h[:])
 }
 
 func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string) error {
