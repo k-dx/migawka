@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	pb "migawka-server/grpc"
 
@@ -57,6 +58,90 @@ func (s *server) DownloadFile(_ context.Context, in *pb.FileDownloadRequest) (*p
 	}
 
 	return &pb.FileDownloadReply{Message: "File " + in.GetFilename() + " downloaded successfully", Content: file}, nil
+}
+
+func (s *server) GetThumbnailsFromDate(_ context.Context, in *pb.ThumbnailsFromDateRequest) (*pb.ThumbnailsFromDateResponse, error) {
+	log.Info().
+		Str("Timestamp", in.GetTimestamp()).
+		Uint32("Count", in.GetCount()).
+		Msgf("GetThumbnailsFromDate")
+
+	// parse timestamp
+	timestamp := in.GetTimestamp()
+	parsedTimestamp, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		log.Error().Err(err).Str("timestamp", timestamp).Msg("Invalid timestamp format")
+		return &pb.ThumbnailsFromDateResponse{
+			Status: &pb.Status{
+				Code:    400,
+				Message: "Invalid timestamp format. Expected format ISO 8601: YYYY-MM-DDTHH:MM:SSZ",
+			},
+		}, nil
+	}
+
+	// retrieve thumbnails from media store
+	thumbnails, err := s.mediaStore.GetThumbnailsFromDate(parsedTimestamp, uint(in.GetCount()))
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get thumbnails from media store")
+		return &pb.ThumbnailsFromDateResponse{
+			Status: &pb.Status{
+				Code:    500,
+				Message: "Failed to get thumbnails from media store",
+			},
+		}, nil
+	}
+
+	// convert to gRPC thumbnails type
+	var pbThumbnails []*pb.ThumbnailsFromDateResponse_Thumbnail
+	for _, thumbnail := range thumbnails {
+		pbThumbnails = append(pbThumbnails, &pb.ThumbnailsFromDateResponse_Thumbnail{
+			Id:      thumbnail.ID.String(),
+			Content: thumbnail.Content,
+		})
+	}
+	return &pb.ThumbnailsFromDateResponse{Thumbnails: pbThumbnails}, nil
+}
+
+func (s *server) GetMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*pb.GetMediaItemResponse, error) {
+	log.Info().Str("id", in.GetId()).Msg("GetMediaItem")
+
+	// parse id
+	var id sha256Hash
+	err := id.FromString(in.GetId())
+	if err != nil {
+		log.Error().Err(err).Str("id", in.GetId()).Msg("Invalid ID format")
+		return &pb.GetMediaItemResponse{
+			Status: &pb.Status{
+				Code:    400,
+				Message: "Invalid ID format",
+			},
+		}, nil
+	}
+
+	// get media item from media store
+	mediaItem, err := s.mediaStore.GetMediaItem(id)
+	if err != nil {
+		log.Error().Err(err).
+			Str("id", in.GetId()).
+			Msg("Failed to get media item from media store")
+		return &pb.GetMediaItemResponse{
+			Status: &pb.Status{
+				Code:    500,
+				Message: "Failed to get media item from media store",
+			},
+		}, nil
+	}
+
+	// convert to gRPC media item type
+	pbMediaItem := &pb.MediaItem{
+		Id:           mediaItem.ID.String(),
+		CreationTime: mediaItem.CreationTime.Format(time.RFC3339),
+		Content:      mediaItem.Content,
+	}
+
+	return &pb.GetMediaItemResponse{
+		MediaItem: pbMediaItem,
+	}, nil
 }
 
 func initLogger(logLevel *string) {

@@ -13,6 +13,13 @@ service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
   rpc UploadFile(FileUploadRequest) returns (FileUploadReply);
   rpc DownloadFile(FileDownloadRequest) returns (FileDownloadReply);
+  rpc GetThumbnailsFromDate(ThumbnailsFromDateRequest) returns (ThumbnailsFromDateResponse);
+  rpc GetMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
+}
+
+message Status {
+  int32 code = 1;
+  string message = 2;
 }
 
 // The request message containing the user's name.
@@ -42,5 +49,42 @@ message FileDownloadReply {
   string filename = 1;
   bytes content = 2;
   string message = 3;
+}
+
+message ThumbnailsFromDateRequest {
+  // ISO 8601 (e.g., "2025-11-11T13:45:30Z")
+  string timestamp = 1;
+
+  // at most how many thumbnails should be returned
+  uint32 count = 2;
+}
+
+message ThumbnailsFromDateResponse {
+  Status status = 1;
+
+  message Thumbnail {
+    // sha256 hash
+    string id = 1;
+
+    bytes content = 2; 
+  }
+
+  repeated Thumbnail thumbnails = 2;
+}
+
+message GetMediaItemRequest {
+  string id = 1;
+}
+
+message MediaItem {
+  string id = 1;
+  string creationTime = 2;
+  bytes content = 3;
+}
+
+message GetMediaItemResponse {
+  Status status = 1;
+
+  MediaItem mediaItem = 2;
 }
 

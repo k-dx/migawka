@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Greeter_SayHello_FullMethodName     = "/Greeter/SayHello"
-	Greeter_UploadFile_FullMethodName   = "/Greeter/UploadFile"
-	Greeter_DownloadFile_FullMethodName = "/Greeter/DownloadFile"
+	Greeter_SayHello_FullMethodName              = "/Greeter/SayHello"
+	Greeter_UploadFile_FullMethodName            = "/Greeter/UploadFile"
+	Greeter_DownloadFile_FullMethodName          = "/Greeter/DownloadFile"
+	Greeter_GetThumbnailsFromDate_FullMethodName = "/Greeter/GetThumbnailsFromDate"
+	Greeter_GetMediaItem_FullMethodName          = "/Greeter/GetMediaItem"
 )
 
 // GreeterClient is the client API for Greeter service.
@@ -34,6 +36,8 @@ type GreeterClient interface {
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 	UploadFile(ctx context.Context, in *FileUploadRequest, opts ...grpc.CallOption) (*FileUploadReply, error)
 	DownloadFile(ctx context.Context, in *FileDownloadRequest, opts ...grpc.CallOption) (*FileDownloadReply, error)
+	GetThumbnailsFromDate(ctx context.Context, in *ThumbnailsFromDateRequest, opts ...grpc.CallOption) (*ThumbnailsFromDateResponse, error)
+	GetMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 }
 
 type greeterClient struct {
@@ -74,6 +78,26 @@ func (c *greeterClient) DownloadFile(ctx context.Context, in *FileDownloadReques
 	return out, nil
 }
 
+func (c *greeterClient) GetThumbnailsFromDate(ctx context.Context, in *ThumbnailsFromDateRequest, opts ...grpc.CallOption) (*ThumbnailsFromDateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ThumbnailsFromDateResponse)
+	err := c.cc.Invoke(ctx, Greeter_GetThumbnailsFromDate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *greeterClient) GetMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMediaItemResponse)
+	err := c.cc.Invoke(ctx, Greeter_GetMediaItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility.
@@ -84,6 +108,8 @@ type GreeterServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
 	UploadFile(context.Context, *FileUploadRequest) (*FileUploadReply, error)
 	DownloadFile(context.Context, *FileDownloadRequest) (*FileDownloadReply, error)
+	GetThumbnailsFromDate(context.Context, *ThumbnailsFromDateRequest) (*ThumbnailsFromDateResponse, error)
+	GetMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -102,6 +128,12 @@ func (UnimplementedGreeterServer) UploadFile(context.Context, *FileUploadRequest
 }
 func (UnimplementedGreeterServer) DownloadFile(context.Context, *FileDownloadRequest) (*FileDownloadReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
+}
+func (UnimplementedGreeterServer) GetThumbnailsFromDate(context.Context, *ThumbnailsFromDateRequest) (*ThumbnailsFromDateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetThumbnailsFromDate not implemented")
+}
+func (UnimplementedGreeterServer) GetMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMediaItem not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 func (UnimplementedGreeterServer) testEmbeddedByValue()                 {}
@@ -178,6 +210,42 @@ func _Greeter_DownloadFile_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_GetThumbnailsFromDate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ThumbnailsFromDateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).GetThumbnailsFromDate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Greeter_GetThumbnailsFromDate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).GetThumbnailsFromDate(ctx, req.(*ThumbnailsFromDateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Greeter_GetMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMediaItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).GetMediaItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Greeter_GetMediaItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).GetMediaItem(ctx, req.(*GetMediaItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -196,6 +264,14 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DownloadFile",
 			Handler:    _Greeter_DownloadFile_Handler,
+		},
+		{
+			MethodName: "GetThumbnailsFromDate",
+			Handler:    _Greeter_GetThumbnailsFromDate_Handler,
+		},
+		{
+			MethodName: "GetMediaItem",
+			Handler:    _Greeter_GetMediaItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

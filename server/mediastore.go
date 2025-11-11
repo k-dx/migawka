@@ -36,7 +36,7 @@ type MediaItem struct {
 }
 
 type MediaStore interface {
-	GetThumbnailsFromDate(date time.Time, count int) ([]Thumbnail, error)
+	GetThumbnailsFromDate(date time.Time, count uint) ([]Thumbnail, error)
 	GetMediaItem(id sha256Hash) (MediaItem, error)
 
 	GetMediaItemsCountForTest() int
@@ -48,7 +48,7 @@ type mediaStoreImpl struct {
 }
 
 // Returns at most 'count' thumbnails created after (or at) the given date
-func (ms *mediaStoreImpl) GetThumbnailsFromDate(date time.Time, count int) ([]Thumbnail, error) {
+func (ms *mediaStoreImpl) GetThumbnailsFromDate(date time.Time, count uint) ([]Thumbnail, error) {
 	type idDatePair struct {
 		id   sha256Hash
 		date time.Time
@@ -73,7 +73,7 @@ func (ms *mediaStoreImpl) GetThumbnailsFromDate(date time.Time, count int) ([]Th
 
 	// return the first 'count' items
 	ids := make([]sha256Hash, 0, count)
-	for i := 0; i < count && i < len(idsByDate); i++ {
+	for i := 0; i < int(count) && i < len(idsByDate); i++ {
 		ids = append(ids, idsByDate[i].id)
 	}
 	return ms.getThumbnailsByIDs(ids)
