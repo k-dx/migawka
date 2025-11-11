@@ -11,6 +11,7 @@ composeBom = "2024.09.00"
 preference = "1.2.1"
 navigationCompose = "2.9.5"
 coilCompose = "3.2.0"
+paging = "3.3.6"
 protobuf = "0.9.5"
 grpc = "1.61.0"
 grpcKotlin = "1.4.1"
@@ -35,6 +36,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilCompose" }
+androidx-compose-paging = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
 # gRPC Libraries
 grpc-okhttp = { group = "io.grpc", name = "grpc-okhttp", version.ref = "grpc" }
 grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.ref = "grpc" }

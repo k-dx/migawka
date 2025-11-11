@@ -14,81 +14,83 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
 fun ImageGalleryScreen(
-    onImageClick: (Int) -> Unit,
+    onImageClick: (Uri) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ImageListViewModel = viewModel()
+    viewModel: ImageGalleryViewModel = viewModel()
 ) {
-    val context = LocalContext.current
-    val uiState = viewModel.uiState
+    val images = viewModel.imageStream.collectAsLazyPagingItems()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadImages(context)
-    }
-
-    Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Display loading indicator or the image grid
-        if (uiState.isLoading) {
-            CircularProgressIndicator()
-        } else {
-            ImageGrid(
-                images = uiState.images,
-                onImageClick = onImageClick
-            )
-        }
-    }
+    ImageGrid(
+        images = images,
+        onImageClick = onImageClick,
+        modifier = modifier
+    )
 }
 
 @Composable
 fun ImageGrid(
-    images: List<Uri>,
-    onImageClick: (Int) -> Unit,
+    images: LazyPagingItems<Uri>,
+    onImageClick: (Uri) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (images.isEmpty()) {
-        Text("No images found.", modifier = modifier.padding(16.dp))
-    } else {
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 120.dp),
-            modifier = modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            contentPadding = PaddingValues(4.dp)
-        ) {
-            items(images.size) { index ->
-                val imageUri = images[index]
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 120.dp),
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        contentPadding = PaddingValues(4.dp)
+    ) {
+        items(images.itemCount) { index ->
+            val imageUri = images[index]
+            if (imageUri != null) {
                 AsyncImage(
                     model = imageUri,
                     contentDescription = "Gallery Image",
                     modifier = Modifier
                         .aspectRatio(1f) // Make it square
                         .fillMaxWidth()
-                        .clickable { onImageClick(index) },
+                        .clickable { onImageClick(imageUri) },
                     contentScale = ContentScale.Crop // Crop to fill the square
                 )
             }
         }
+    }
+
+    when (images.loadState.refresh) {
+        is LoadState.Loading -> {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is LoadState.Error -> {
+            Text("Error loading images.", modifier = modifier.padding(16.dp))
+        }
+        else -> {}
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ImageGallery() {
+    // This preview will be empty as it doesn't have access to a real ViewModel
+    // You can create a fake ViewModel for preview purposes if needed.
     ImageGalleryScreen(onImageClick = {})
 }
