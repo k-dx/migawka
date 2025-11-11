@@ -13,7 +13,7 @@ service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
   rpc UploadFile(FileUploadRequest) returns (FileUploadReply);
   rpc DownloadFile(FileDownloadRequest) returns (FileDownloadReply);
-  rpc GetThumbnailsFromDate(ThumbnailsFromDateRequest) returns (ThumbnailsFromDateResponse);
+  rpc GetThumbnailsBeforeTimestamp(ThumbnailsTimestampRequest) returns (ThumbnailsTimestampResponse);
   rpc GetMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
 }
 
@@ -51,7 +51,17 @@ message FileDownloadReply {
   string message = 3;
 }
 
-message ThumbnailsFromDateRequest {
+message Thumbnail {
+  // sha256 hash
+  string id = 1;
+
+  bytes content = 2;
+
+  // ISO 8601
+  string creationTime = 3;
+}
+
+message ThumbnailsTimestampRequest {
   // ISO 8601 (e.g., "2025-11-11T13:45:30Z")
   string timestamp = 1;
 
@@ -59,16 +69,8 @@ message ThumbnailsFromDateRequest {
   uint32 count = 2;
 }
 
-message ThumbnailsFromDateResponse {
+message ThumbnailsTimestampResponse {
   Status status = 1;
-
-  message Thumbnail {
-    // sha256 hash
-    string id = 1;
-
-    bytes content = 2; 
-  }
-
   repeated Thumbnail thumbnails = 2;
 }
 

@@ -20,8 +20,9 @@ import (
 )
 
 type Thumbnail struct {
-	ID      sha256Hash
-	Content []byte
+	ID           sha256Hash
+	CreationTime time.Time // time when the original media item was created
+	Content      []byte
 }
 
 type MediaItem struct {
@@ -32,7 +33,7 @@ type MediaItem struct {
 }
 
 type MediaStore interface {
-	GetThumbnailsFromDate(date time.Time, count uint) ([]Thumbnail, error)
+	GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error)
 	GetMediaItem(id sha256Hash) (MediaItem, error)
 
 	GetMediaItemsCountForTest() int
@@ -43,8 +44,8 @@ type mediaStoreImpl struct {
 	thumbnails map[sha256Hash]Thumbnail
 }
 
-// Returns at most 'count' thumbnails created after (or at) the given date
-func (ms *mediaStoreImpl) GetThumbnailsFromDate(date time.Time, count uint) ([]Thumbnail, error) {
+// Returns at most 'count' thumbnails created before (or at) the given timestamp
+func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error) {
 	type idDatePair struct {
 		id   sha256Hash
 		date time.Time
@@ -53,7 +54,8 @@ func (ms *mediaStoreImpl) GetThumbnailsFromDate(date time.Time, count uint) ([]T
 	// put date, sha256Hash into a list for dates >= given date
 	idsByDate := make([]idDatePair, 0, len(ms.items))
 	for id, item := range ms.items {
-		if item.CreationTime.Before(date) {
+		// filter out items after the given date
+		if item.CreationTime.After(date) {
 			continue
 		}
 		idsByDate = append(idsByDate, idDatePair{
@@ -62,9 +64,9 @@ func (ms *mediaStoreImpl) GetThumbnailsFromDate(date time.Time, count uint) ([]T
 		})
 	}
 
-	// sort by date
+	// sort by date descending
 	sort.Slice(idsByDate, func(i, j int) bool {
-		return idsByDate[i].date.Before(idsByDate[j].date)
+		return idsByDate[i].date.After(idsByDate[j].date)
 	})
 
 	// return the first 'count' items
@@ -130,40 +132,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	// TODO: change both to WalkDir for better performance with many files
 	// TODO: change both to follow symlinks
 
-	// walk through thumbnail directory and load thumbnails
-	err := filepath.Walk(thumbnailPath, func(filePath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			return fmt.Errorf("failed to read file %s: %w", filePath, err)
-		}
-
-		filenameWithoutExt := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-		var hash sha256Hash
-		err = hash.FromString(filenameWithoutExt)
-		if err != nil {
-			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
-		} else {
-			ms.thumbnails[hash] = Thumbnail{
-				ID:      hash,
-				Content: content,
-			}
-		}
-
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to load thumbnails: %w", err)
-	}
-	log.Debug().Int("count", len(ms.thumbnails)).Msg("Loaded thumbnails from existing files")
-
 	// walk through the directory and load media items
-	err = filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
+	err := filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -228,6 +198,41 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	}
 	log.Debug().Int("count", len(ms.items)).Msg("Loaded media items")
 
+	// walk through thumbnail directory and load thumbnails
+	err = filepath.Walk(thumbnailPath, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", filePath, err)
+		}
+
+		filenameWithoutExt := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
+		var hash sha256Hash
+		err = hash.FromString(filenameWithoutExt)
+		if err != nil {
+			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
+		} else if _, mediaItemPresent := ms.items[hash]; !mediaItemPresent {
+			log.Warn().Str("file", filePath).Msg("thumbnail does not match any media item. ignoring")
+		} else {
+			ms.thumbnails[hash] = Thumbnail{
+				ID:           hash,
+				CreationTime: ms.items[hash].CreationTime,
+				Content:      content,
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to load thumbnails: %w", err)
+	}
+	log.Debug().Int("count", len(ms.thumbnails)).Msg("Loaded thumbnails from existing files")
+
 	// generate thumbnails for media items without thumbnails
 	for id, item := range ms.items {
 		if _, ok := ms.thumbnails[id]; !ok {
@@ -242,8 +247,9 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			}
 			// store thumbnail in map
 			ms.thumbnails[id] = Thumbnail{
-				ID:      id,
-				Content: thumbnailContent,
+				ID:           id,
+				CreationTime: ms.items[id].CreationTime,
+				Content:      thumbnailContent,
 			}
 			// save thumbnail to disk
 			thumbnailFilePath := filepath.Join(thumbnailPath, id.String()+".jpg")

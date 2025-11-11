@@ -363,7 +363,69 @@ func (x *FileDownloadReply) GetMessage() string {
 	return ""
 }
 
-type ThumbnailsFromDateRequest struct {
+type Thumbnail struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// sha256 hash
+	Id      string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Content []byte `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	// ISO 8601
+	CreationTime  string `protobuf:"bytes,3,opt,name=creationTime,proto3" json:"creationTime,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Thumbnail) Reset() {
+	*x = Thumbnail{}
+	mi := &file_grpc_grpc_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Thumbnail) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Thumbnail) ProtoMessage() {}
+
+func (x *Thumbnail) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Thumbnail.ProtoReflect.Descriptor instead.
+func (*Thumbnail) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Thumbnail) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Thumbnail) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *Thumbnail) GetCreationTime() string {
+	if x != nil {
+		return x.CreationTime
+	}
+	return ""
+}
+
+type ThumbnailsTimestampRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// ISO 8601 (e.g., "2025-11-11T13:45:30Z")
 	Timestamp string `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
@@ -373,21 +435,21 @@ type ThumbnailsFromDateRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ThumbnailsFromDateRequest) Reset() {
-	*x = ThumbnailsFromDateRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[7]
+func (x *ThumbnailsTimestampRequest) Reset() {
+	*x = ThumbnailsTimestampRequest{}
+	mi := &file_grpc_grpc_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ThumbnailsFromDateRequest) String() string {
+func (x *ThumbnailsTimestampRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ThumbnailsFromDateRequest) ProtoMessage() {}
+func (*ThumbnailsTimestampRequest) ProtoMessage() {}
 
-func (x *ThumbnailsFromDateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[7]
+func (x *ThumbnailsTimestampRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -398,48 +460,48 @@ func (x *ThumbnailsFromDateRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ThumbnailsFromDateRequest.ProtoReflect.Descriptor instead.
-func (*ThumbnailsFromDateRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{7}
+// Deprecated: Use ThumbnailsTimestampRequest.ProtoReflect.Descriptor instead.
+func (*ThumbnailsTimestampRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *ThumbnailsFromDateRequest) GetTimestamp() string {
+func (x *ThumbnailsTimestampRequest) GetTimestamp() string {
 	if x != nil {
 		return x.Timestamp
 	}
 	return ""
 }
 
-func (x *ThumbnailsFromDateRequest) GetCount() uint32 {
+func (x *ThumbnailsTimestampRequest) GetCount() uint32 {
 	if x != nil {
 		return x.Count
 	}
 	return 0
 }
 
-type ThumbnailsFromDateResponse struct {
-	state         protoimpl.MessageState                  `protogen:"open.v1"`
-	Status        *Status                                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	Thumbnails    []*ThumbnailsFromDateResponse_Thumbnail `protobuf:"bytes,2,rep,name=thumbnails,proto3" json:"thumbnails,omitempty"`
+type ThumbnailsTimestampResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        *Status                `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Thumbnails    []*Thumbnail           `protobuf:"bytes,2,rep,name=thumbnails,proto3" json:"thumbnails,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ThumbnailsFromDateResponse) Reset() {
-	*x = ThumbnailsFromDateResponse{}
-	mi := &file_grpc_grpc_proto_msgTypes[8]
+func (x *ThumbnailsTimestampResponse) Reset() {
+	*x = ThumbnailsTimestampResponse{}
+	mi := &file_grpc_grpc_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ThumbnailsFromDateResponse) String() string {
+func (x *ThumbnailsTimestampResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ThumbnailsFromDateResponse) ProtoMessage() {}
+func (*ThumbnailsTimestampResponse) ProtoMessage() {}
 
-func (x *ThumbnailsFromDateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[8]
+func (x *ThumbnailsTimestampResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -450,19 +512,19 @@ func (x *ThumbnailsFromDateResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ThumbnailsFromDateResponse.ProtoReflect.Descriptor instead.
-func (*ThumbnailsFromDateResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{8}
+// Deprecated: Use ThumbnailsTimestampResponse.ProtoReflect.Descriptor instead.
+func (*ThumbnailsTimestampResponse) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *ThumbnailsFromDateResponse) GetStatus() *Status {
+func (x *ThumbnailsTimestampResponse) GetStatus() *Status {
 	if x != nil {
 		return x.Status
 	}
 	return nil
 }
 
-func (x *ThumbnailsFromDateResponse) GetThumbnails() []*ThumbnailsFromDateResponse_Thumbnail {
+func (x *ThumbnailsTimestampResponse) GetThumbnails() []*Thumbnail {
 	if x != nil {
 		return x.Thumbnails
 	}
@@ -478,7 +540,7 @@ type GetMediaItemRequest struct {
 
 func (x *GetMediaItemRequest) Reset() {
 	*x = GetMediaItemRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[9]
+	mi := &file_grpc_grpc_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -490,7 +552,7 @@ func (x *GetMediaItemRequest) String() string {
 func (*GetMediaItemRequest) ProtoMessage() {}
 
 func (x *GetMediaItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[9]
+	mi := &file_grpc_grpc_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -503,7 +565,7 @@ func (x *GetMediaItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMediaItemRequest.ProtoReflect.Descriptor instead.
 func (*GetMediaItemRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{9}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetMediaItemRequest) GetId() string {
@@ -524,7 +586,7 @@ type MediaItem struct {
 
 func (x *MediaItem) Reset() {
 	*x = MediaItem{}
-	mi := &file_grpc_grpc_proto_msgTypes[10]
+	mi := &file_grpc_grpc_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -536,7 +598,7 @@ func (x *MediaItem) String() string {
 func (*MediaItem) ProtoMessage() {}
 
 func (x *MediaItem) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[10]
+	mi := &file_grpc_grpc_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -549,7 +611,7 @@ func (x *MediaItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MediaItem.ProtoReflect.Descriptor instead.
 func (*MediaItem) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{10}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *MediaItem) GetId() string {
@@ -583,7 +645,7 @@ type GetMediaItemResponse struct {
 
 func (x *GetMediaItemResponse) Reset() {
 	*x = GetMediaItemResponse{}
-	mi := &file_grpc_grpc_proto_msgTypes[11]
+	mi := &file_grpc_grpc_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -595,7 +657,7 @@ func (x *GetMediaItemResponse) String() string {
 func (*GetMediaItemResponse) ProtoMessage() {}
 
 func (x *GetMediaItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[11]
+	mi := &file_grpc_grpc_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -608,7 +670,7 @@ func (x *GetMediaItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMediaItemResponse.ProtoReflect.Descriptor instead.
 func (*GetMediaItemResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{11}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetMediaItemResponse) GetStatus() *Status {
@@ -621,59 +683,6 @@ func (x *GetMediaItemResponse) GetStatus() *Status {
 func (x *GetMediaItemResponse) GetMediaItem() *MediaItem {
 	if x != nil {
 		return x.MediaItem
-	}
-	return nil
-}
-
-type ThumbnailsFromDateResponse_Thumbnail struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// sha256 hash
-	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Content       []byte `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ThumbnailsFromDateResponse_Thumbnail) Reset() {
-	*x = ThumbnailsFromDateResponse_Thumbnail{}
-	mi := &file_grpc_grpc_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ThumbnailsFromDateResponse_Thumbnail) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ThumbnailsFromDateResponse_Thumbnail) ProtoMessage() {}
-
-func (x *ThumbnailsFromDateResponse_Thumbnail) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ThumbnailsFromDateResponse_Thumbnail.ProtoReflect.Descriptor instead.
-func (*ThumbnailsFromDateResponse_Thumbnail) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{8, 0}
-}
-
-func (x *ThumbnailsFromDateResponse_Thumbnail) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *ThumbnailsFromDateResponse_Thumbnail) GetContent() []byte {
-	if x != nil {
-		return x.Content
 	}
 	return nil
 }
@@ -701,18 +710,20 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x11FileDownloadReply\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\fR\acontent\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"O\n" +
-	"\x19ThumbnailsFromDateRequest\x12\x1c\n" +
-	"\ttimestamp\x18\x01 \x01(\tR\ttimestamp\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\rR\x05count\"\xbb\x01\n" +
-	"\x1aThumbnailsFromDateResponse\x12\x1f\n" +
-	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12E\n" +
-	"\n" +
-	"thumbnails\x18\x02 \x03(\v2%.ThumbnailsFromDateResponse.ThumbnailR\n" +
-	"thumbnails\x1a5\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"Y\n" +
 	"\tThumbnail\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\fR\acontent\"%\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent\x12\"\n" +
+	"\fcreationTime\x18\x03 \x01(\tR\fcreationTime\"P\n" +
+	"\x1aThumbnailsTimestampRequest\x12\x1c\n" +
+	"\ttimestamp\x18\x01 \x01(\tR\ttimestamp\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\rR\x05count\"j\n" +
+	"\x1bThumbnailsTimestampResponse\x12\x1f\n" +
+	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12*\n" +
+	"\n" +
+	"thumbnails\x18\x02 \x03(\v2\n" +
+	".ThumbnailR\n" +
+	"thumbnails\"%\n" +
 	"\x13GetMediaItemRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"Y\n" +
 	"\tMediaItem\x12\x0e\n" +
@@ -722,13 +733,13 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x14GetMediaItemResponse\x12\x1f\n" +
 	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12(\n" +
 	"\tmediaItem\x18\x02 \x01(\v2\n" +
-	".MediaItemR\tmediaItem2\xb0\x02\n" +
+	".MediaItemR\tmediaItem2\xb9\x02\n" +
 	"\aGreeter\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
 	"UploadFile\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\x128\n" +
-	"\fDownloadFile\x12\x14.FileDownloadRequest\x1a\x12.FileDownloadReply\x12P\n" +
-	"\x15GetThumbnailsFromDate\x12\x1a.ThumbnailsFromDateRequest\x1a\x1b.ThumbnailsFromDateResponse\x12;\n" +
+	"\fDownloadFile\x12\x14.FileDownloadRequest\x1a\x12.FileDownloadReply\x12Y\n" +
+	"\x1cGetThumbnailsBeforeTimestamp\x12\x1b.ThumbnailsTimestampRequest\x1a\x1c.ThumbnailsTimestampResponse\x12;\n" +
 	"\fGetMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponseB,\n" +
 	"\x13xyz.jdubiel.migawkaP\x01Z\x13migawka-server/grpcb\x06proto3"
 
@@ -746,35 +757,35 @@ func file_grpc_grpc_proto_rawDescGZIP() []byte {
 
 var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_grpc_grpc_proto_goTypes = []any{
-	(*Status)(nil),                               // 0: Status
-	(*HelloRequest)(nil),                         // 1: HelloRequest
-	(*HelloReply)(nil),                           // 2: HelloReply
-	(*FileUploadRequest)(nil),                    // 3: FileUploadRequest
-	(*FileUploadReply)(nil),                      // 4: FileUploadReply
-	(*FileDownloadRequest)(nil),                  // 5: FileDownloadRequest
-	(*FileDownloadReply)(nil),                    // 6: FileDownloadReply
-	(*ThumbnailsFromDateRequest)(nil),            // 7: ThumbnailsFromDateRequest
-	(*ThumbnailsFromDateResponse)(nil),           // 8: ThumbnailsFromDateResponse
-	(*GetMediaItemRequest)(nil),                  // 9: GetMediaItemRequest
-	(*MediaItem)(nil),                            // 10: MediaItem
-	(*GetMediaItemResponse)(nil),                 // 11: GetMediaItemResponse
-	(*ThumbnailsFromDateResponse_Thumbnail)(nil), // 12: ThumbnailsFromDateResponse.Thumbnail
+	(*Status)(nil),                      // 0: Status
+	(*HelloRequest)(nil),                // 1: HelloRequest
+	(*HelloReply)(nil),                  // 2: HelloReply
+	(*FileUploadRequest)(nil),           // 3: FileUploadRequest
+	(*FileUploadReply)(nil),             // 4: FileUploadReply
+	(*FileDownloadRequest)(nil),         // 5: FileDownloadRequest
+	(*FileDownloadReply)(nil),           // 6: FileDownloadReply
+	(*Thumbnail)(nil),                   // 7: Thumbnail
+	(*ThumbnailsTimestampRequest)(nil),  // 8: ThumbnailsTimestampRequest
+	(*ThumbnailsTimestampResponse)(nil), // 9: ThumbnailsTimestampResponse
+	(*GetMediaItemRequest)(nil),         // 10: GetMediaItemRequest
+	(*MediaItem)(nil),                   // 11: MediaItem
+	(*GetMediaItemResponse)(nil),        // 12: GetMediaItemResponse
 }
 var file_grpc_grpc_proto_depIdxs = []int32{
-	0,  // 0: ThumbnailsFromDateResponse.status:type_name -> Status
-	12, // 1: ThumbnailsFromDateResponse.thumbnails:type_name -> ThumbnailsFromDateResponse.Thumbnail
+	0,  // 0: ThumbnailsTimestampResponse.status:type_name -> Status
+	7,  // 1: ThumbnailsTimestampResponse.thumbnails:type_name -> Thumbnail
 	0,  // 2: GetMediaItemResponse.status:type_name -> Status
-	10, // 3: GetMediaItemResponse.mediaItem:type_name -> MediaItem
+	11, // 3: GetMediaItemResponse.mediaItem:type_name -> MediaItem
 	1,  // 4: Greeter.SayHello:input_type -> HelloRequest
 	3,  // 5: Greeter.UploadFile:input_type -> FileUploadRequest
 	5,  // 6: Greeter.DownloadFile:input_type -> FileDownloadRequest
-	7,  // 7: Greeter.GetThumbnailsFromDate:input_type -> ThumbnailsFromDateRequest
-	9,  // 8: Greeter.GetMediaItem:input_type -> GetMediaItemRequest
+	8,  // 7: Greeter.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
+	10, // 8: Greeter.GetMediaItem:input_type -> GetMediaItemRequest
 	2,  // 9: Greeter.SayHello:output_type -> HelloReply
 	4,  // 10: Greeter.UploadFile:output_type -> FileUploadReply
 	6,  // 11: Greeter.DownloadFile:output_type -> FileDownloadReply
-	8,  // 12: Greeter.GetThumbnailsFromDate:output_type -> ThumbnailsFromDateResponse
-	11, // 13: Greeter.GetMediaItem:output_type -> GetMediaItemResponse
+	9,  // 12: Greeter.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
+	12, // 13: Greeter.GetMediaItem:output_type -> GetMediaItemResponse
 	9,  // [9:14] is the sub-list for method output_type
 	4,  // [4:9] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name

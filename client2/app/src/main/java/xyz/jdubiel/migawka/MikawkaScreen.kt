@@ -2,7 +2,9 @@ package xyz.jdubiel.migawka
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
@@ -83,35 +85,75 @@ fun Migawka(
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier) {
-        Button(onClick = { onSettingsButtonClick() }) {
-            Text(text = stringResource(R.string.settings))
-        }
-        Button(onClick = {
-            val serverAddress = "192.168.5.158"
-            Log.d("serverAddress", serverAddress)
-            val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
-                .usePlaintext()
-                .build()
-
-            val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
-
-            coroutineScope.launch {
-                try {
-                    val request = FileDownloadRequest.newBuilder()
-                        .setFilename("test.jpg")
-                        .build()
-
-                    val response = stub.downloadFile(request)
-
-                    // Update the UI with the response on the main thread
-                    Log.i("gRPC", "Response: ${response.filename} ${response.message} ${response.content}")
-
-                } catch (e: Exception) {
-                    Log.e("gRPC", "Error: ${e.message}", e)
-                }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { onSettingsButtonClick() }) {
+                Text(text = stringResource(R.string.settings))
             }
-        } ) {
-            Text(text = "Download")
+            Button(onClick = {
+                val serverAddress = "192.168.5.158"
+                Log.d("serverAddress", serverAddress)
+                val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+                    .usePlaintext()
+                    .build()
+
+                val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+
+                coroutineScope.launch {
+                    try {
+                        val request = FileDownloadRequest.newBuilder()
+                            .setFilename("test.jpg")
+                            .build()
+
+                        val response = stub.downloadFile(request)
+
+                        // Update the UI with the response on the main thread
+                        Log.i(
+                            "gRPC",
+                            "Response: ${response.filename} ${response.message} ${response.content}"
+                        )
+
+                    } catch (e: Exception) {
+                        Log.e("gRPC", "Error: ${e.message}", e)
+                    }
+                }
+            }) {
+                Text(text = "Download")
+            }
+            Button(onClick = {
+                val serverAddress = "192.168.5.158"
+                Log.d("serverAddress", serverAddress)
+                val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+                    .usePlaintext()
+                    .build()
+
+                val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+
+                coroutineScope.launch {
+                    try {
+                        val request = ThumbnailsTimestampRequest.newBuilder()
+                            .setTimestamp("2026-01-01T00:00:00Z")
+                            .setCount(10)
+                            .build()
+
+                        val response = stub.getThumbnailsBeforeTimestamp(request)
+
+                        // Update the UI with the response on the main thread
+                        Log.i(
+                            "gRPC",
+                            "Response: ${response.status}"
+                        )
+
+                        response.thumbnailsList.forEach({
+                            Log.i("gRPC", "Thumbnail: ${it.creationTime} ${it.id}")
+                        })
+
+                    } catch (e: Exception) {
+                        Log.e("gRPC", "Error: ${e.message}", e)
+                    }
+                }
+            }) {
+                Text(text = "Get thumbnails")
+            }
         }
         GalleryPermissionWrapper(
             viewModel = viewModel,

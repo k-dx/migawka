@@ -60,18 +60,18 @@ func (s *server) DownloadFile(_ context.Context, in *pb.FileDownloadRequest) (*p
 	return &pb.FileDownloadReply{Message: "File " + in.GetFilename() + " downloaded successfully", Content: file}, nil
 }
 
-func (s *server) GetThumbnailsFromDate(_ context.Context, in *pb.ThumbnailsFromDateRequest) (*pb.ThumbnailsFromDateResponse, error) {
+func (s *server) GetThumbnailsBeforeTimestamp(_ context.Context, in *pb.ThumbnailsTimestampRequest) (*pb.ThumbnailsTimestampResponse, error) {
 	log.Info().
 		Str("Timestamp", in.GetTimestamp()).
 		Uint32("Count", in.GetCount()).
-		Msgf("GetThumbnailsFromDate")
+		Msgf("GetThumbnailsBeforeTimestamp")
 
 	// parse timestamp
 	timestamp := in.GetTimestamp()
 	parsedTimestamp, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		log.Error().Err(err).Str("timestamp", timestamp).Msg("Invalid timestamp format")
-		return &pb.ThumbnailsFromDateResponse{
+		return &pb.ThumbnailsTimestampResponse{
 			Status: &pb.Status{
 				Code:    400,
 				Message: "Invalid timestamp format. Expected format ISO 8601: YYYY-MM-DDTHH:MM:SSZ",
@@ -80,10 +80,10 @@ func (s *server) GetThumbnailsFromDate(_ context.Context, in *pb.ThumbnailsFromD
 	}
 
 	// retrieve thumbnails from media store
-	thumbnails, err := s.mediaStore.GetThumbnailsFromDate(parsedTimestamp, uint(in.GetCount()))
+	thumbnails, err := s.mediaStore.GetThumbnailsBeforeTimestamp(parsedTimestamp, uint(in.GetCount()))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get thumbnails from media store")
-		return &pb.ThumbnailsFromDateResponse{
+		return &pb.ThumbnailsTimestampResponse{
 			Status: &pb.Status{
 				Code:    500,
 				Message: "Failed to get thumbnails from media store",
@@ -92,14 +92,15 @@ func (s *server) GetThumbnailsFromDate(_ context.Context, in *pb.ThumbnailsFromD
 	}
 
 	// convert to gRPC thumbnails type
-	var pbThumbnails []*pb.ThumbnailsFromDateResponse_Thumbnail
+	var pbThumbnails []*pb.Thumbnail
 	for _, thumbnail := range thumbnails {
-		pbThumbnails = append(pbThumbnails, &pb.ThumbnailsFromDateResponse_Thumbnail{
-			Id:      thumbnail.ID.String(),
-			Content: thumbnail.Content,
+		pbThumbnails = append(pbThumbnails, &pb.Thumbnail{
+			Id:           thumbnail.ID.String(),
+			CreationTime: thumbnail.CreationTime.Format(time.RFC3339),
+			Content:      thumbnail.Content,
 		})
 	}
-	return &pb.ThumbnailsFromDateResponse{Thumbnails: pbThumbnails}, nil
+	return &pb.ThumbnailsTimestampResponse{Thumbnails: pbThumbnails}, nil
 }
 
 func (s *server) GetMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*pb.GetMediaItemResponse, error) {

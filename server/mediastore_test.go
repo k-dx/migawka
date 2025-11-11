@@ -72,7 +72,7 @@ func TestMediaStore_loadMediaItems_shouldGenerateThumbnails(t *testing.T) {
 	}
 
 	expectedThumbnailsCount := 2
-	thumbnails, err := mediaStore.GetThumbnailsFromDate(time.Time{}, 10)
+	thumbnails, err := mediaStore.GetThumbnailsBeforeTimestamp(time.Time{}, 10)
 	if err != nil {
 		t.Fatalf("Failed to get thumbnails: %v", err)
 	}
@@ -124,13 +124,40 @@ func TestMediaStore_loadMediaItems_shouldHandleExistingThumbnails(t *testing.T) 
 	}
 
 	expectedThumbnailsCount := 2
-	thumbnails, err := mediaStore.GetThumbnailsFromDate(time.Time{}, 10)
+	thumbnails, err := mediaStore.GetThumbnailsBeforeTimestamp(time.Time{}, 10)
 	if err != nil {
 		t.Fatalf("Failed to get thumbnails: %v", err)
 	}
 	got := len(thumbnails)
 	if got != expectedThumbnailsCount {
 		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	}
+}
+
+func TestMediaStore_GetThumbanilsBeforeTimestamp(t *testing.T) {
+	copyDir(t, "./tests/test2", "./test")
+	t.Cleanup(func() {
+		os.RemoveAll("./test")
+	})
+
+	mediaStore, err := NewMediaStore("./test")
+	if err != nil {
+		t.Fatalf("Failed to create media store: %v", err)
+	}
+
+	thumbnails, err := mediaStore.GetThumbnailsBeforeTimestamp(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC), 10)
+	if err != nil {
+		t.Fatalf("Failed to get thumbnails: %v", err)
+	}
+
+	got := len(thumbnails)
+	expectedThumbnailsCount := 2
+	if got != expectedThumbnailsCount {
+		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	}
+
+	if thumbnails[0].CreationTime.Before(thumbnails[1].CreationTime) {
+		t.Fatalf("Thumbnails are not sorted by creation time descending")
 	}
 }
 
