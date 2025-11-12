@@ -32,7 +32,7 @@ fun SingleMediaViewScreen(
 
     val images = viewModel.imageStream.collectAsLazyPagingItems()
 
-    val initialPage = images.itemSnapshotList.items.indexOf(initialImageUri)
+    val initialPage = images.itemSnapshotList.items.indexOfFirst{ initialImageUri == it.contentUri }
 
     val pagerState = rememberPagerState(
         initialPage = if (initialPage != -1) initialPage else 0,
@@ -54,7 +54,7 @@ fun SingleMediaViewScreen(
             state = pagerState,
             modifier = Modifier.weight(1f)
         ) { pageIndex ->
-            val imageUri = images[pageIndex]
+            val imageUri: Uri? = images[pageIndex]?.contentUri
             if (imageUri != null) {
                 AsyncImage(
                     model = imageUri,

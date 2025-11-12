@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,13 @@ fun ImageGalleryScreen(
     modifier: Modifier = Modifier,
     viewModel: ImageGalleryViewModel = viewModel()
 ) {
+    // This is an extension function from the androidx.paging:paging-compose
+    // library. Its job is to collect the PagingData from the imageStream and
+    // convert it into a LazyPagingItems<Uri> object. This object is what
+    // connects the Paging library's data loading mechanism with Jetpack
+    // Compose's lazy layouts.
     val images = viewModel.imageStream.collectAsLazyPagingItems()
+    Log.d(TAG, "images.itemCount = ${images.itemCount}")
 
     ImageGrid(
         images = images,
@@ -43,7 +50,7 @@ fun ImageGalleryScreen(
 
 @Composable
 fun ImageGrid(
-    images: LazyPagingItems<Uri>,
+    images: LazyPagingItems<PagedImage>,
     onImageClick: (Uri) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -55,7 +62,7 @@ fun ImageGrid(
         contentPadding = PaddingValues(4.dp)
     ) {
         items(images.itemCount) { index ->
-            val imageUri = images[index]
+            val imageUri: Uri? = images[index]?.contentUri
             if (imageUri != null) {
                 AsyncImage(
                     model = imageUri,

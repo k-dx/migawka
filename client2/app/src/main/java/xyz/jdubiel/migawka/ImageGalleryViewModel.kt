@@ -11,6 +11,10 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
 
     private val imageRepository = ImageRepository(application.contentResolver)
 
-    val imageStream: Flow<PagingData<android.net.Uri>> = imageRepository.getImageStream()
+    // This is a Flow of PagingData<Uri>> provided by ImageGalleryViewModel. The
+    // Paging library is responsible for creating this stream, fetching data
+    // from data source (like the device's local storage) in small chunks called
+    // pages.
+    val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
         .cachedIn(viewModelScope)
 }
