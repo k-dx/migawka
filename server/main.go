@@ -96,7 +96,7 @@ func (s *server) GetThumbnailsBeforeTimestamp(_ context.Context, in *pb.Thumbnai
 	for _, thumbnail := range thumbnails {
 		pbThumbnails = append(pbThumbnails, &pb.Thumbnail{
 			Id:           thumbnail.ID.String(),
-			CreationTime: thumbnail.CreationTime.Format(time.RFC3339),
+			CreationTime: thumbnail.CreationTime.UTC().Format(time.RFC3339),
 			Content:      thumbnail.Content,
 		})
 	}
@@ -135,7 +135,7 @@ func (s *server) GetMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*p
 	// convert to gRPC media item type
 	pbMediaItem := &pb.MediaItem{
 		Id:           mediaItem.ID.String(),
-		CreationTime: mediaItem.CreationTime.Format(time.RFC3339),
+		CreationTime: mediaItem.CreationTime.UTC().Format(time.RFC3339),
 		Content:      mediaItem.Content,
 	}
 

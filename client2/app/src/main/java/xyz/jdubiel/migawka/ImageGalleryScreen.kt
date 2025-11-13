@@ -1,7 +1,10 @@
 package xyz.jdubiel.migawka
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +18,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +31,8 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
@@ -48,6 +56,40 @@ fun ImageGalleryScreen(
     )
 }
 
+
+
+// TODO: consider changing this to Coil library
+@Composable
+fun JpgFromBytes(jpgBytes: ByteArray, modifier: Modifier = Modifier) {
+    Log.d(TAG, "JpgFromBytes, jpgBytes.size = ${jpgBytes.size}, jpgBytes = $jpgBytes")
+
+//    val bitmap = remember(jpgBytes) {
+//        BitmapFactory.decodeByteArray(jpgBytes, 0, jpgBytes.size)
+//    }
+//    if (bitmap != null) {
+//        Image(
+//            bitmap = bitmap.asImageBitmap(),
+//            contentDescription = null,
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    }
+
+    val bitmap by produceState<Bitmap?>(initialValue = null, jpgBytes) {
+        value = withContext(Dispatchers.IO) {
+            BitmapFactory.decodeByteArray(jpgBytes, 0, jpgBytes.size)
+        }
+    }
+    bitmap?.let {
+        Image(
+            bitmap = it.asImageBitmap(),
+            contentDescription = null,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
 @Composable
 fun ImageGrid(
     images: LazyPagingItems<PagedImage>,
@@ -62,18 +104,32 @@ fun ImageGrid(
         contentPadding = PaddingValues(4.dp)
     ) {
         items(images.itemCount) { index ->
-            val imageUri: Uri? = images[index]?.contentUri
-            if (imageUri != null) {
-                AsyncImage(
-                    model = imageUri,
-                    contentDescription = "Gallery Image",
-                    modifier = Modifier
+            val image = images[index]
+
+            when (image) {
+                is PagedImage.FromUri -> {
+                    val imageUri = image.contentUri
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Gallery Image",
+                        modifier = Modifier
+                            .aspectRatio(1f) // Make it square
+                            .fillMaxWidth()
+                            .clickable { onImageClick(imageUri) },
+                        contentScale = ContentScale.Crop // Crop to fill the square
+                    )
+                }
+                is PagedImage.FromBytes -> {
+                    JpgFromBytes(image.bytes, modifier = Modifier
                         .aspectRatio(1f) // Make it square
                         .fillMaxWidth()
-                        .clickable { onImageClick(imageUri) },
-                    contentScale = ContentScale.Crop // Crop to fill the square
-                )
+                    )
+                }
+                null -> {
+                    Log.e(TAG, "ImageGrid: images[$index] == null")
+                }
             }
+
         }
     }
 
