@@ -92,14 +92,17 @@ class ImagePagingSource(
                     "Response: ${response.status}"
                 )
 
-                response.thumbnailsList.forEach({
+                response.thumbnailsList.forEach {
                     val date = Instant.parse(it.creationTime)
                     Log.i("gRPC", "Thumbnail: ${it.creationTime} $date ${it.id}")
 
-                    remoteImages.add(PagedImage.FromBytes(
-                        it.content.toByteArray(),
-                        date))
-                })
+                    remoteImages.add(
+                        PagedImage.FromBytes(
+                            it.content.toByteArray(),
+                            date
+                        )
+                    )
+                }
 
             } catch (e: Exception) {
                 Log.e("gRPC", "Error: ${e.message}", e)

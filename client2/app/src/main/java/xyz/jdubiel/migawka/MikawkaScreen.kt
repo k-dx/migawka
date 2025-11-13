@@ -70,7 +70,9 @@ fun MigawkaApp(
                 arguments = listOf(navArgument(initialImageUriArg) { type = NavType.StringType })
             ) { backStackEntry ->
                 // Extract the index argument
-                val initialImageUri = backStackEntry.arguments?.getString(initialImageUriArg)?.let { it.toUri() }
+                val initialImageUri = backStackEntry.arguments
+                    ?.getString(initialImageUriArg)
+                    ?.toUri()
                 if (initialImageUri != null) {
                     SingleMediaViewScreen(
                         viewModel = imageGalleryViewModel,
@@ -150,9 +152,9 @@ fun Migawka(
                             "Response: ${response.status}"
                         )
 
-                        response.thumbnailsList.forEach({
+                        response.thumbnailsList.forEach {
                             Log.i("gRPC", "Thumbnail: ${it.creationTime} ${it.id}")
-                        })
+                        }
 
                     } catch (e: Exception) {
                         Log.e("gRPC", "Error: ${e.message}", e)

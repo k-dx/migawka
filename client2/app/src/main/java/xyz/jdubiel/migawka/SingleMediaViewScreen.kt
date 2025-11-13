@@ -13,7 +13,7 @@ fun SingleMediaViewScreen(
 ) {
     Text("SingleMediaViewScreen")
 
-    // TODO: change this to accomodate for remote images
+    // TODO: change this to accommodate for remote images
 
 //    val coroutineScope = rememberCoroutineScope()
 //

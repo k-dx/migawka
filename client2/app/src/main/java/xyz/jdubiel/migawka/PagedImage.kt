@@ -16,5 +16,17 @@ sealed class PagedImage {
         // TODO: add id (sha256)
         val bytes: ByteArray,
         override val date: Instant
-    ) : PagedImage()
+    ) : PagedImage() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is FromBytes) return false
+            return date == other.date && bytes.contentEquals(other.bytes)
+        }
+
+        override fun hashCode(): Int {
+            var result = date.hashCode()
+            result = 31 * result + bytes.contentHashCode()
+            return result
+        }
+    }
 }
