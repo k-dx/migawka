@@ -3,23 +3,13 @@ package xyz.jdubiel.migawka
 import android.net.Uri
 import java.time.Instant
 
-// @JvmInline Marks the class as an inline/value class. On the JVM it lets the
-// compiler avoid allocating a wrapper object in many cases, treating instances
-// as the underlying representation (here ByteArray) where possible — lower
-// overhead while keeping a distinct type at the source level.
-
-// `value class Sha256` Declares a value (inline) class named Sha256. This
-// provides a distinct, type-safe wrapper around an underlying value while
-// aiming for minimal runtime cost.
-
 // `private constructor` Makes the primary constructor private so callers cannot
 // instantiate Sha256 directly with arbitrary arrays.
 
 // `private val bytes: ByteArray` Stores the underlying bytes in a private
 // property bytes. Keeping it private prevents external code from mutating or
 // replacing the internal array reference directly
-@JvmInline
-value class Sha256 private constructor(private val bytes: ByteArray) {
+class Sha256 private constructor(private val bytes: ByteArray) {
     // `companion object` Provides factory functions and helpers associated with
     // Sha256. Because the primary constructor is private, this is the intended
     // public surface for creating instances.
@@ -33,6 +23,15 @@ value class Sha256 private constructor(private val bytes: ByteArray) {
 
     fun bytes(): ByteArray = bytes.copyOf()
     fun toHex(): String = bytes.joinToString("") { "%02x".format(it) }
+
+    // Because we are using ByteArray, default equals will not work as it compares
+    // references. We must override and compare contents instead.
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Sha256) return false
+
+        return bytes.contentEquals(other.bytes)
+    }
 }
 
 

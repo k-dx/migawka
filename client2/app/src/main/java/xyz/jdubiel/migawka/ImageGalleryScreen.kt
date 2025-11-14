@@ -60,7 +60,7 @@ fun ImageGalleryScreen(
 // TODO: consider changing this to Coil library
 @Composable
 fun JpgFromBytes(jpgBytes: ByteArray, modifier: Modifier = Modifier) {
-    Log.d(TAG, "JpgFromBytes, jpgBytes.size = ${jpgBytes.size}, jpgBytes = $jpgBytes")
+//    Log.d(TAG, "JpgFromBytes, jpgBytes.size = ${jpgBytes.size}, jpgBytes = $jpgBytes")
 
 //    val bitmap = remember(jpgBytes) {
 //        BitmapFactory.decodeByteArray(jpgBytes, 0, jpgBytes.size)
