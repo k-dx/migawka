@@ -22,7 +22,7 @@ class ImagePagingSource(
             // TODO: query local and remote simultaneously
             // query the local MediaStoreAPI
             val localImagesResult = localImageProvider.getImages(pageSize, key)
-            val localImages = localImagesResult.map { PagedImage.FromUri(it.contentUri, it.date) }
+            val localImages = localImagesResult.map { PagedImage.FromUri(it.sha256, it.contentUri, it.date) }
 
 
             val remoteImages = mutableListOf<PagedImage>()

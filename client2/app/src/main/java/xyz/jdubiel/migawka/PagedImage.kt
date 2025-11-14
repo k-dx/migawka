@@ -40,7 +40,7 @@ sealed class PagedImage {
     abstract val date: Instant
 
     data class FromUri(
-        // TODO: add id (sha256)
+        val id: Sha256,
         val contentUri: Uri,
         override val date: Instant
     ) : PagedImage()
