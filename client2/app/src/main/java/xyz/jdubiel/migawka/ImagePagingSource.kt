@@ -1,8 +1,5 @@
 package xyz.jdubiel.migawka
 
-import android.content.ContentResolver
-import android.content.ContentUris
-import android.provider.MediaStore
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
@@ -10,7 +7,7 @@ import io.grpc.ManagedChannelBuilder
 import java.time.Instant
 
 class ImagePagingSource(
-    private val contentResolver: ContentResolver
+    private val localImageProvider: LocalImageProvider
 ) : PagingSource<Instant, PagedImage>() {
 
     // loads the next combined page of photos from local and remote storage
@@ -21,48 +18,11 @@ class ImagePagingSource(
         return try {
             val key = params.key
             val pageSize = params.loadSize
-            val localImages = mutableListOf<PagedImage>()
 
             // TODO: query local and remote simultaneously
             // query the local MediaStoreAPI
-            contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED),
-                null,
-                null,
-                "${MediaStore.Images.Media.DATE_ADDED} DESC" // TODO: use EXIF data if possible
-            )?.use { cursor ->
-                // cursor is positioned _before_ the first row
-
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-
-                if (key != null) {
-                    // TODO: optimize this
-                    // Find the first image with a date <= key.date
-                    // This is not very efficient, but MediaStore API doesn't seem to offer
-                    // a better way to jump to a specific position based on a value.
-                    // A possible optimization is to use a selection argument, but that would
-                    // require more complex logic to handle paging.
-                    while (cursor.moveToNext()) {
-                        val date = Instant.ofEpochSecond(cursor.getLong(dateColumn))
-                        if (date < key) {
-                            cursor.moveToPrevious() // Move back to start processing from this item
-                            break
-                        }
-                    }
-                }
-
-                // cursor is positioned _before_ the first element that interests us
-
-                while (cursor.moveToNext() && localImages.size < pageSize) {
-                    val id = cursor.getLong(idColumn)
-                    val date = Instant.ofEpochSecond(cursor.getLong(dateColumn))
-                    val contentUri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                    localImages.add(PagedImage.FromUri(contentUri, date))
-                }
-            }
+            val localImagesResult = localImageProvider.getImages(pageSize, key)
+            val localImages = localImagesResult.map { PagedImage.FromUri(it.contentUri, it.date) }
 
 
             val remoteImages = mutableListOf<PagedImage>()
