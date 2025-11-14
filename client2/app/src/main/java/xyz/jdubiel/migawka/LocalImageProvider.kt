@@ -21,5 +21,7 @@ interface LocalImageProvider {
      */
     suspend fun getImages(limit: Int, imagesBefore: Instant?): List<LocalImage>
 
-    // TODO: add getThumbnailsBeforeTimestamp
+    suspend fun getImage(id: Sha256): LocalImage
+
+    // TODO: add getThumbnailsBeforeTimestamp, use Android's thumbnails for this?
 }

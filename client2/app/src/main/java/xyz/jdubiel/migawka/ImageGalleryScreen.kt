@@ -2,7 +2,6 @@ package xyz.jdubiel.migawka
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -37,7 +36,7 @@ import kotlinx.coroutines.withContext
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
 fun ImageGalleryScreen(
-    onImageClick: (Uri) -> Unit,
+    onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ImageGalleryViewModel = viewModel()
 ) {
@@ -93,7 +92,7 @@ fun JpgFromBytes(jpgBytes: ByteArray, modifier: Modifier = Modifier) {
 @Composable
 fun ImageGrid(
     images: LazyPagingItems<PagedImage>,
-    onImageClick: (Uri) -> Unit,
+    onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -109,20 +108,23 @@ fun ImageGrid(
             when (image) {
                 is PagedImage.FromUri -> {
                     val imageUri = image.contentUri
+                    val imageId = image.id
                     AsyncImage(
                         model = imageUri,
                         contentDescription = "Gallery Image",
                         modifier = Modifier
                             .aspectRatio(1f) // Make it square
                             .fillMaxWidth()
-                            .clickable { onImageClick(imageUri) },
+                            .clickable { onImageClick(imageId.toHex()) },
                         contentScale = ContentScale.Crop // Crop to fill the square
                     )
                 }
                 is PagedImage.FromBytes -> {
+                    val imageId = image.id
                     JpgFromBytes(image.bytes, modifier = Modifier
                         .aspectRatio(1f) // Make it square
                         .fillMaxWidth()
+                        .clickable { onImageClick(imageId.toHex()) }
                     )
                 }
                 null -> {

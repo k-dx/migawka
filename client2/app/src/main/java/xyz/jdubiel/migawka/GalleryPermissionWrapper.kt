@@ -25,7 +25,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 @Composable
 fun GalleryPermissionWrapper(
     viewModel: ImageGalleryViewModel,
-    onImageClick: (Uri) -> Unit
+    onImageClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as Activity

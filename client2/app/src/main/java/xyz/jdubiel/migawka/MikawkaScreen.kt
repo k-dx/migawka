@@ -1,6 +1,5 @@
 package xyz.jdubiel.migawka
 
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +14,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,8 +24,6 @@ import androidx.navigation.navArgument
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 enum class MigawkaScreen {
     Second,
@@ -42,7 +38,7 @@ fun MigawkaApp(
     imageGalleryViewModel: ImageGalleryViewModel = viewModel()
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        val initialImageUriArg = "initialImageUri"
+        val initialImageIdArg = "initialImageId"
 
         NavHost(
             navController = navController,
@@ -53,10 +49,9 @@ fun MigawkaApp(
                 Migawka(
                     onSettingsButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
                     viewModel = imageGalleryViewModel,
-                    onImageClick = { imageUri ->
-                        Log.d(TAG, "onImageClick, imageUri = $imageUri")
-                        val encodedUri = URLEncoder.encode(imageUri.toString(), StandardCharsets.UTF_8.toString())
-                        navController.navigate("${MigawkaScreen.SingleMediaView.name}/$encodedUri")
+                    onImageClick = { imageId: String ->
+                        Log.d(TAG, "onImageClick, imageId = $imageId")
+                        navController.navigate("${MigawkaScreen.SingleMediaView.name}/$imageId")
                     }
                 )
             }
@@ -66,18 +61,19 @@ fun MigawkaApp(
             }
 
             composable(
-                route = "${MigawkaScreen.SingleMediaView.name}/{$initialImageUriArg}",
-                arguments = listOf(navArgument(initialImageUriArg) { type = NavType.StringType })
+                route = "${MigawkaScreen.SingleMediaView.name}/{$initialImageIdArg}",
+                arguments = listOf(navArgument(initialImageIdArg) { type = NavType.StringType })
             ) { backStackEntry ->
-                // Extract the index argument
-                val initialImageUri = backStackEntry.arguments
-                    ?.getString(initialImageUriArg)
-                    ?.toUri()
-                if (initialImageUri != null) {
+                val initialImageId = backStackEntry.arguments
+                    ?.getString(initialImageIdArg)
+                if (initialImageId != null) {
                     SingleMediaViewScreen(
                         viewModel = imageGalleryViewModel,
-                        initialImageUri = initialImageUri
+                        initialImageId = Sha256.fromHex(initialImageId)
                     )
+                } else {
+                    Log.e("SingleMediaViewScreen", "initialImageId is null")
+                    Text("Error: initialImageId is null. The image could not be displayed.")
                 }
             }
         }
@@ -87,7 +83,7 @@ fun MigawkaApp(
 @Composable
 fun Migawka(
     viewModel: ImageGalleryViewModel,
-    onImageClick: (Uri) -> Unit,
+    onImageClick: (String) -> Unit,
     onSettingsButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {

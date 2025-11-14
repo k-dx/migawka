@@ -1,17 +1,58 @@
 package xyz.jdubiel.migawka
 
-import android.net.Uri
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import coil3.compose.AsyncImage
 
 @Composable
 fun SingleMediaViewScreen(
     viewModel: ImageGalleryViewModel,
-    initialImageUri: Uri,
+    initialImageId: Sha256,
     modifier: Modifier = Modifier
 ) {
-    Text("SingleMediaViewScreen")
+    // 1. Trigger the data load when the screen is first composed
+    LaunchedEffect(initialImageId) {
+        viewModel.loadImageById(initialImageId)
+    }
+
+    // 2. Collect the state from the ViewModel
+    val imageDetails by viewModel.selectedImage.collectAsState()
+
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        // 3. Display loading, error, or image based on the state
+        if (imageDetails == null) {
+            // You might want a more nuanced check for loading vs. error
+            CircularProgressIndicator()
+        } else {
+            AsyncImage(
+                model = imageDetails!!.contentUri,
+                contentDescription = "Full-screen image",
+                modifier = Modifier
+            )
+            // You can also display other info like the SHA256 hash
+            Text(text = "SHA256: ${imageDetails!!.sha256.toHex()}")
+            Row() {
+                Button(onClick = {}) {
+                    Text("Previous")
+                }
+                Button(onClick = {}) {
+                    Text("Next")
+                }
+            }
+        }
+    }
+
 
     // TODO: change this to accommodate for remote images
 
