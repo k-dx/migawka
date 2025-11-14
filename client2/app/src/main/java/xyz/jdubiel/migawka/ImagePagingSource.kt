@@ -3,11 +3,11 @@ package xyz.jdubiel.migawka
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import io.grpc.ManagedChannelBuilder
 import java.time.Instant
 
 class ImagePagingSource(
-    private val localImageProvider: LocalImageProvider
+    private val localImageProvider: LocalImageProvider,
+    private val remoteImageProvider: RemoteImageProvider
 ) : PagingSource<Instant, PagedImage>() {
 
     // loads the next combined page of photos from local and remote storage
@@ -24,50 +24,12 @@ class ImagePagingSource(
             val localImagesResult = localImageProvider.getImages(pageSize, key)
             val localImages = localImagesResult.map { PagedImage.FromUri(it.sha256, it.contentUri, it.date) }
 
+            // query the remote API
+            val dateForRequest = key ?: Instant.now()
+            Log.d(TAG, "dateForRequest is `${dateForRequest}`")
+            val remoteImagesResult = remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
+            val remoteImages = remoteImagesResult.map { PagedImage.FromBytes(id = it.sha256, bytes = it.bytes, date = it.date) }
 
-            val remoteImages = mutableListOf<PagedImage>()
-
-            // TODO: query the remote server
-            val serverAddress = "192.168.5.158"
-            // TODO: channel should be reused probably
-            val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
-                .usePlaintext() // TODO: don't use plaintext!
-                .build()
-
-            val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
-
-            try {
-                val dateForRequest = key?.toString() ?: Instant.now().toString()
-                Log.d(TAG, "dateForRequest is `${dateForRequest}`")
-                val request = ThumbnailsTimestampRequest.newBuilder()
-                    .setTimestamp(dateForRequest)
-                    .setCount(pageSize)
-                    .build()
-
-                val response = stub.getThumbnailsBeforeTimestamp(request)
-
-                // Update the UI with the response on the main thread
-                Log.i(
-                    "gRPC",
-                    "Response: ${response.status}"
-                )
-
-                response.thumbnailsList.forEach {
-                    val date = Instant.parse(it.creationTime)
-                    Log.i("gRPC", "Thumbnail: ${it.creationTime} $date ${it.id}")
-
-                    remoteImages.add(
-                        PagedImage.FromBytes(
-                            Sha256.fromHex(it.id),
-                            it.content.toByteArray(),
-                            date
-                        )
-                    )
-                }
-
-            } catch (e: Exception) {
-                Log.e("gRPC", "Error: ${e.message}", e)
-            }
 
             // combine local and remote results
             val combinedImages = mutableListOf<PagedImage>()

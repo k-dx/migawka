@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 class ImageRepository(private val contentResolver: ContentResolver) {
     private val localImageProvider: LocalImageProvider = MediaStoreImageProvider(contentResolver)
+    private val remoteImageProvider = RemoteImageProvider()
 
     suspend fun getImage(id: Sha256): LocalImage {
         Log.d(TAG, "imageRepository, getImage")
@@ -20,6 +21,6 @@ class ImageRepository(private val contentResolver: ContentResolver) {
             pageSize = 30,
             enablePlaceholders = false
         ),
-        pagingSourceFactory = { ImagePagingSource(localImageProvider) }
+        pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
     ).flow
 }
