@@ -98,6 +98,7 @@ class ImagePagingSource(
 
                     remoteImages.add(
                         PagedImage.FromBytes(
+                            Sha256.fromHex(it.id),
                             it.content.toByteArray(),
                             date
                         )
