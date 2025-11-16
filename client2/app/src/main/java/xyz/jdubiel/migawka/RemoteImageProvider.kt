@@ -6,7 +6,7 @@ import io.grpc.ManagedChannelBuilder
 import java.time.Instant
 
 data class RemoteImage(
-    val bytes: ByteArray,
+    var bytes: ByteArray,
     val date: Instant,
     val sha256: Sha256
 )

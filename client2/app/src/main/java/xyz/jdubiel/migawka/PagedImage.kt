@@ -47,6 +47,7 @@ sealed class PagedImage {
     data class FromBytes(
         val id: Sha256,
         val bytes: ByteArray,
+        val fullBytes: ByteArray? = null,
         override val date: Instant
     ) : PagedImage() {
         override fun equals(other: Any?): Boolean {

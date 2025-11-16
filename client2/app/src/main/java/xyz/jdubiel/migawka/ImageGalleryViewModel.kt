@@ -5,7 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -17,4 +19,9 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
     // pages.
     val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
         .cachedIn(viewModelScope)
+
+    suspend fun getRemoteImage(id: Sha256) = withContext(Dispatchers.IO) {
+        imageRepository.getRemoteImage(id)
+    }
+
 }

@@ -23,4 +23,9 @@ class ImageRepository(private val contentResolver: ContentResolver) {
         ),
         pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
     ).flow
+
+    suspend fun getRemoteImage(id: Sha256): RemoteImage {
+        Log.d(TAG, "imageRepository, getRemoteImage")
+        return remoteImageProvider.getImage(id)
+    }
 }
