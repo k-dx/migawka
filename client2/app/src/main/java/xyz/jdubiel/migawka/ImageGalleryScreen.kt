@@ -121,10 +121,20 @@ fun ImageGrid(
                 }
                 is PagedImage.FromBytes -> {
                     val imageId = image.id
-                    JpgFromBytes(image.bytes, modifier = Modifier
-                        .aspectRatio(1f) // Make it square
-                        .fillMaxWidth()
-                        .clickable { onImageClick(imageId.toHex()) }
+                    val content = image.bytes
+//                    JpgFromBytes(image.bytes, modifier = Modifier
+//                        .aspectRatio(1f) // Make it square
+//                        .fillMaxWidth()
+//                        .clickable { onImageClick(imageId.toHex()) }
+//                    )
+                    AsyncImage(
+                        model = content,
+                        contentDescription = "Gallery Image",
+                        modifier = Modifier
+                            .aspectRatio(1f) // Make it square
+                            .fillMaxWidth()
+                            .clickable { onImageClick(imageId.toHex()) },
+                        contentScale = ContentScale.Crop // Crop to fill the square
                     )
                 }
                 null -> {
