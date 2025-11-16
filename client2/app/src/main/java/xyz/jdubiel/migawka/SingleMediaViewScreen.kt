@@ -91,7 +91,16 @@ fun SingleMediaViewScreen(
                                     contentScale = ContentScale.Fit
                                 )
                             } else {
-                                CircularProgressIndicator()
+                                Column(){
+                                    AsyncImage(
+                                        model = image.bytes,
+                                        contentDescription = "Full screen thumbnail",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                    Text("Thumbnail, fetching")
+                                    CircularProgressIndicator()
+                                }
                                 LaunchedEffect(image.fullBytes) {
 //                                    fullImage = viewModel.getRemoteImage(image.id)
 
