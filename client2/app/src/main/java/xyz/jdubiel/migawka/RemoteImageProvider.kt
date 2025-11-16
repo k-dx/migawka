@@ -12,6 +12,8 @@ data class RemoteImage(
 )
 
 class RemoteImageProvider { // TODO: make it a singleton
+
+    // TODO: gracefully shutdown the channel when the instance gets removed?
     private val channel: ManagedChannel
     private val stub: GreeterGrpcKt.GreeterCoroutineStub
 
@@ -70,8 +72,8 @@ class RemoteImageProvider { // TODO: make it a singleton
         val response = stub.getMediaItem(request)
 
         if (response.status.code != 200) {
-            Log.e("gRPC", "Error: ${response.status.message}")
-            throw Exception("Error: ${response.status.message}")
+            Log.e("gRPC", "Error: `${response.status.message}`")
+            throw Exception("Error: `${response.status.message}`")
         }
 
         if (response.mediaItem.id != id.toHex()) {

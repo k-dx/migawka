@@ -74,6 +74,7 @@ fun SingleMediaViewScreen(
                         }
                         is PagedImage.FromBytes -> {
                             var fullImage: RemoteImage? by remember { mutableStateOf(null) }
+                            var error by remember { mutableStateOf<String?>(null) }
 
                             if (fullImage != null) {
                                 AsyncImage(
@@ -90,19 +91,19 @@ fun SingleMediaViewScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         contentScale = ContentScale.Fit
                                     )
-                                    Text("Thumbnail, fetching")
-                                    CircularProgressIndicator()
+                                    if (error != null) {
+                                        Text("Fetching error: $error")
+                                    } else {
+                                        Text("Thumbnail, fetching")
+                                        CircularProgressIndicator()
+                                    }
                                 }
                                 LaunchedEffect(fullImage) {
-                                    // fullImage = viewModel.getRemoteImage(image.id)
-
-                                    // TODO: this creates and shuts down a channel for every request
-                                    val mi = Utils.fetchImageBytesGrpc(image.id)
-                                    fullImage = RemoteImage(
-                                        bytes = mi.content.toByteArray(),
-                                        date = image.date,
-                                        sha256 = image.id
-                                    )
+                                    try {
+                                        fullImage = viewModel.getRemoteImage(image.id)
+                                    } catch (e: Exception) {
+                                        error = e.message
+                                    }
                                 }
                             }
                         }
