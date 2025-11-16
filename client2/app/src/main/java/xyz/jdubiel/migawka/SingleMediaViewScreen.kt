@@ -1,6 +1,5 @@
 package xyz.jdubiel.migawka
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import io.grpc.ManagedChannelBuilder
 
 @Composable
 fun SingleMediaViewScreen(
@@ -77,12 +75,6 @@ fun SingleMediaViewScreen(
                         is PagedImage.FromBytes -> {
                             var fullImage: RemoteImage? by remember { mutableStateOf(null) }
 
-//                            AsyncImage(
-//                                model = image.bytes,
-//                                contentDescription = "Full screen thumbnail",
-//                                modifier = Modifier.fillMaxWidth(),
-//                                contentScale = ContentScale.Fit
-//                            )
                             if (fullImage != null) {
                                 AsyncImage(
                                     model = fullImage!!.bytes,
@@ -101,47 +93,16 @@ fun SingleMediaViewScreen(
                                     Text("Thumbnail, fetching")
                                     CircularProgressIndicator()
                                 }
-                                LaunchedEffect(image.fullBytes) {
-//                                    fullImage = viewModel.getRemoteImage(image.id)
+                                LaunchedEffect(fullImage) {
+                                    // fullImage = viewModel.getRemoteImage(image.id)
 
-                                    val serverAddress = "192.168.5.158"
-                                    Log.d("serverAddress", serverAddress)
-                                    val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
-                                        .usePlaintext()
-                                        .build()
-
-                                    val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
-
-                                    try {
-                                        val request = GetMediaItemRequest.newBuilder()
-                                            .setId(image.id.toHex())
-                                            .build()
-
-                                        val response = stub.getMediaItem(request)
-
-                                        try {
-                                            channel.shutdown()
-                                        } catch (e: InterruptedException) {
-                                            Log.e("gRPC__", "Error shutting down channel: ${e.message}")
-                                            channel.shutdownNow();
-                                            Thread.currentThread().interrupt();
-                                        }
-
-                                        // Update the UI with the response on the main thread
-                                        Log.i(
-                                            "gRPC__",
-                                            "Response for full image: ${response.status}"
-                                        )
-
-                                        fullImage = RemoteImage(
-                                            bytes = response.mediaItem.content.toByteArray(),
-                                            sha256 = image.id,
-                                            date = image.date
-                                        )
-
-                                    } catch (e: Exception) {
-                                        Log.e("gRPC__", "Error: ${e.message}", e)
-                                    }
+                                    // TODO: this creates and shuts down a channel for every request
+                                    val mi = Utils.fetchImageBytesGrpc(image.id)
+                                    fullImage = RemoteImage(
+                                        bytes = mi.content.toByteArray(),
+                                        date = image.date,
+                                        sha256 = image.id
+                                    )
                                 }
                             }
                         }
