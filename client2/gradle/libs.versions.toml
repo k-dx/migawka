@@ -12,6 +12,7 @@ preference = "1.2.1"
 navigationCompose = "2.9.5"
 coilCompose = "3.2.0"
 paging = "3.3.6"
+datastore-preferences = "1.1.7"
 protobuf = "0.9.5"
 grpc = "1.61.0"
 grpcKotlin = "1.4.1"
@@ -37,6 +38,7 @@ androidx-preference = { group = "androidx.preference", name = "preference", vers
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilCompose" }
 androidx-compose-paging = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore-preferences"}
 # gRPC Libraries
 grpc-okhttp = { group = "io.grpc", name = "grpc-okhttp", version.ref = "grpc" }
 grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.ref = "grpc" }

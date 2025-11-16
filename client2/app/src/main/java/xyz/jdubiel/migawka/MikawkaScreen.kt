@@ -1,11 +1,14 @@
 package xyz.jdubiel.migawka
 
 import android.util.Log
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -14,6 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -28,7 +32,8 @@ import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 enum class MigawkaScreen {
     Second,
     Gallery,
-    SingleMediaView
+    SingleMediaView,
+    Settings
 }
 
 
@@ -47,7 +52,8 @@ fun MigawkaApp(
         ) {
             composable(route = MigawkaScreen.Gallery.name) {
                 Migawka(
-                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
+                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) },
+                    onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
                     viewModel = imageGalleryViewModel,
                     onImageClick = { imageId: String ->
                         Log.d(TAG, "onImageClick, imageId = $imageId")
@@ -58,6 +64,14 @@ fun MigawkaApp(
 
             composable(route = MigawkaScreen.Second.name) {
                 SecondScreen(content = "Second screen! Yay!")
+            }
+
+            composable(route = MigawkaScreen.Settings.name) {
+                SettingsScreen(
+                    onSaved = {
+                        // navController.popBackStack()
+                    }
+                )
             }
 
             composable(
@@ -85,14 +99,22 @@ fun Migawka(
     viewModel: ImageGalleryViewModel,
     onImageClick: (String) -> Unit,
     onSettingsButtonClick: () -> Unit,
+    onSecondScreenButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+//            .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Button(onClick = { onSettingsButtonClick() }) {
                 Text(text = stringResource(R.string.settings))
+            }
+            Button(onClick = { onSecondScreenButtonClick() }) {
+                Text(text = "Second screen")
             }
             Button(onClick = {
                 val serverAddress = "192.168.5.158"
@@ -175,6 +197,7 @@ fun MigawkaPreview() {
         Migawka(
             viewModel = viewModel<ImageGalleryViewModel>(),
             onSettingsButtonClick = {},
+            onSecondScreenButtonClick = {},
             onImageClick = {}
         )
     }
