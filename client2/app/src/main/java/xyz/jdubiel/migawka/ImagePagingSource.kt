@@ -3,6 +3,9 @@ package xyz.jdubiel.migawka
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
 class ImagePagingSource(
@@ -12,24 +15,31 @@ class ImagePagingSource(
 
     // loads the next combined page of photos from local and remote storage
     // the photos are taken before the datetime (given as key), not inclusive
-    override suspend fun load(params: LoadParams<Instant>): LoadResult<Instant, PagedImage> {
-        Log.d(TAG, "load with params: loadSize = ${params.loadSize}, key = ${params.key}")
+    override suspend fun load(params: LoadParams<Instant>): LoadResult<Instant, PagedImage> =
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "load with params: loadSize = ${params.loadSize}, key = ${params.key}")
+            val start = System.nanoTime()
 
-        return try {
             val key = params.key
             val pageSize = params.loadSize
 
-            // TODO: query local and remote simultaneously
+            // query both APIs. `async` is used to run both queries in parallel
             // query the local MediaStoreAPI
-            val localImagesResult = localImageProvider.getImages(pageSize, key)
-            val localImages = localImagesResult.map { PagedImage.FromUri(it.sha256, it.contentUri, it.date) }
+            val localImagesResult = async {
+                localImageProvider.getImages(pageSize, key)
+            }
 
             // query the remote API
             val dateForRequest = key ?: Instant.now()
             Log.d(TAG, "dateForRequest is `${dateForRequest}`")
-            val remoteImagesResult = remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
-            val remoteImages = remoteImagesResult.map { PagedImage.FromBytes(id = it.sha256, bytes = it.bytes, date = it.date) }
+            val remoteImagesResult = async {
+                remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
+            }
 
+            val localImages = localImagesResult.await()
+                .map { PagedImage.FromUri(it.sha256, it.contentUri, it.date) }
+            val remoteImages = remoteImagesResult.await()
+                .map { PagedImage.FromBytes(id = it.sha256, bytes = it.bytes, date = it.date) }
 
             // combine local and remote results
             val combinedImages = mutableListOf<PagedImage>()
@@ -61,20 +71,21 @@ class ImagePagingSource(
                 combinedImages.add(remoteImages[remoteImagesIndex++])
             }
 
+
             val nextKey = if (combinedImages.size < pageSize) null else combinedImages.last().date
+
+            val end = System.nanoTime()
+            Log.d("time", "ImagePagingSource took ${(end - start)/1000000}ms")
 
             LoadResult.Page(
                 data = combinedImages,
                 prevKey = null, // we only page backward in time; no "prev" (newer) pages from
-                                // this source. This would be only possible if Paging3 allows
-                                // separate functions for loading the previous/next page
-                                // (TODO: check if it's possible)
+                // this source. This would be only possible if Paging3 allows
+                // separate functions for loading the previous/next page
+                // (TODO: check if it's possible)
                 nextKey = nextKey
             )
-        } catch (e: Exception) {
-            LoadResult.Error(e)
         }
-    }
 
     // Anchor position handling for jump-to-position restore
     override fun getRefreshKey(state: PagingState<Instant, PagedImage>): Instant? {
