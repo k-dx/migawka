@@ -2,6 +2,7 @@ package xyz.jdubiel.migawka
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -10,6 +11,8 @@ import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import java.time.Instant
 
+const val HERETAG = "MediaStoreImageProvider"
+
 class MediaStoreImageProvider(
     private val contentResolver: ContentResolver
 ) : LocalImageProvider {
@@ -17,38 +20,48 @@ class MediaStoreImageProvider(
     // TODO: change String to Sha256 (needs proper comparison for Sha256)
     private var sha256ToUri: MutableMap<String, Uri> = mutableMapOf()
 
-    override suspend fun getImages(limit: Int, imagesBefore: Instant?): List<LocalImage> {
+    // TODO: change this to be saved in a database provided by Android
+    //       (or at least be sorted by Instant)
+    private var uriToDate: MutableList<Pair<Uri, Instant>> = mutableListOf()
+
+    init {
+        contentResolver.query(
+             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+             arrayOf(MediaStore.Images.Media._ID),
+             null,
+             null,
+             null
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+                // queryDateTaken should not throw here, since we are passing a valid uri
+                val date = queryDateTaken(uri)
+
+                uriToDate.add(uri to date)
+                Log.d(HERETAG, "uri $uri has date $date")
+            }
+        }
+        uriToDate.sortByDescending { it.second }
+    }
+
+    override suspend fun getImages(count: Int, imagesBefore: Instant?): List<LocalImage> {
         // Use withContext to ensure this IO-heavy operation runs on a background thread.
         return withContext(Dispatchers.IO) {
+            val uriToDateBefore = uriToDate.filter { it.second < imagesBefore ?: Instant.now() }
+
             val localImages = mutableListOf<LocalImage>()
-            val selection = imagesBefore?.let { "${MediaStore.Images.Media.DATE_ADDED} < ?" }
-            val selectionArgs = imagesBefore?.let { arrayOf(it.epochSecond.toString()) }
-
-            // TODO: make the dates right!
-            contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED),
-                selection,
-                selectionArgs,
-                "${MediaStore.Images.Media.DATE_ADDED} DESC"
-            )?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-
-                while (cursor.moveToNext() && localImages.size < limit) {
-                    val id = cursor.getLong(idColumn)
-                    val date = Instant.ofEpochSecond(cursor.getLong(dateColumn))
-                    val contentUri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-                    // Compute SHA256 hash
-                    // This is an I/O operation and can be slow. It's correctly placed within withContext(Dispatchers.IO).
-                    val sha256 = computeSha256(contentUri)
-                    sha256?.let {
-                        localImages.add(LocalImage(contentUri, date, it))
-                        sha256ToUri[it.toHex()] = contentUri
-                        Log.d(TAG, "calculated sha256 of uri $contentUri: $it")
-                    }
+            for (i in 0 until minOf(count, uriToDateBefore.size)) {
+                val uri = uriToDateBefore[i].first
+                val date = uriToDateBefore[i].second
+                val sha256 = computeSha256(uri)
+                sha256?.let {
+                    localImages.add(LocalImage(uri, date, it))
+                    sha256ToUri[it.toHex()] = uri
+//                    Log.d(TAG, "calculated sha256 of uri $uri: $it")
                 }
             }
             localImages
@@ -58,7 +71,6 @@ class MediaStoreImageProvider(
     override suspend fun getImage(id: Sha256): LocalImage {
         val idString = id.toHex()
         Log.d(TAG, "MediaStoreImageProvider, getImage(${id.toHex()})")
-//        throw Exception("Not implemented")
         if (!sha256ToUri.containsKey(idString)) {
             Log.e("MediaStoreImageProvider.getImage", "No image with SHA-256 $id found")
             throw IllegalArgumentException("No image with SHA-256 $id found")
@@ -66,43 +78,87 @@ class MediaStoreImageProvider(
         Log.d(TAG, "MediaStoreImageProvider, getImage, accessing sha256ToUri")
         val contentUri = sha256ToUri[idString]!!
         Log.d(TAG, "MediaStoreImageProvider, getImage, contentUri = $contentUri")
-        val date = queryDateTaken(contentUri); // TODO: should this happen in a coroutine?
-        if (date == null) {
+        try {
+            val date = queryDateTaken(contentUri); // TODO: should this happen in a coroutine?
+            Log.d(TAG, "MediaStoreImageProvider, getImage, date = $date")
+            return LocalImage(contentUri = contentUri, date = date, sha256 = id)
+
+        } catch (e: NoSuchElementException) {
             Log.e("MediaStoreImageProvider.getImage", "No date found for image with SHA-256 $id")
-            throw IllegalArgumentException("No date found for image with SHA-256 $id")
+            throw NoSuchElementException("No image with given id found in MediaStore")
         }
-        Log.d(TAG, "MediaStoreImageProvider, getImage, date = $date")
-        return LocalImage(contentUri = contentUri, date = date, sha256 = id)
     }
 
 
-    private fun queryDateTaken(uri: Uri): Instant? {
-        val projection = arrayOf(MediaStore.Images.ImageColumns.DATE_TAKEN,
-            MediaStore.MediaColumns.DATE_MODIFIED,
-            MediaStore.MediaColumns.DATE_ADDED)
-        contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                // DATE_TAKEN is milliseconds since epoch (nullable)
-//                val dateTakenIdx = cursor.getColumnIndexOrThrow(MediaStore.Images.ImageColumns.DATE_TAKEN)
-//                val dateTaken = if (!cursor.isNull(dateTakenIdx)) cursor.getLong(dateTakenIdx) else null
-//                if (dateTaken != null && dateTaken > 0L) return Instant.fromEpochSeconds(dateTaken)
-//
-//                // fallback: DATE_MODIFIED is seconds since epoch -> convert to millis
-//                val modIdx = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED)
-//                if (!cursor.isNull(modIdx)) {
-//                    val mod = cursor.getLong(modIdx)
-//                    if (mod > 0L) return kotlin.time.Instant(mod * 1000L)
-//                }
+    // TODO: now
+    private fun queryDateTaken(uri: Uri): Instant {
+        val index = uriToDate.find { it.first == uri }
+        if (index != null) {
+            return index.second
+        }
 
-                // fallback: DATE_ADDED is seconds since epoch -> convert to millis
-                val addedIdx = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)
-                if (!cursor.isNull(addedIdx)) {
-                    val added = cursor.getLong(addedIdx)
-                    if (added > 0L) return Instant.ofEpochSecond(added)
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DATE_ADDED,
+            MediaStore.Images.Media.DATE_TAKEN
+        )
+        var dateAddedSec: Long? = null
+        var dateTakenMilliSec: Long? = null
+        var dateExif: Instant? = null
+
+        contentResolver.query(
+            uri, projection, null, null, null
+        )?.use { cursor ->
+            val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+            val dateTakenColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
+
+            if (cursor.moveToFirst()) {
+                dateAddedSec = cursor.getLong(dateAddedColumn).takeIf { it > 0 }
+                dateTakenMilliSec = cursor.getLong(dateTakenColumn).takeIf { it > 0 }
+
+                // parse EXIF (may be slow — TODO: consider dispatching to IO dispatcher)
+                try {
+                    contentResolver.openInputStream(uri)?.use { input ->
+                        // TODO: handle timezone from EXIF?
+                        val exif = androidx.exifinterface.media.ExifInterface(input)
+                        exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)?.let { s ->
+                            // parse "yyyy:MM:dd HH:mm:ss" optionally with offset tag
+                            dateExif = try {
+                                val fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+                                val ldt = java.time.LocalDateTime.parse(s, fmt)
+                                ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()
+                            } catch (e: Exception) { null }
+                        }
+                    }
+                } catch (_: Exception) {
+                    /* ignore unreadable EXIF */
+                    Log.d(HERETAG, "failed to parse EXIF for $uri")
                 }
+
+            } else {
+                throw NoSuchElementException("No media found for URI: $uri")
             }
         }
-        return null
+
+        val date = when {
+            dateExif != null -> {
+                //Log.d(HERETAG, "using exif")
+                dateExif
+            }
+            dateTakenMilliSec != null -> {
+                Log.d(HERETAG, "using DATE_TAKEN")
+                Instant.ofEpochMilli(dateTakenMilliSec)
+            }
+            dateAddedSec != null -> {
+                Log.d(HERETAG, "using DATE_ADDED")
+                Instant.ofEpochSecond(dateAddedSec)
+            }
+            else -> {
+                Log.w(HERETAG, "using current time :(")
+                Instant.now() // fallback to current time
+            }
+        }
+        return date
     }
 
     private fun computeSha256(uri: Uri): Sha256? {

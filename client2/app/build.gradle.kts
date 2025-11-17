@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.compose.paging)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.exifinterface)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
