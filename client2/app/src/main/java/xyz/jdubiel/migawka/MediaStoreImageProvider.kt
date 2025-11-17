@@ -17,8 +17,7 @@ class MediaStoreImageProvider(
     private val contentResolver: ContentResolver
 ) : LocalImageProvider {
 
-    // TODO: change String to Sha256 (needs proper comparison for Sha256)
-    private var sha256ToUri: MutableMap<String, Uri> = mutableMapOf()
+    private var sha256ToUri: MutableMap<Sha256, Uri> = mutableMapOf()
 
     // TODO: change this to be saved in a database provided by Android
     //       (or at least be sorted by Instant)
@@ -60,7 +59,7 @@ class MediaStoreImageProvider(
                 val sha256 = computeSha256(uri)
                 sha256?.let {
                     localImages.add(LocalImage(uri, date, it))
-                    sha256ToUri[it.toHex()] = uri
+                    sha256ToUri[it] = uri
 //                    Log.d(TAG, "calculated sha256 of uri $uri: $it")
                 }
             }
@@ -69,14 +68,13 @@ class MediaStoreImageProvider(
     }
 
     override suspend fun getImage(id: Sha256): LocalImage {
-        val idString = id.toHex()
         Log.d(TAG, "MediaStoreImageProvider, getImage(${id.toHex()})")
-        if (!sha256ToUri.containsKey(idString)) {
+        if (!sha256ToUri.containsKey(id)) {
             Log.e("MediaStoreImageProvider.getImage", "No image with SHA-256 $id found")
             throw IllegalArgumentException("No image with SHA-256 $id found")
         }
         Log.d(TAG, "MediaStoreImageProvider, getImage, accessing sha256ToUri")
-        val contentUri = sha256ToUri[idString]!!
+        val contentUri = sha256ToUri[id]!!
         Log.d(TAG, "MediaStoreImageProvider, getImage, contentUri = $contentUri")
         try {
             val date = queryDateTaken(contentUri); // TODO: should this happen in a coroutine?
@@ -170,7 +168,7 @@ class MediaStoreImageProvider(
                 while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                     digest.update(buffer, 0, bytesRead)
                 }
-                Sha256.of(digest.digest()) // Assumes Sha256 class wraps a ByteArray
+                Sha256.of(digest.digest())
             }
         } catch (e: Exception) {
             Log.e("MediaStoreImageProvider", "Failed to compute SHA-256 for $uri", e)

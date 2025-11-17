@@ -38,13 +38,12 @@ class ImagePagingSource(
 
             val localImages = localImagesResult.await()
                 .map { PagedImage.FromUri(it.sha256, it.contentUri, it.date) }
-            // TODO: change String to Sha256 (needs proper comparison for Sha256)
-            val localImageIds: Set<String> = localImages.map { it.id.toHex() }.toSet()
+            val localImageIds: Set<Sha256> = localImages.map { it.id }.toSet()
 
             val remoteImages = remoteImagesResult.await()
                 .map { PagedImage.FromBytes(id = it.sha256, bytes = it.bytes, date = it.date) }
                 // filter out remote images that we have locally
-                .filter { !localImageIds.contains(it.id.toHex()) }
+                .filter { !localImageIds.contains(it.id) }
 
             // combine local and remote results
             val combinedImages = mutableListOf<PagedImage>()
