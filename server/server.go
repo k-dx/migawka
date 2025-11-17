@@ -9,10 +9,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// server is used to implement helloworld.GreeterServer.
+// server is used to implement helloworld.MigawkaServer.
 type server struct {
-	pb.UnimplementedGreeterServer // TODO: rename to MigawkaServer
-	mediaStore                    MediaStore
+	pb.UnimplementedMigawkaServer
+	mediaStore MediaStore
 }
 
 func CreateServer(mediaDirectory string) *server {

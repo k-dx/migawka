@@ -123,7 +123,7 @@ fun Migawka(
                     .usePlaintext()
                     .build()
 
-                val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+                val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
 
                 coroutineScope.launch {
                     try {
@@ -153,7 +153,7 @@ fun Migawka(
                     .usePlaintext()
                     .build()
 
-                val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+                val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
 
                 coroutineScope.launch {
                     try {

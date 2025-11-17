@@ -67,7 +67,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	migawkaServer := CreateServer(*mediaDirectory)
 
-	pb.RegisterGreeterServer(grpcServer, migawkaServer)
+	pb.RegisterMigawkaServer(grpcServer, migawkaServer)
 	log.Info().Msgf("server listening at %v", lis.Addr())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal().Msgf("failed to serve: %v", err)

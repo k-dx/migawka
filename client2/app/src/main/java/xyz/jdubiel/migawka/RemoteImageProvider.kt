@@ -15,7 +15,7 @@ class RemoteImageProvider { // TODO: make it a singleton
 
     // TODO: gracefully shutdown the channel when the instance gets removed?
     private val channel: ManagedChannel
-    private val stub: GreeterGrpcKt.GreeterCoroutineStub
+    private val stub: MigawkaGrpcKt.MigawkaCoroutineStub
 
     init {
         // TODO: don't hardcode IP or PORT
@@ -24,7 +24,7 @@ class RemoteImageProvider { // TODO: make it a singleton
             .usePlaintext() // TODO: don't use plaintext!
             .build()
 
-        stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+        stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
     }
 
     suspend fun getThumbnailsBeforeTimestamp(timestamp: Instant, count: Int): List<RemoteImage> {

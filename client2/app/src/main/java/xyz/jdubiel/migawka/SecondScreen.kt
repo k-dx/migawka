@@ -56,7 +56,7 @@ fun SecondScreen(content: String) {
     GrpcImage(
         imageId = "0b8512120df51731b619a06b537668d9b58625904f1f780abdf585a0d8863ee6",
         stubProvider = {
-            GreeterGrpcKt.GreeterCoroutineStub(channel)
+            MigawkaGrpcKt.MigawkaCoroutineStub(channel)
         },
         shutdownChannel = {
             shutdownChannel(channel)
@@ -72,7 +72,7 @@ fun SecondScreen(content: String) {
  * - ioDispatcher: optional dispatcher for blocking IO/decoding.
  */
 suspend fun fetchImageBytesGrpc(
-    stub: GreeterGrpcKt.GreeterCoroutineStub,
+    stub: MigawkaGrpcKt.MigawkaCoroutineStub,
     imageId: String,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ): ByteArray = withContext(ioDispatcher) {
@@ -103,7 +103,7 @@ fun GrpcImage(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     size: Dp = 200.dp,
-    stubProvider: () -> GreeterGrpcKt.GreeterCoroutineStub,
+    stubProvider: () -> MigawkaGrpcKt.MigawkaCoroutineStub,
     contentScale: ContentScale = ContentScale.Crop,
     shutdownChannel: () -> Unit = {}
 ) {

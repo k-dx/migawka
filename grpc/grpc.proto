@@ -8,7 +8,7 @@ option java_multiple_files = true;
 // package helloworld;
 
 // The greeting service definition.
-service Greeter {
+service Migawka {
   // Sends a greeting
   rpc SayHello (HelloRequest) returns (HelloReply) {}
   rpc UploadFile(FileUploadRequest) returns (FileUploadReply);

@@ -734,7 +734,7 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12(\n" +
 	"\tmediaItem\x18\x02 \x01(\v2\n" +
 	".MediaItemR\tmediaItem2\x83\x03\n" +
-	"\aGreeter\x12(\n" +
+	"\aMigawka\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
 	"UploadFile\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\x128\n" +
@@ -777,18 +777,18 @@ var file_grpc_grpc_proto_depIdxs = []int32{
 	7,  // 1: ThumbnailsTimestampResponse.thumbnails:type_name -> Thumbnail
 	0,  // 2: GetMediaItemResponse.status:type_name -> Status
 	11, // 3: GetMediaItemResponse.mediaItem:type_name -> MediaItem
-	1,  // 4: Greeter.SayHello:input_type -> HelloRequest
-	3,  // 5: Greeter.UploadFile:input_type -> FileUploadRequest
-	5,  // 6: Greeter.DownloadFile:input_type -> FileDownloadRequest
-	8,  // 7: Greeter.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
-	10, // 8: Greeter.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
-	10, // 9: Greeter.GetFullMediaItem:input_type -> GetMediaItemRequest
-	2,  // 10: Greeter.SayHello:output_type -> HelloReply
-	4,  // 11: Greeter.UploadFile:output_type -> FileUploadReply
-	6,  // 12: Greeter.DownloadFile:output_type -> FileDownloadReply
-	9,  // 13: Greeter.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
-	12, // 14: Greeter.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
-	12, // 15: Greeter.GetFullMediaItem:output_type -> GetMediaItemResponse
+	1,  // 4: Migawka.SayHello:input_type -> HelloRequest
+	3,  // 5: Migawka.UploadFile:input_type -> FileUploadRequest
+	5,  // 6: Migawka.DownloadFile:input_type -> FileDownloadRequest
+	8,  // 7: Migawka.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
+	10, // 8: Migawka.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
+	10, // 9: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
+	2,  // 10: Migawka.SayHello:output_type -> HelloReply
+	4,  // 11: Migawka.UploadFile:output_type -> FileUploadReply
+	6,  // 12: Migawka.DownloadFile:output_type -> FileDownloadReply
+	9,  // 13: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
+	12, // 14: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
+	12, // 15: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
 	10, // [10:16] is the sub-list for method output_type
 	4,  // [4:10] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name

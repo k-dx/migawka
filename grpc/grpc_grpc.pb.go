@@ -19,20 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Greeter_SayHello_FullMethodName                     = "/Greeter/SayHello"
-	Greeter_UploadFile_FullMethodName                   = "/Greeter/UploadFile"
-	Greeter_DownloadFile_FullMethodName                 = "/Greeter/DownloadFile"
-	Greeter_GetThumbnailsBeforeTimestamp_FullMethodName = "/Greeter/GetThumbnailsBeforeTimestamp"
-	Greeter_GetOptimizedMediaItem_FullMethodName        = "/Greeter/GetOptimizedMediaItem"
-	Greeter_GetFullMediaItem_FullMethodName             = "/Greeter/GetFullMediaItem"
+	Migawka_SayHello_FullMethodName                     = "/Migawka/SayHello"
+	Migawka_UploadFile_FullMethodName                   = "/Migawka/UploadFile"
+	Migawka_DownloadFile_FullMethodName                 = "/Migawka/DownloadFile"
+	Migawka_GetThumbnailsBeforeTimestamp_FullMethodName = "/Migawka/GetThumbnailsBeforeTimestamp"
+	Migawka_GetOptimizedMediaItem_FullMethodName        = "/Migawka/GetOptimizedMediaItem"
+	Migawka_GetFullMediaItem_FullMethodName             = "/Migawka/GetFullMediaItem"
 )
 
-// GreeterClient is the client API for Greeter service.
+// MigawkaClient is the client API for Migawka service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // The greeting service definition.
-type GreeterClient interface {
+type MigawkaClient interface {
 	// Sends a greeting
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 	UploadFile(ctx context.Context, in *FileUploadRequest, opts ...grpc.CallOption) (*FileUploadReply, error)
@@ -42,80 +42,80 @@ type GreeterClient interface {
 	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 }
 
-type greeterClient struct {
+type migawkaClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGreeterClient(cc grpc.ClientConnInterface) GreeterClient {
-	return &greeterClient{cc}
+func NewMigawkaClient(cc grpc.ClientConnInterface) MigawkaClient {
+	return &migawkaClient{cc}
 }
 
-func (c *greeterClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
+func (c *migawkaClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HelloReply)
-	err := c.cc.Invoke(ctx, Greeter_SayHello_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Migawka_SayHello_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *greeterClient) UploadFile(ctx context.Context, in *FileUploadRequest, opts ...grpc.CallOption) (*FileUploadReply, error) {
+func (c *migawkaClient) UploadFile(ctx context.Context, in *FileUploadRequest, opts ...grpc.CallOption) (*FileUploadReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(FileUploadReply)
-	err := c.cc.Invoke(ctx, Greeter_UploadFile_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Migawka_UploadFile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *greeterClient) DownloadFile(ctx context.Context, in *FileDownloadRequest, opts ...grpc.CallOption) (*FileDownloadReply, error) {
+func (c *migawkaClient) DownloadFile(ctx context.Context, in *FileDownloadRequest, opts ...grpc.CallOption) (*FileDownloadReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(FileDownloadReply)
-	err := c.cc.Invoke(ctx, Greeter_DownloadFile_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Migawka_DownloadFile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *greeterClient) GetThumbnailsBeforeTimestamp(ctx context.Context, in *ThumbnailsTimestampRequest, opts ...grpc.CallOption) (*ThumbnailsTimestampResponse, error) {
+func (c *migawkaClient) GetThumbnailsBeforeTimestamp(ctx context.Context, in *ThumbnailsTimestampRequest, opts ...grpc.CallOption) (*ThumbnailsTimestampResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ThumbnailsTimestampResponse)
-	err := c.cc.Invoke(ctx, Greeter_GetThumbnailsBeforeTimestamp_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Migawka_GetThumbnailsBeforeTimestamp_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *greeterClient) GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
+func (c *migawkaClient) GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetMediaItemResponse)
-	err := c.cc.Invoke(ctx, Greeter_GetOptimizedMediaItem_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Migawka_GetOptimizedMediaItem_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *greeterClient) GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
+func (c *migawkaClient) GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetMediaItemResponse)
-	err := c.cc.Invoke(ctx, Greeter_GetFullMediaItem_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Migawka_GetFullMediaItem_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// GreeterServer is the server API for Greeter service.
-// All implementations must embed UnimplementedGreeterServer
+// MigawkaServer is the server API for Migawka service.
+// All implementations must embed UnimplementedMigawkaServer
 // for forward compatibility.
 //
 // The greeting service definition.
-type GreeterServer interface {
+type MigawkaServer interface {
 	// Sends a greeting
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
 	UploadFile(context.Context, *FileUploadRequest) (*FileUploadReply, error)
@@ -123,193 +123,193 @@ type GreeterServer interface {
 	GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error)
 	GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
-	mustEmbedUnimplementedGreeterServer()
+	mustEmbedUnimplementedMigawkaServer()
 }
 
-// UnimplementedGreeterServer must be embedded to have
+// UnimplementedMigawkaServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedGreeterServer struct{}
+type UnimplementedMigawkaServer struct{}
 
-func (UnimplementedGreeterServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
+func (UnimplementedMigawkaServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
 }
-func (UnimplementedGreeterServer) UploadFile(context.Context, *FileUploadRequest) (*FileUploadReply, error) {
+func (UnimplementedMigawkaServer) UploadFile(context.Context, *FileUploadRequest) (*FileUploadReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
 }
-func (UnimplementedGreeterServer) DownloadFile(context.Context, *FileDownloadRequest) (*FileDownloadReply, error) {
+func (UnimplementedMigawkaServer) DownloadFile(context.Context, *FileDownloadRequest) (*FileDownloadReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
 }
-func (UnimplementedGreeterServer) GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error) {
+func (UnimplementedMigawkaServer) GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetThumbnailsBeforeTimestamp not implemented")
 }
-func (UnimplementedGreeterServer) GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
+func (UnimplementedMigawkaServer) GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOptimizedMediaItem not implemented")
 }
-func (UnimplementedGreeterServer) GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
+func (UnimplementedMigawkaServer) GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFullMediaItem not implemented")
 }
-func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
-func (UnimplementedGreeterServer) testEmbeddedByValue()                 {}
+func (UnimplementedMigawkaServer) mustEmbedUnimplementedMigawkaServer() {}
+func (UnimplementedMigawkaServer) testEmbeddedByValue()                 {}
 
-// UnsafeGreeterServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GreeterServer will
+// UnsafeMigawkaServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MigawkaServer will
 // result in compilation errors.
-type UnsafeGreeterServer interface {
-	mustEmbedUnimplementedGreeterServer()
+type UnsafeMigawkaServer interface {
+	mustEmbedUnimplementedMigawkaServer()
 }
 
-func RegisterGreeterServer(s grpc.ServiceRegistrar, srv GreeterServer) {
-	// If the following call pancis, it indicates UnimplementedGreeterServer was
+func RegisterMigawkaServer(s grpc.ServiceRegistrar, srv MigawkaServer) {
+	// If the following call pancis, it indicates UnimplementedMigawkaServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&Greeter_ServiceDesc, srv)
+	s.RegisterService(&Migawka_ServiceDesc, srv)
 }
 
-func _Greeter_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Migawka_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HelloRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).SayHello(ctx, in)
+		return srv.(MigawkaServer).SayHello(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_SayHello_FullMethodName,
+		FullMethod: Migawka_SayHello_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).SayHello(ctx, req.(*HelloRequest))
+		return srv.(MigawkaServer).SayHello(ctx, req.(*HelloRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_UploadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Migawka_UploadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FileUploadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).UploadFile(ctx, in)
+		return srv.(MigawkaServer).UploadFile(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_UploadFile_FullMethodName,
+		FullMethod: Migawka_UploadFile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).UploadFile(ctx, req.(*FileUploadRequest))
+		return srv.(MigawkaServer).UploadFile(ctx, req.(*FileUploadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_DownloadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Migawka_DownloadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FileDownloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).DownloadFile(ctx, in)
+		return srv.(MigawkaServer).DownloadFile(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_DownloadFile_FullMethodName,
+		FullMethod: Migawka_DownloadFile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).DownloadFile(ctx, req.(*FileDownloadRequest))
+		return srv.(MigawkaServer).DownloadFile(ctx, req.(*FileDownloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GetThumbnailsBeforeTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Migawka_GetThumbnailsBeforeTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ThumbnailsTimestampRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).GetThumbnailsBeforeTimestamp(ctx, in)
+		return srv.(MigawkaServer).GetThumbnailsBeforeTimestamp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_GetThumbnailsBeforeTimestamp_FullMethodName,
+		FullMethod: Migawka_GetThumbnailsBeforeTimestamp_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).GetThumbnailsBeforeTimestamp(ctx, req.(*ThumbnailsTimestampRequest))
+		return srv.(MigawkaServer).GetThumbnailsBeforeTimestamp(ctx, req.(*ThumbnailsTimestampRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GetOptimizedMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Migawka_GetOptimizedMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMediaItemRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).GetOptimizedMediaItem(ctx, in)
+		return srv.(MigawkaServer).GetOptimizedMediaItem(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_GetOptimizedMediaItem_FullMethodName,
+		FullMethod: Migawka_GetOptimizedMediaItem_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).GetOptimizedMediaItem(ctx, req.(*GetMediaItemRequest))
+		return srv.(MigawkaServer).GetOptimizedMediaItem(ctx, req.(*GetMediaItemRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GetFullMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Migawka_GetFullMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMediaItemRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).GetFullMediaItem(ctx, in)
+		return srv.(MigawkaServer).GetFullMediaItem(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_GetFullMediaItem_FullMethodName,
+		FullMethod: Migawka_GetFullMediaItem_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).GetFullMediaItem(ctx, req.(*GetMediaItemRequest))
+		return srv.(MigawkaServer).GetFullMediaItem(ctx, req.(*GetMediaItemRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
+// Migawka_ServiceDesc is the grpc.ServiceDesc for Migawka service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Greeter_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Greeter",
-	HandlerType: (*GreeterServer)(nil),
+var Migawka_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Migawka",
+	HandlerType: (*MigawkaServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "SayHello",
-			Handler:    _Greeter_SayHello_Handler,
+			Handler:    _Migawka_SayHello_Handler,
 		},
 		{
 			MethodName: "UploadFile",
-			Handler:    _Greeter_UploadFile_Handler,
+			Handler:    _Migawka_UploadFile_Handler,
 		},
 		{
 			MethodName: "DownloadFile",
-			Handler:    _Greeter_DownloadFile_Handler,
+			Handler:    _Migawka_DownloadFile_Handler,
 		},
 		{
 			MethodName: "GetThumbnailsBeforeTimestamp",
-			Handler:    _Greeter_GetThumbnailsBeforeTimestamp_Handler,
+			Handler:    _Migawka_GetThumbnailsBeforeTimestamp_Handler,
 		},
 		{
 			MethodName: "GetOptimizedMediaItem",
-			Handler:    _Greeter_GetOptimizedMediaItem_Handler,
+			Handler:    _Migawka_GetOptimizedMediaItem_Handler,
 		},
 		{
 			MethodName: "GetFullMediaItem",
-			Handler:    _Greeter_GetFullMediaItem_Handler,
+			Handler:    _Migawka_GetFullMediaItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -13,7 +13,7 @@ class Utils {
                     .build()
 
             try {
-                val stub = GreeterGrpcKt.GreeterCoroutineStub(channel)
+                val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
                 val request = GetMediaItemRequest.newBuilder()
                         .setId(id.toHex())
                         .build()
