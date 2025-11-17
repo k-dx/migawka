@@ -25,11 +25,15 @@ type Thumbnail struct {
 	Content      []byte
 }
 
-type MediaItem struct {
+type MediaItemMetadata struct {
 	ID           sha256Hash
 	Path         string
 	CreationTime time.Time
-	Content      []byte
+}
+
+type MediaItem struct {
+	Metadata MediaItemMetadata
+	Content  []byte
 }
 
 type MediaStore interface {
@@ -41,7 +45,7 @@ type MediaStore interface {
 }
 
 type mediaStoreImpl struct {
-	items      map[sha256Hash]MediaItem
+	items      map[sha256Hash]MediaItemMetadata
 	thumbnails map[sha256Hash]Thumbnail
 }
 
@@ -97,7 +101,37 @@ func (ms *mediaStoreImpl) GetFullMediaItem(id sha256Hash) (MediaItem, error) {
 	if !ok {
 		return MediaItem{}, fmt.Errorf("media item with given id not found")
 	}
-	return item, nil
+
+	path := item.Path
+	log.Debug().Str("ID", id.String()).
+		Str("path", path).
+		Msg("Returning full media item")
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return MediaItem{}, fmt.Errorf("failed to read media item from disk: %w", err)
+	}
+
+	itemFull := MediaItem{
+		Metadata: item,
+		Content:  content,
+	}
+	return itemFull, nil
+}
+
+func NewMediaItemMetadata(id sha256Hash, path string, creationTime time.Time) MediaItemMetadata {
+	return MediaItemMetadata{
+		ID:           id,
+		Path:         path,
+		CreationTime: creationTime,
+	}
+}
+
+func NewMediaItem(metadata MediaItemMetadata, content []byte) MediaItem {
+	return MediaItem{
+		Metadata: metadata,
+		Content:  content,
+	}
 }
 
 func (ms *mediaStoreImpl) GetOptimizedMediaItem(id sha256Hash) (MediaItem, error) {
@@ -118,17 +152,22 @@ func (ms *mediaStoreImpl) GetOptimizedMediaItem(id sha256Hash) (MediaItem, error
 		Int("optimizedSize", len(optimized)).
 		Msg("Returning optimized media item")
 
-	return MediaItem{
-		ID:           mediaItem.ID,
-		CreationTime: mediaItem.CreationTime,
-		Content:      optimized,
-	}, nil
+	metadata := NewMediaItemMetadata(
+		mediaItem.Metadata.ID,
+		mediaItem.Metadata.Path,
+		mediaItem.Metadata.CreationTime,
+	)
+
+	return NewMediaItem(
+		metadata,
+		optimized,
+	), nil
 }
 
 func NewMediaStore(path string) (MediaStore, error) {
 	log.Debug().Msg("Creating new MediaStore")
 	ms := &mediaStoreImpl{
-		items:      make(map[sha256Hash]MediaItem),
+		items:      make(map[sha256Hash]MediaItemMetadata),
 		thumbnails: make(map[sha256Hash]Thumbnail),
 	}
 	err := ms.loadMediaItems(path, filepath.Join(path, ".thumbnails"))
@@ -210,12 +249,11 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			Msg("Loaded media item")
 
 		// Store in map
-		ms.items[hash] = MediaItem{
-			ID:           hash,
-			Path:         filePath,
-			CreationTime: info.ModTime(), // TODO: use EXIF for images if available
-			Content:      content,
-		}
+		ms.items[hash] = NewMediaItemMetadata(
+			hash,
+			filePath,
+			info.ModTime(), // TODO: use EXIF for images if available
+		)
 
 		return nil
 	})
@@ -243,11 +281,12 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		if err != nil {
 			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
 		} else if _, mediaItemPresent := ms.items[hash]; !mediaItemPresent {
+			// TODO: do this after loading
 			log.Warn().Str("file", filePath).Msg("thumbnail does not match any media item. ignoring")
 		} else {
 			ms.thumbnails[hash] = Thumbnail{
 				ID:           hash,
-				CreationTime: ms.items[hash].CreationTime,
+				CreationTime: ms.items[hash].CreationTime, //TODO: remove this, refer to media item instead
 				Content:      content,
 			}
 		}
@@ -263,7 +302,16 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	for id, item := range ms.items {
 		if _, ok := ms.thumbnails[id]; !ok {
 			// generate thumbnail
-			thumbnailContent, err := generateThumbnail(item.Content)
+			content, err := os.ReadFile(item.Path)
+			if err != nil {
+				log.Error().
+					Str("file", item.Path).
+					Err(err).
+					Msg("failed to read media item for thumbnail generation")
+				continue
+			}
+
+			thumbnailContent, err := generateThumbnail(content)
 			if err != nil {
 				log.Error().
 					Str("ID", id.String()).

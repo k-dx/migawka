@@ -110,8 +110,8 @@ func (s *server) GetOptimizedMediaItem(_ context.Context, in *pb.GetMediaItemReq
 
 	// convert to gRPC media item type
 	pbMediaItem := &pb.MediaItem{
-		Id:           mediaItem.ID.String(),
-		CreationTime: mediaItem.CreationTime.UTC().Format(time.RFC3339),
+		Id:           mediaItem.Metadata.ID.String(),
+		CreationTime: mediaItem.Metadata.CreationTime.UTC().Format(time.RFC3339),
 		Content:      mediaItem.Content,
 	}
 
@@ -143,8 +143,8 @@ func (s *server) GetFullMediaItem(_ context.Context, in *pb.GetMediaItemRequest)
 
 	// convert to gRPC media item type
 	pbMediaItem := &pb.MediaItem{
-		Id:           mediaItem.ID.String(),
-		CreationTime: mediaItem.CreationTime.UTC().Format(time.RFC3339),
+		Id:           mediaItem.Metadata.ID.String(),
+		CreationTime: mediaItem.Metadata.CreationTime.UTC().Format(time.RFC3339),
 		Content:      mediaItem.Content,
 	}
 
