@@ -733,14 +733,15 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x14GetMediaItemResponse\x12\x1f\n" +
 	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12(\n" +
 	"\tmediaItem\x18\x02 \x01(\v2\n" +
-	".MediaItemR\tmediaItem2\xb9\x02\n" +
+	".MediaItemR\tmediaItem2\x83\x03\n" +
 	"\aGreeter\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
 	"UploadFile\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\x128\n" +
 	"\fDownloadFile\x12\x14.FileDownloadRequest\x1a\x12.FileDownloadReply\x12Y\n" +
-	"\x1cGetThumbnailsBeforeTimestamp\x12\x1b.ThumbnailsTimestampRequest\x1a\x1c.ThumbnailsTimestampResponse\x12;\n" +
-	"\fGetMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponseB,\n" +
+	"\x1cGetThumbnailsBeforeTimestamp\x12\x1b.ThumbnailsTimestampRequest\x1a\x1c.ThumbnailsTimestampResponse\x12D\n" +
+	"\x15GetOptimizedMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12?\n" +
+	"\x10GetFullMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponseB,\n" +
 	"\x13xyz.jdubiel.migawkaP\x01Z\x13migawka-server/grpcb\x06proto3"
 
 var (
@@ -780,14 +781,16 @@ var file_grpc_grpc_proto_depIdxs = []int32{
 	3,  // 5: Greeter.UploadFile:input_type -> FileUploadRequest
 	5,  // 6: Greeter.DownloadFile:input_type -> FileDownloadRequest
 	8,  // 7: Greeter.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
-	10, // 8: Greeter.GetMediaItem:input_type -> GetMediaItemRequest
-	2,  // 9: Greeter.SayHello:output_type -> HelloReply
-	4,  // 10: Greeter.UploadFile:output_type -> FileUploadReply
-	6,  // 11: Greeter.DownloadFile:output_type -> FileDownloadReply
-	9,  // 12: Greeter.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
-	12, // 13: Greeter.GetMediaItem:output_type -> GetMediaItemResponse
-	9,  // [9:14] is the sub-list for method output_type
-	4,  // [4:9] is the sub-list for method input_type
+	10, // 8: Greeter.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
+	10, // 9: Greeter.GetFullMediaItem:input_type -> GetMediaItemRequest
+	2,  // 10: Greeter.SayHello:output_type -> HelloReply
+	4,  // 11: Greeter.UploadFile:output_type -> FileUploadReply
+	6,  // 12: Greeter.DownloadFile:output_type -> FileDownloadReply
+	9,  // 13: Greeter.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
+	12, // 14: Greeter.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
+	12, // 15: Greeter.GetFullMediaItem:output_type -> GetMediaItemResponse
+	10, // [10:16] is the sub-list for method output_type
+	4,  // [4:10] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name

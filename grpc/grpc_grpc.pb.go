@@ -23,7 +23,8 @@ const (
 	Greeter_UploadFile_FullMethodName                   = "/Greeter/UploadFile"
 	Greeter_DownloadFile_FullMethodName                 = "/Greeter/DownloadFile"
 	Greeter_GetThumbnailsBeforeTimestamp_FullMethodName = "/Greeter/GetThumbnailsBeforeTimestamp"
-	Greeter_GetMediaItem_FullMethodName                 = "/Greeter/GetMediaItem"
+	Greeter_GetOptimizedMediaItem_FullMethodName        = "/Greeter/GetOptimizedMediaItem"
+	Greeter_GetFullMediaItem_FullMethodName             = "/Greeter/GetFullMediaItem"
 )
 
 // GreeterClient is the client API for Greeter service.
@@ -37,7 +38,8 @@ type GreeterClient interface {
 	UploadFile(ctx context.Context, in *FileUploadRequest, opts ...grpc.CallOption) (*FileUploadReply, error)
 	DownloadFile(ctx context.Context, in *FileDownloadRequest, opts ...grpc.CallOption) (*FileDownloadReply, error)
 	GetThumbnailsBeforeTimestamp(ctx context.Context, in *ThumbnailsTimestampRequest, opts ...grpc.CallOption) (*ThumbnailsTimestampResponse, error)
-	GetMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
+	GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
+	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 }
 
 type greeterClient struct {
@@ -88,10 +90,20 @@ func (c *greeterClient) GetThumbnailsBeforeTimestamp(ctx context.Context, in *Th
 	return out, nil
 }
 
-func (c *greeterClient) GetMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
+func (c *greeterClient) GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetMediaItemResponse)
-	err := c.cc.Invoke(ctx, Greeter_GetMediaItem_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Greeter_GetOptimizedMediaItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *greeterClient) GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMediaItemResponse)
+	err := c.cc.Invoke(ctx, Greeter_GetFullMediaItem_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +121,8 @@ type GreeterServer interface {
 	UploadFile(context.Context, *FileUploadRequest) (*FileUploadReply, error)
 	DownloadFile(context.Context, *FileDownloadRequest) (*FileDownloadReply, error)
 	GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error)
-	GetMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
+	GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
+	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -132,8 +145,11 @@ func (UnimplementedGreeterServer) DownloadFile(context.Context, *FileDownloadReq
 func (UnimplementedGreeterServer) GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetThumbnailsBeforeTimestamp not implemented")
 }
-func (UnimplementedGreeterServer) GetMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMediaItem not implemented")
+func (UnimplementedGreeterServer) GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOptimizedMediaItem not implemented")
+}
+func (UnimplementedGreeterServer) GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFullMediaItem not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 func (UnimplementedGreeterServer) testEmbeddedByValue()                 {}
@@ -228,20 +244,38 @@ func _Greeter_GetThumbnailsBeforeTimestamp_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GetMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_GetOptimizedMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMediaItemRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).GetMediaItem(ctx, in)
+		return srv.(GreeterServer).GetOptimizedMediaItem(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Greeter_GetMediaItem_FullMethodName,
+		FullMethod: Greeter_GetOptimizedMediaItem_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).GetMediaItem(ctx, req.(*GetMediaItemRequest))
+		return srv.(GreeterServer).GetOptimizedMediaItem(ctx, req.(*GetMediaItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Greeter_GetFullMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMediaItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).GetFullMediaItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Greeter_GetFullMediaItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).GetFullMediaItem(ctx, req.(*GetMediaItemRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -270,8 +304,12 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Greeter_GetThumbnailsBeforeTimestamp_Handler,
 		},
 		{
-			MethodName: "GetMediaItem",
-			Handler:    _Greeter_GetMediaItem_Handler,
+			MethodName: "GetOptimizedMediaItem",
+			Handler:    _Greeter_GetOptimizedMediaItem_Handler,
+		},
+		{
+			MethodName: "GetFullMediaItem",
+			Handler:    _Greeter_GetFullMediaItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

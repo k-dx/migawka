@@ -80,7 +80,7 @@ suspend fun fetchImageBytesGrpc(
         .setId(imageId)
         .build()
 
-    val response = stub.getMediaItem(request) // suspend RPC
+    val response = stub.getOptimizedMediaItem(request) // suspend RPC
     response.mediaItem.content.toByteArray() // ByteString -> ByteArray
 }
 

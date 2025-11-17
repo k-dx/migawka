@@ -18,7 +18,7 @@ class Utils {
                         .setId(id.toHex())
                         .build()
 
-                val response = stub.getMediaItem(request)
+                val response = stub.getOptimizedMediaItem(request)
 
                 // Update the UI with the response on the main thread
                 Log.i(

@@ -69,7 +69,7 @@ class RemoteImageProvider { // TODO: make it a singleton
             .setId(id.toHex())
             .build()
 
-        val response = stub.getMediaItem(request)
+        val response = stub.getOptimizedMediaItem(request)
 
         if (response.status.code != 200) {
             Log.e("gRPC", "Error: `${response.status.message}`")

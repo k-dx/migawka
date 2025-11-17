@@ -14,7 +14,8 @@ service Greeter {
   rpc UploadFile(FileUploadRequest) returns (FileUploadReply);
   rpc DownloadFile(FileDownloadRequest) returns (FileDownloadReply);
   rpc GetThumbnailsBeforeTimestamp(ThumbnailsTimestampRequest) returns (ThumbnailsTimestampResponse);
-  rpc GetMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
+  rpc GetOptimizedMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
+  rpc GetFullMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
 }
 
 message Status {
