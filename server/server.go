@@ -75,9 +75,16 @@ func (s *server) GetThumbnailsBeforeTimestamp(_ context.Context, in *pb.Thumbnai
 	// convert to gRPC thumbnails type
 	var pbThumbnails []*pb.Thumbnail
 	for _, thumbnail := range thumbnails {
+		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(thumbnail.ID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get creation time of media item")
+			status := pb.NewStatus(500, "Failed to get creation time of media item")
+			return pb.NewThumbnailsTimestampResponse(nil, status), nil
+		}
+
 		pbThumbnails = append(pbThumbnails, &pb.Thumbnail{
 			Id:           thumbnail.ID.String(),
-			CreationTime: thumbnail.CreationTime.UTC().Format(time.RFC3339),
+			CreationTime: creationTime.UTC().Format(time.RFC3339),
 			Content:      thumbnail.Content,
 		})
 	}

@@ -20,9 +20,8 @@ import (
 )
 
 type Thumbnail struct {
-	ID           sha256Hash
-	CreationTime time.Time // time when the original media item was created
-	Content      []byte
+	ID      sha256Hash
+	Content []byte
 }
 
 type MediaItemMetadata struct {
@@ -40,6 +39,7 @@ type MediaStore interface {
 	GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error)
 	GetOptimizedMediaItem(id sha256Hash) (MediaItem, error)
 	GetFullMediaItem(id sha256Hash) (MediaItem, error)
+	GetCreationTimeOfMediaItem(id sha256Hash) (time.Time, error)
 
 	GetMediaItemsCountForTest() int
 }
@@ -47,6 +47,14 @@ type MediaStore interface {
 type mediaStoreImpl struct {
 	items      map[sha256Hash]MediaItemMetadata
 	thumbnails map[sha256Hash]Thumbnail
+}
+
+func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id sha256Hash) (time.Time, error) {
+	item, ok := ms.items[id]
+	if !ok {
+		return time.Time{}, fmt.Errorf("media item with given id not found")
+	}
+	return item.CreationTime, nil
 }
 
 // Returns at most 'count' thumbnails created before (or at) the given timestamp
@@ -281,13 +289,11 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		if err != nil {
 			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
 		} else if _, mediaItemPresent := ms.items[hash]; !mediaItemPresent {
-			// TODO: do this after loading
 			log.Warn().Str("file", filePath).Msg("thumbnail does not match any media item. ignoring")
 		} else {
 			ms.thumbnails[hash] = Thumbnail{
-				ID:           hash,
-				CreationTime: ms.items[hash].CreationTime, //TODO: remove this, refer to media item instead
-				Content:      content,
+				ID:      hash,
+				Content: content,
 			}
 		}
 
@@ -321,9 +327,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			}
 			// store thumbnail in map
 			ms.thumbnails[id] = Thumbnail{
-				ID:           id,
-				CreationTime: ms.items[id].CreationTime,
-				Content:      thumbnailContent,
+				ID:      id,
+				Content: thumbnailContent,
 			}
 			// save thumbnail to disk
 			thumbnailFilePath := filepath.Join(thumbnailPath, id.String()+".jpg")

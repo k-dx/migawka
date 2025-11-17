@@ -156,7 +156,16 @@ func TestMediaStore_GetThumbanilsBeforeTimestamp(t *testing.T) {
 		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
 	}
 
-	if thumbnails[0].CreationTime.Before(thumbnails[1].CreationTime) {
+	t1CreationTime, err := mediaStore.GetCreationTimeOfMediaItem(thumbnails[0].ID)
+	if err != nil {
+		t.Fatalf("Failed to get creation time of media item: %v", err)
+	}
+	t2CreationTime, err := mediaStore.GetCreationTimeOfMediaItem(thumbnails[1].ID)
+	if err != nil {
+		t.Fatalf("Failed to get creation time of media item: %v", err)
+	}
+
+	if t1CreationTime.Before(t2CreationTime) {
 		t.Fatalf("Thumbnails are not sorted by creation time descending")
 	}
 }
