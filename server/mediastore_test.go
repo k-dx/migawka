@@ -177,7 +177,7 @@ func TestMediaStore_GetMediaItem(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create sha256Hash from string: %v", err)
 	}
-	mediaItem, err := mediaStore.GetMediaItem(*testId)
+	mediaItem, err := mediaStore.GetFullMediaItem(*testId)
 	if err != nil {
 		t.Fatalf("Failed to get media item: %v", err)
 	}

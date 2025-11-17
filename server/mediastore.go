@@ -34,7 +34,8 @@ type MediaItem struct {
 
 type MediaStore interface {
 	GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error)
-	GetMediaItem(id sha256Hash) (MediaItem, error)
+	GetOptimizedMediaItem(id sha256Hash) (MediaItem, error)
+	GetFullMediaItem(id sha256Hash) (MediaItem, error)
 
 	GetMediaItemsCountForTest() int
 }
@@ -91,12 +92,37 @@ func (ms *mediaStoreImpl) getThumbnailsByIDs(ids []sha256Hash) ([]Thumbnail, err
 	return thumbnails, nil
 }
 
-func (ms *mediaStoreImpl) GetMediaItem(id sha256Hash) (MediaItem, error) {
+func (ms *mediaStoreImpl) GetFullMediaItem(id sha256Hash) (MediaItem, error) {
 	item, ok := ms.items[id]
 	if !ok {
 		return MediaItem{}, fmt.Errorf("media item with given id not found")
 	}
 	return item, nil
+}
+
+func (ms *mediaStoreImpl) GetOptimizedMediaItem(id sha256Hash) (MediaItem, error) {
+	// TODO: generate optimized version on first request and cache it
+	// or generate all optimized versions on startup
+	mediaItem, err := ms.GetFullMediaItem(id)
+	if err != nil {
+		return MediaItem{}, err
+	}
+
+	optimized, err := optimizeJpg(mediaItem.Content)
+	if err != nil {
+		return MediaItem{}, fmt.Errorf("failed to optimize media item: %w", err)
+	}
+
+	log.Debug().Str("ID", id.String()).
+		Int("originalSize", len(mediaItem.Content)).
+		Int("optimizedSize", len(optimized)).
+		Msg("Returning optimized media item")
+
+	return MediaItem{
+		ID:           mediaItem.ID,
+		CreationTime: mediaItem.CreationTime,
+		Content:      optimized,
+	}, nil
 }
 
 func NewMediaStore(path string) (MediaStore, error) {
@@ -271,6 +297,23 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 
 func generateThumbnail(data []byte) ([]byte, error) {
 	return ResizeTo256(data)
+}
+
+func optimizeJpg(in []byte) ([]byte, error) {
+	img, _, err := image.Decode(bytes.NewReader(in))
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: copy EXIF metadata from original image
+
+	var buf bytes.Buffer
+	opts := &jpeg.Options{Quality: 50}
+	if err := jpeg.Encode(&buf, img, opts); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 // ResizeTo256 takes raw image bytes and returns JPEG-encoded bytes of a 256x256

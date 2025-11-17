@@ -110,7 +110,7 @@ func (s *server) GetMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*p
 	}
 
 	// get media item from media store
-	mediaItem, err := s.mediaStore.GetMediaItem(*id)
+	mediaItem, err := s.mediaStore.GetOptimizedMediaItem(*id)
 	if err != nil {
 		log.Error().Err(err).
 			Str("id", in.GetId()).
