@@ -1,6 +1,5 @@
 package xyz.jdubiel.migawka
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,19 +22,56 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.map
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import xyz.jdubiel.migawka.data.UserSettingsRepository
 import java.util.regex.Pattern
 
+class SettingsScreenViewModel(
+    private val userSettingsRepository: UserSettingsRepository
+) : ViewModel() {
+
+    // stateIn call converts (cold) Flow to (hot) StateFlow, so it's immediately available
+    // more info about the started parameter:
+    // https://medium.com/androiddevelopers/migrating-from-livedata-to-kotlins-flow-379292f419fb
+    val serverAddress: StateFlow<String> = userSettingsRepository.serverAddress.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ""
+        )
+
+    fun setServerAddress(serverAddress: String) {
+        viewModelScope.launch {
+            userSettingsRepository.setServerAddress(serverAddress)
+        }
+    }
+
+    companion object {
+        // Factory for creating SettingsScreenViewModel. It uses the userSettingsRepository that
+        // has been injected into MigawkaApplication.
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as MigawkaApplication)
+                SettingsScreenViewModel(application.userSettingsRepository)
+            }
+        }
+    }
+}
+
+// TODO: move validation to UserSettingsRepository
 fun isIpv4OrIpv4Port(input: String): Boolean {
     // IPv4 octet 0-255
     val octet = "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)"
@@ -53,26 +89,13 @@ fun isValidServerAddress(input: String): Boolean {
     return isIpv4OrIpv4Port(input)
 }
 
-// DataStore setup (top-level)
-private val Context.dataStore by preferencesDataStore(name = "settings_prefs")
-private val SERVER_ADDRESS_KEY = stringPreferencesKey("server_address")
 
-// Public API: composable
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
-    onSaved: ((String) -> Unit)? = null
+    viewModel: SettingsScreenViewModel = viewModel(factory = SettingsScreenViewModel.Factory)
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    // Load persisted value as State
-    val savedAddressFlow = remember(context) {
-        context.dataStore.data.map { prefs ->
-            prefs[SERVER_ADDRESS_KEY] ?: ""
-        }
-    }
-    val savedAddress by savedAddressFlow.collectAsState(initial = "")
+    val savedAddress by viewModel.serverAddress.collectAsState()
 
     var text by remember { mutableStateOf(savedAddress) }
     // keep text synced when savedAddress changes externally
@@ -134,13 +157,7 @@ fun SettingsScreen(
 
                 Button(
                     onClick = {
-                        scope.launch {
-                            // Persist to DataStore
-                            context.dataStore.edit { prefs ->
-                                prefs[SERVER_ADDRESS_KEY] = text.trim()
-                            }
-                            onSaved?.invoke(text.trim())
-                        }
+                        viewModel.setServerAddress(text.trim())
                     },
                     enabled = isValid && isChanged
                 ) {

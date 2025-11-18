@@ -67,11 +67,7 @@ fun MigawkaApp(
             }
 
             composable(route = MigawkaScreen.Settings.name) {
-                SettingsScreen(
-                    onSaved = {
-                        // navController.popBackStack()
-                    }
-                )
+                SettingsScreen()
             }
 
             composable(
