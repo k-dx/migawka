@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.ui
 
 import android.content.Context
 import android.content.Intent

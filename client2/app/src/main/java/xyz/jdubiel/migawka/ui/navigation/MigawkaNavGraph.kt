@@ -11,8 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.Migawka
-import xyz.jdubiel.migawka.SecondScreen
-import xyz.jdubiel.migawka.SettingsScreen
+import xyz.jdubiel.migawka.ui.SecondScreen
+import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.Sha256
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.TAG

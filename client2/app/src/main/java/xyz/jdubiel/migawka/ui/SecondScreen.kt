@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.ui
 
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -30,6 +31,8 @@ import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import xyz.jdubiel.migawka.GetMediaItemRequest
+import xyz.jdubiel.migawka.MigawkaGrpcKt
 import java.io.ByteArrayInputStream
 
 fun shutdownChannel(channel: ManagedChannel) {
@@ -159,7 +162,7 @@ fun GrpcImage(
                         // But we don't ask user; use side-effect: increment a counter remembered outside.
                     }) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                            imageVector = Icons.Default.Refresh,
                             contentDescription = "Retry"
                         )
                     }

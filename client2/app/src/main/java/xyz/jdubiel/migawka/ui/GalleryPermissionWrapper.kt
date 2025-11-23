@@ -22,7 +22,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryScreen
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
-import xyz.jdubiel.migawka.PermissionRationaleScreen
 
 @Composable
 fun GalleryPermissionWrapper(
