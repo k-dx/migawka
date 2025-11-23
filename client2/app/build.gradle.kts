@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.protobuf)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -104,4 +105,10 @@ dependencies {
     implementation(libs.grpc.kotlin.stub)
     implementation(libs.javax.annotation.api)
     implementation(libs.protobuf.javalite)
+
+    // Room
+    // TODO: change to libs.*
+    implementation("androidx.room:room-runtime:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
 }
