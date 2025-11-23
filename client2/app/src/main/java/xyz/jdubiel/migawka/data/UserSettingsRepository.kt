@@ -10,13 +10,16 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withTimeoutOrNull
 
 // This is an interface so we can inject any implementation that adheres to this
 // interface in MigawkaApplication (or tests)
 interface UserSettingsRepository {
     val serverAddress: Flow<String>
     suspend fun setServerAddress(address: String)
+    suspend fun getServerAddress(timeoutMs: Long = 5_000L, default: String = "localhost"): String
 }
 
 /**
@@ -28,6 +31,10 @@ class InMemoryUserSettingsRepository() : UserSettingsRepository {
 
     override suspend fun setServerAddress(address: String) {
         _serverAddress.value = address
+    }
+
+    override suspend fun getServerAddress(timeoutMs: Long, default: String): String {
+        TODO("Not yet implemented")
     }
 }
 
@@ -56,10 +63,20 @@ class PersistentUserSettingsRepository(
             preferences[SERVER_ADDRESS_KEY] ?: ""
         }
 
+    /**
+     * This is for only getting the server address once, it will not update like the Flow above.
+     */
+    override suspend fun getServerAddress(timeoutMs: Long, default: String): String =
+        withTimeoutOrNull(timeoutMs) {
+            serverAddress.first()
+        } ?: default
+
 
     override suspend fun setServerAddress(address: String) {
         dataStore.edit { preferences ->
             preferences[SERVER_ADDRESS_KEY] = address
         }
     }
+
+
 }

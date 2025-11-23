@@ -11,21 +11,28 @@ data class RemoteImage(
     val sha256: Sha256
 )
 
-class RemoteImageProvider { // TODO: make it a singleton
+data class IPEndpoint(
+    val ip: String,
+    val port: Int
+) {
+    init {
+        require(ip.isNotBlank()) { "ip must not be blank" }
+        require(port in 0..65535) { "port must be in 0..65535" }
+    }
+
+    override fun toString(): String = "$ip:$port"
+}
+
+
+class RemoteImageProvider(private val endpoint: IPEndpoint) { // TODO: make it a singleton (?)
 
     // TODO: gracefully shutdown the channel when the instance gets removed?
-    private val channel: ManagedChannel
-    private val stub: MigawkaGrpcKt.MigawkaCoroutineStub
-
-    init {
-        // TODO: don't hardcode IP or PORT
-        val serverAddress = "192.168.5.158"
-        channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+    private val channel: ManagedChannel =
+        ManagedChannelBuilder.forAddress(endpoint.ip, endpoint.port)
             .usePlaintext() // TODO: don't use plaintext!
             .build()
-
-        stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
-    }
+    private val stub: MigawkaGrpcKt.MigawkaCoroutineStub =
+        MigawkaGrpcKt.MigawkaCoroutineStub(channel)
 
     suspend fun getThumbnailsBeforeTimestamp(timestamp: Instant, count: Int): List<RemoteImage> {
         val remoteImages = mutableListOf<RemoteImage>()
