@@ -20,21 +20,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
+import xyz.jdubiel.migawka.ui.navigation.MigawkaNavHost
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
-
-enum class MigawkaScreen {
-    Second,
-    Gallery,
-    SingleMediaView,
-    Settings
-}
 
 
 @Composable
@@ -42,51 +32,13 @@ fun MigawkaApp(
     navController: NavHostController = rememberNavController(),
     imageGalleryViewModel: ImageGalleryViewModel = viewModel()
 ) {
+    // TODO: probably MikawkaNavHost should be moved outside Scaffold (?)
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        val initialImageIdArg = "initialImageId"
-
-        NavHost(
+        MigawkaNavHost(
             navController = navController,
-            startDestination = MigawkaScreen.Gallery.name,
+            imageGalleryViewModel = imageGalleryViewModel,
             modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(route = MigawkaScreen.Gallery.name) {
-                Migawka(
-                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) },
-                    onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
-                    viewModel = imageGalleryViewModel,
-                    onImageClick = { imageId: String ->
-                        Log.d(TAG, "onImageClick, imageId = $imageId")
-                        navController.navigate("${MigawkaScreen.SingleMediaView.name}/$imageId")
-                    }
-                )
-            }
-
-            composable(route = MigawkaScreen.Second.name) {
-                SecondScreen(content = "Second screen! Yay!")
-            }
-
-            composable(route = MigawkaScreen.Settings.name) {
-                SettingsScreen()
-            }
-
-            composable(
-                route = "${MigawkaScreen.SingleMediaView.name}/{$initialImageIdArg}",
-                arguments = listOf(navArgument(initialImageIdArg) { type = NavType.StringType })
-            ) { backStackEntry ->
-                val initialImageId = backStackEntry.arguments
-                    ?.getString(initialImageIdArg)
-                if (initialImageId != null) {
-                    SingleMediaViewScreen(
-                        viewModel = imageGalleryViewModel,
-                        initialImageId = Sha256.fromHex(initialImageId)
-                    )
-                } else {
-                    Log.e("SingleMediaViewScreen", "initialImageId is null")
-                    Text("Error: initialImageId is null. The image could not be displayed.")
-                }
-            }
-        }
+        )
     }
 }
 
