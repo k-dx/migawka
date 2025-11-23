@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.ui.imageGallery
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -8,6 +8,9 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import xyz.jdubiel.migawka.ImageRepository
+import xyz.jdubiel.migawka.PagedImage
+import xyz.jdubiel.migawka.Sha256
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
 

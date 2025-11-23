@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka
 
 import android.net.Uri
+import xyz.jdubiel.migawka.Sha256
 import java.time.Instant
 
 // Data class to hold processed local image information

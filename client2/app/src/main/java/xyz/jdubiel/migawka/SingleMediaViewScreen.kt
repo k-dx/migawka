@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 
 @Composable
 fun SingleMediaViewScreen(

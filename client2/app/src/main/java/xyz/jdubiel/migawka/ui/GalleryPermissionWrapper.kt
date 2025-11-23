@@ -1,10 +1,9 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.ui
 
 import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +20,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryScreen
+import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import xyz.jdubiel.migawka.PermissionRationaleScreen
 
 @Composable
 fun GalleryPermissionWrapper(

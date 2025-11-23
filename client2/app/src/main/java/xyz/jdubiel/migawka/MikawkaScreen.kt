@@ -23,6 +23,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
+import xyz.jdubiel.migawka.ui.GalleryPermissionWrapper
+import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.navigation.MigawkaNavHost
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
