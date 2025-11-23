@@ -6,10 +6,12 @@ import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.TAG
+import xyz.jdubiel.migawka.data.uriToSha256.UriToSha256Entry
+import xyz.jdubiel.migawka.data.uriToSha256.UriToSha256Repository
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.LocalDateTime
@@ -19,9 +21,9 @@ import java.time.format.DateTimeFormatter
 const val HERETAG = "MediaStoreImageProvider"
 
 class MediaStoreImageProvider(
-    private val contentResolver: ContentResolver
+    private val contentResolver: ContentResolver,
+    private val uriToSha256Repository: UriToSha256Repository
 ) : LocalImageProvider {
-
     private var sha256ToUri: MutableMap<Sha256, Uri> = mutableMapOf()
 
     // TODO: change this to be saved in a database provided by Android
@@ -29,6 +31,7 @@ class MediaStoreImageProvider(
     private var uriToDate: MutableList<Pair<Uri, Instant>> = mutableListOf()
 
     init {
+        // TODO: query only those not present in uriToSha256Repo
         contentResolver.query(
              MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
              arrayOf(MediaStore.Images.Media._ID),
@@ -57,14 +60,25 @@ class MediaStoreImageProvider(
         return withContext(Dispatchers.IO) {
             val uriToDateBefore = uriToDate.filter { it.second < imagesBefore ?: Instant.now() }
 
+            val uriToSha: Map<Uri, Sha256> = uriToSha256Repository.getAllEntries().associate {
+                it.uri.toUri() to Sha256.fromHex(it.sha256)
+            }
             val localImages = mutableListOf<LocalImage>()
+
+
             for (i in 0 until minOf(count, uriToDateBefore.size)) {
                 val uri = uriToDateBefore[i].first
                 val date = uriToDateBefore[i].second
-                val sha256 = computeSha256(uri)
+                val sha256 = uriToSha[uri] ?: computeSha256(uri)
+                Log.d(TAG, if(uriToSha.containsKey(uri)) { "entry in database"} else {"computing sha"})
                 sha256?.let {
                     localImages.add(LocalImage(uri, date, it))
                     sha256ToUri[it] = uri
+
+                    // TODO: change to one insertion, all at once
+                    uriToSha256Repository.insertEntry(
+                        UriToSha256Entry(uri.toString(), sha256.toHex())
+                    )
 //                    Log.d(TAG, "calculated sha256 of uri $uri: $it")
                 }
             }

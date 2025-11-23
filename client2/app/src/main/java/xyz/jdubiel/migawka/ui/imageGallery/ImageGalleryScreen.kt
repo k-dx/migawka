@@ -23,24 +23,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.TAG
+import xyz.jdubiel.migawka.data.PagedImage
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
 fun ImageGalleryScreen(
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ImageGalleryViewModel = viewModel()
+    viewModel: ImageGalleryViewModel
 ) {
     // This is an extension function from the androidx.paging:paging-compose
     // library. Its job is to collect the PagingData from the imageStream and
@@ -162,12 +160,4 @@ fun ImageGrid(
         }
         else -> {}
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ImageGallery() {
-    // This preview will be empty as it doesn't have access to a real ViewModel
-    // You can create a fake ViewModel for preview purposes if needed.
-    ImageGalleryScreen(onImageClick = {})
 }

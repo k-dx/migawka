@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -26,13 +25,12 @@ import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.ui.GalleryPermissionWrapper
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.navigation.MigawkaNavHost
-import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 
 @Composable
 fun MigawkaApp(
     navController: NavHostController = rememberNavController(),
-    imageGalleryViewModel: ImageGalleryViewModel = viewModel()
+    imageGalleryViewModel: ImageGalleryViewModel = viewModel(factory = ImageGalleryViewModel.Factory)
 ) {
     // TODO: probably MikawkaNavHost should be moved outside Scaffold (?)
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -140,15 +138,15 @@ fun Migawka(
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MigawkaPreview() {
-    MigawkaTheme {
-        Migawka(
-            viewModel = viewModel<ImageGalleryViewModel>(),
-            onSettingsButtonClick = {},
-            onSecondScreenButtonClick = {},
-            onImageClick = {}
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun MigawkaPreview() {
+//    MigawkaTheme {
+//        Migawka(
+//            viewModel = viewModel<ImageGalleryViewModel>(factory = ImageGalleryViewModel.Factory),
+//            onSettingsButtonClick = {},
+//            onSecondScreenButtonClick = {},
+//            onImageClick = {}
+//        )
+//    }
+//}

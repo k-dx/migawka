@@ -5,7 +5,6 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.ThumbnailsTimestampRequest
 import java.time.Instant
 
