@@ -45,8 +45,15 @@ class SettingsScreenViewModel(
 ) : ViewModel() {
 
     // stateIn call converts (cold) Flow to (hot) StateFlow, so it's immediately available
-    // more info about the started parameter:
+    // about the started parameter:
+    // the `WhileSubscribed(5_000)` passed to started parameter means that when
+    // the current activity is stopped, the upstream flows will be stopped after
+    // 5 more seconds, providing a smooth transition: they will be stopped if 
+    // the user goes to the home screen or another app, but they will not be
+    // stopped during a device rotation (as the activity will be restarted with
+    // onResume in less than 5 seconds)
     // https://medium.com/androiddevelopers/migrating-from-livedata-to-kotlins-flow-379292f419fb
+    // https://www.youtube.com/watch?v=fSB6_KE95bU
     val serverAddress: StateFlow<String> = userSettingsRepository.serverAddress.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
