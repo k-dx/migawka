@@ -8,7 +8,7 @@ import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.Sha256
+import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.TAG
 import java.security.MessageDigest
 import java.time.Instant

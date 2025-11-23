@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
-import xyz.jdubiel.migawka.Sha256
+import xyz.jdubiel.migawka.data.Sha256
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
 

@@ -2,6 +2,7 @@ package xyz.jdubiel.migawka
 
 import android.util.Log
 import io.grpc.ManagedChannelBuilder
+import xyz.jdubiel.migawka.data.Sha256
 
 class Utils {
     companion object {

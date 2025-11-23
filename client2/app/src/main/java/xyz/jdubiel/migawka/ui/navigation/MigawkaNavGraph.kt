@@ -13,7 +13,7 @@ import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.Migawka
 import xyz.jdubiel.migawka.ui.SecondScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
-import xyz.jdubiel.migawka.Sha256
+import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.TAG
 

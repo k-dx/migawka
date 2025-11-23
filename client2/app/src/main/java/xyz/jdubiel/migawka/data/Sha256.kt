@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.data
 
 // `private constructor` Makes the primary constructor private so callers cannot
 // instantiate Sha256 directly with arbitrary arrays.

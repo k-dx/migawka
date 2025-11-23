@@ -21,7 +21,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
-import xyz.jdubiel.migawka.Sha256
+import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 
 @Composable
