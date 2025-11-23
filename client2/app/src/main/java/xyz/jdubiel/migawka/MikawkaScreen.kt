@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -27,7 +26,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
-import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 enum class MigawkaScreen {
     Second,
@@ -40,7 +38,7 @@ enum class MigawkaScreen {
 @Composable
 fun MigawkaApp(
     navController: NavHostController = rememberNavController(),
-    imageGalleryViewModel: ImageGalleryViewModel = viewModel()
+    imageGalleryViewModel: ImageGalleryViewModel = viewModel(factory = ImageGalleryViewModel.Factory)
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         val initialImageIdArg = "initialImageId"
@@ -184,17 +182,4 @@ fun Migawka(
         )
     }
 
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MigawkaPreview() {
-    MigawkaTheme {
-        Migawka(
-            viewModel = viewModel<ImageGalleryViewModel>(),
-            onSettingsButtonClick = {},
-            onSecondScreenButtonClick = {},
-            onImageClick = {}
-        )
-    }
 }
