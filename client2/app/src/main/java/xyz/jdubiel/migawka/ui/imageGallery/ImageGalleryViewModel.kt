@@ -8,8 +8,8 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.ImageRepository
-import xyz.jdubiel.migawka.PagedImage
+import xyz.jdubiel.migawka.data.ImageRepository
+import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.Sha256
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {

@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.ui.singleMedia
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.data.PagedImage
+import xyz.jdubiel.migawka.data.RemoteImage
+import xyz.jdubiel.migawka.Sha256
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 
 @Composable

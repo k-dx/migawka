@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.data
 
 import android.net.Uri
 import xyz.jdubiel.migawka.Sha256

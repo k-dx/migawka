@@ -32,7 +32,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.PagedImage
+import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.TAG
 
 // Displays a gallery grid with images. Assumes the permission is already granted.

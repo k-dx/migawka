@@ -1,8 +1,12 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.data
 
 import android.util.Log
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import xyz.jdubiel.migawka.GetMediaItemRequest
+import xyz.jdubiel.migawka.MigawkaGrpcKt
+import xyz.jdubiel.migawka.Sha256
+import xyz.jdubiel.migawka.ThumbnailsTimestampRequest
 import java.time.Instant
 
 data class RemoteImage(
@@ -50,7 +54,7 @@ class RemoteImageProvider { // TODO: make it a singleton
 
                 remoteImages.add(
                     RemoteImage(
-                        sha256 = Sha256.fromHex(it.id),
+                        sha256 = Sha256.Companion.fromHex(it.id),
                         bytes = it.content.toByteArray(),
                         date = date
                     )

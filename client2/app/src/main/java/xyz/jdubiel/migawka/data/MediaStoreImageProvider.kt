@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka
+package xyz.jdubiel.migawka.data
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -8,8 +8,13 @@ import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import xyz.jdubiel.migawka.Sha256
+import xyz.jdubiel.migawka.TAG
 import java.security.MessageDigest
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 const val HERETAG = "MediaStoreImageProvider"
 
@@ -122,9 +127,9 @@ class MediaStoreImageProvider(
                         exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)?.let { s ->
                             // parse "yyyy:MM:dd HH:mm:ss" optionally with offset tag
                             dateExif = try {
-                                val fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
-                                val ldt = java.time.LocalDateTime.parse(s, fmt)
-                                ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()
+                                val fmt = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+                                val ldt = LocalDateTime.parse(s, fmt)
+                                ldt.atZone(ZoneId.systemDefault()).toInstant()
                             } catch (e: Exception) { null }
                         }
                     }
@@ -168,7 +173,7 @@ class MediaStoreImageProvider(
                 while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                     digest.update(buffer, 0, bytesRead)
                 }
-                Sha256.of(digest.digest())
+                Sha256.Companion.of(digest.digest())
             }
         } catch (e: Exception) {
             Log.e("MediaStoreImageProvider", "Failed to compute SHA-256 for $uri", e)

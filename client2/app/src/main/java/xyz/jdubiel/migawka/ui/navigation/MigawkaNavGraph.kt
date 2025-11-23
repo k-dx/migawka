@@ -14,7 +14,7 @@ import xyz.jdubiel.migawka.Migawka
 import xyz.jdubiel.migawka.SecondScreen
 import xyz.jdubiel.migawka.SettingsScreen
 import xyz.jdubiel.migawka.Sha256
-import xyz.jdubiel.migawka.SingleMediaViewScreen
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.TAG
 
 enum class MigawkaScreen {
