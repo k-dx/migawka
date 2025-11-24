@@ -161,18 +161,6 @@ fun SingleMediaViewScreen(
                 .padding(top = 16.dp)
         ) {
             Box() {
-                // Bottom vignette overlay
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(40.dp)
-//                        .align(Alignment.BottomCenter)
-//                        .background(
-//                            Brush.verticalGradient(
-//                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.2f))
-//                            )
-//                        )
-//                )
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
