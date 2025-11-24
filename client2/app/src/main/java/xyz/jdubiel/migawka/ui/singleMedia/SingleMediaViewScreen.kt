@@ -40,6 +40,45 @@ import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 
 @Composable
+fun ActionButtons(buttons: List<@Composable () -> Unit>, content: @Composable () -> Unit) {
+    // TODO: this should be remembered between device rotations
+    var showButtons by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { showButtons = !showButtons }
+    ) {
+        content()
+
+        AnimatedVisibility(
+            visible = showButtons,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomEnd)
+                .padding(top = 16.dp)
+        ) {
+            Box() {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    buttons.forEach { it() }
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
 fun SingleMediaViewScreen(
     viewModel: ImageGalleryViewModel,
     initialImageId: Sha256,
@@ -50,7 +89,6 @@ fun SingleMediaViewScreen(
 
     val images = viewModel.imageStream.collectAsLazyPagingItems()
 
-    var showButtons by remember { mutableStateOf(false) }
 
     val initialPage = images.itemSnapshotList.items.indexOfFirst{
         when (it) {
@@ -70,14 +108,14 @@ fun SingleMediaViewScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { showButtons = !showButtons }
-    ) {
+    // TODO: change to icon buttons
+    val buttons: List<@Composable () -> Unit> = listOf(
+        { Button(onClick = { /* Action 1 */ }) { Text("Rotate") } },
+        { Button(onClick = { /* Action 1 */ }) { Text("Download") } },
+        { Button(onClick = { /* Action 1 */ }) { Text("Share") } },
+    )
+
+    ActionButtons(buttons = buttons) {
         Column(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -149,31 +187,6 @@ fun SingleMediaViewScreen(
                     }
                 }
             }
-        }
-
-        AnimatedVisibility(
-            visible = showButtons,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomEnd)
-                .padding(top = 16.dp)
-        ) {
-            Box() {
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                ) {
-                    val currentImage = images[pagerState.currentPage]
-                    Button(onClick = { /* Action 1 */ }) { Text("Rotate") }
-                    if (currentImage is PagedImage.FromBytes) {
-                        Button(onClick = { /* Action 2 */ }) { Text("Download") }
-                    }
-                    Button(onClick = { /* Action 2 */ }) { Text("Share") }
-                }
-            }
-
         }
     }
 }
