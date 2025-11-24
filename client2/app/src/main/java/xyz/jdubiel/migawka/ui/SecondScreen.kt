@@ -2,12 +2,25 @@ package xyz.jdubiel.migawka.ui
 
 import android.graphics.BitmapFactory
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,7 +40,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -46,25 +58,60 @@ fun shutdownChannel(channel: ManagedChannel) {
 }
 
 @Composable
-fun SecondScreen(content: String) {
+fun AnimatedSlideButtonsScreen() {
+    var showButtons by remember { mutableStateOf(false) }
 
-    val serverAddress = "192.168.5.158"
-    Log.d("serverAddress", serverAddress)
-    val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
-        .usePlaintext()
-        .build()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable { showButtons = !showButtons }
+    ) {
+        Text("Tap anywhere to toggle buttons", modifier = Modifier.align(Alignment.Center))
 
-
-    Text(content)
-    GrpcImage(
-        imageId = "0b8512120df51731b619a06b537668d9b58625904f1f780abdf585a0d8863ee6",
-        stubProvider = {
-            MigawkaGrpcKt.MigawkaCoroutineStub(channel)
-        },
-        shutdownChannel = {
-            shutdownChannel(channel)
+        AnimatedVisibility(
+            visible = showButtons,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomEnd)
+                .padding(top = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+            ) {
+                Button(onClick = { /* Action 1 */ }) { Text("Rotate") }
+                Button(onClick = { /* Action 2 */ }) { Text("Download") } // only for remote imgs
+                Button(onClick = { /* Action 2 */ }) { Text("Share") }
+            }
         }
-    )
+    }
+}
+
+
+
+@Composable
+fun SecondScreen(content: String) {
+    AnimatedSlideButtonsScreen()
+
+//    val serverAddress = "192.168.5.158"
+//    Log.d("serverAddress", serverAddress)
+//    val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+//        .usePlaintext()
+//        .build()
+//
+//
+//    Text(content)
+//    GrpcImage(
+//        imageId = "0b8512120df51731b619a06b537668d9b58625904f1f780abdf585a0d8863ee6",
+//        stubProvider = {
+//            MigawkaGrpcKt.MigawkaCoroutineStub(channel)
+//        },
+//        shutdownChannel = {
+//            shutdownChannel(channel)
+//        }
+//    )
 }
 
 
