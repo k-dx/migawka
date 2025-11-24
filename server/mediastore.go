@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/draw"
 	"image/jpeg"
 	"os"
 	"os/exec"
@@ -16,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nfnt/resize"
+	"github.com/disintegration/imaging"
 	"github.com/rs/zerolog/log"
 )
 
@@ -382,7 +381,7 @@ func getExifDate(path string) (time.Time, error) {
 }
 
 func generateThumbnail(data []byte) ([]byte, error) {
-	return ResizeTo256(data)
+	return ResizeToThumbnail(data)
 }
 
 func optimizeJpg(in []byte) ([]byte, error) {
@@ -402,13 +401,11 @@ func optimizeJpg(in []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// ResizeTo256 takes raw image bytes and returns JPEG-encoded bytes of a 256x256
-// image. It center-crops non-square images, then resizes with good quality.
-// Supported input formats: JPEG, PNG, GIF.
-//
-// Returns JPEG bytes and any error.
-func ResizeTo256(in []byte) ([]byte, error) {
-	img, format, err := image.Decode(bytes.NewReader(in))
+// ResizeToThumbnail takes raw image bytes and returns JPEG-encoded bytes of an
+// image resized to longer side to 256 pixels, preserving aspect ratio. It
+// respects image orientation.
+func ResizeToThumbnail(in []byte) ([]byte, error) {
+	img, err := imaging.Decode(bytes.NewReader(in), imaging.AutoOrientation(true))
 	if err != nil {
 		return nil, err
 	}
@@ -418,38 +415,34 @@ func ResizeTo256(in []byte) ([]byte, error) {
 	w := b.Dx()
 	h := b.Dy()
 
-	var src image.Image
-	if w == h {
-		src = img
-	} else if w > h {
-		// landscape: crop sides
-		x0 := (w - h) / 2
-		rect := image.Rect(x0, 0, x0+h, h)
-		c := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
-		draw.Draw(c, c.Bounds(), img, rect.Min, draw.Src)
-		src = c
+	TARGET_LONGER_SIDE := 256
+
+	target_w := 0
+	target_h := 0
+
+	if w >= h {
+		if w > TARGET_LONGER_SIDE {
+			target_w = TARGET_LONGER_SIDE
+			target_h = 0 // will preserve aspect ratio
+		}
 	} else {
-		// portrait: crop top/bottom
-		y0 := (h - w) / 2
-		rect := image.Rect(0, y0, w, y0+w)
-		c := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
-		draw.Draw(c, c.Bounds(), img, rect.Min, draw.Src)
-		src = c
+		if h > TARGET_LONGER_SIDE {
+			target_w = 0 // will preserve aspect ratio
+			target_h = TARGET_LONGER_SIDE
+		}
 	}
 
-	// Resize to 256x256 using github.com/nfnt/resize (Lanczos3)
-	resized := resize.Resize(256, 256, src, resize.Lanczos3)
+	resized := imaging.Resize(img, target_w, target_h, imaging.Lanczos)
 
-	// Encode to JPEG
-	var buf bytes.Buffer
-	opts := &jpeg.Options{Quality: 90}
-	if err := jpeg.Encode(&buf, resized, opts); err != nil {
+	// encode to JPEG
+	var outBuf bytes.Buffer
+	opts := &jpeg.Options{Quality: 50}
+	err = imaging.Encode(&outBuf, resized, imaging.JPEG, imaging.JPEGQuality(opts.Quality))
+	if err != nil {
 		return nil, err
 	}
 
-	// If caller wants original format instead of JPEG, you can branch on `format`.
-	_ = format // keep for future use
-	return buf.Bytes(), nil
+	return outBuf.Bytes(), nil
 }
 
 // In mediastore_test.go or mediastore.go
