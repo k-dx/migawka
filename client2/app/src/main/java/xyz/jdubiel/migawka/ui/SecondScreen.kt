@@ -58,7 +58,9 @@ fun shutdownChannel(channel: ManagedChannel) {
 }
 
 @Composable
-fun AnimatedSlideButtonsScreen() {
+fun AnimatedSlideButtonsScreen(
+    content: @Composable () -> Unit
+) {
     var showButtons by remember { mutableStateOf(false) }
 
     Box(
@@ -66,7 +68,7 @@ fun AnimatedSlideButtonsScreen() {
             .fillMaxSize()
             .clickable { showButtons = !showButtons }
     ) {
-        Text("Tap anywhere to toggle buttons", modifier = Modifier.align(Alignment.Center))
+        content()
 
         AnimatedVisibility(
             visible = showButtons,
@@ -77,15 +79,32 @@ fun AnimatedSlideButtonsScreen() {
                 .align(Alignment.BottomEnd)
                 .padding(top = 16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-            ) {
-                Button(onClick = { /* Action 1 */ }) { Text("Rotate") }
-                Button(onClick = { /* Action 2 */ }) { Text("Download") } // only for remote imgs
-                Button(onClick = { /* Action 2 */ }) { Text("Share") }
+            Box() {
+                // Bottom vignette overlay
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(40.dp)
+//                        .align(Alignment.BottomCenter)
+//                        .background(
+//                            Brush.verticalGradient(
+//                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.2f))
+//                            )
+//                        )
+//                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    Button(onClick = { /* Action 1 */ }) { Text("Rotate") }
+                    Button(onClick = { /* Action 2 */ }) { Text("Download") } // only for remote imgs
+                    Button(onClick = { /* Action 2 */ }) { Text("Share") }
+                }
             }
+
         }
+
+
     }
 }
 
@@ -93,7 +112,10 @@ fun AnimatedSlideButtonsScreen() {
 
 @Composable
 fun SecondScreen(content: String) {
-    AnimatedSlideButtonsScreen()
+    AnimatedSlideButtonsScreen() {
+        Text("Tap anywhere to toggle buttons")
+        //modifier = Modifier.align(Alignment.Center)
+    }
 
 //    val serverAddress = "192.168.5.158"
 //    Log.d("serverAddress", serverAddress)
