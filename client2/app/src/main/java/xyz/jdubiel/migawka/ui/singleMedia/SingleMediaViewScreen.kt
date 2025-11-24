@@ -1,12 +1,14 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -88,18 +90,23 @@ fun SingleMediaViewScreen(
                                     contentScale = ContentScale.Fit
                                 )
                             } else {
-                                Column(){
-                                    AsyncImage(
-                                        model = image.bytes,
-                                        contentDescription = "Full screen thumbnail",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                    if (error != null) {
-                                        Text("Fetching error: $error")
-                                    } else {
-                                        Text("Thumbnail, fetching")
-                                        CircularProgressIndicator()
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        AsyncImage(
+                                            model = image.bytes,
+                                            contentDescription = "Full screen thumbnail",
+                                            modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                        if (error != null) {
+                                            Text("Fetching error: $error")
+                                        } else {
+                                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                        }
                                     }
                                 }
                                 LaunchedEffect(fullImage) {
