@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"image/jpeg"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/disintegration/imaging"
 	"github.com/h2non/bimg"
 	"github.com/rs/zerolog/log"
 )
@@ -415,7 +412,6 @@ func optimizeJpg(in []byte) ([]byte, error) {
 		Quality:       80,
 		Interlace:     true,
 		StripMetadata: false, // keep EXIF metadata
-		// Compression:  9, // what does this do?
 	}
 
 	newImage, err := img.Process(options)
@@ -430,44 +426,42 @@ func optimizeJpg(in []byte) ([]byte, error) {
 // image resized to longer side to 256 pixels, preserving aspect ratio. It
 // respects image orientation.
 func ResizeToThumbnail(in []byte) ([]byte, error) {
-	img, err := imaging.Decode(bytes.NewReader(in), imaging.AutoOrientation(true))
-	if err != nil {
-		return nil, err
-	}
+	img := bimg.NewImage(in)
 
-	// Determine square crop rectangle centered
-	b := img.Bounds()
-	w := b.Dx()
-	h := b.Dy()
+	size, err := img.Size()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get image size: %w", err)
+	}
 
 	TARGET_LONGER_SIDE := 256
 
 	target_w := 0
 	target_h := 0
 
-	if w >= h {
-		if w > TARGET_LONGER_SIDE {
+	if size.Width >= size.Height {
+		if size.Width > TARGET_LONGER_SIDE {
 			target_w = TARGET_LONGER_SIDE
 			target_h = 0 // will preserve aspect ratio
 		}
 	} else {
-		if h > TARGET_LONGER_SIDE {
+		if size.Height > TARGET_LONGER_SIDE {
 			target_w = 0 // will preserve aspect ratio
 			target_h = TARGET_LONGER_SIDE
 		}
 	}
 
-	resized := imaging.Resize(img, target_w, target_h, imaging.Lanczos)
-
-	// encode to JPEG
-	var outBuf bytes.Buffer
-	opts := &jpeg.Options{Quality: 50}
-	err = imaging.Encode(&outBuf, resized, imaging.JPEG, imaging.JPEGQuality(opts.Quality))
-	if err != nil {
-		return nil, err
+	options := bimg.Options{
+		Width:     target_w,
+		Height:    target_h,
+		Quality:   50,
+		Interlace: true,
 	}
 
-	return outBuf.Bytes(), nil
+	newImage, err := img.Process(options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process image: %w", err)
+	}
+	return newImage, nil
 }
 
 // In mediastore_test.go or mediastore.go
