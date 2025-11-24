@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -253,7 +252,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			Str("hash", hex.EncodeToString(hash[:])).
 			Msg("Loaded media item")
 
-		creatationDatetime, err := getExifDate(filePath)
+		creatationDatetime, err := getExifCreationDate(content)
 		if err != nil {
 			log.Info().
 				Str("file", filePath).
@@ -355,21 +354,16 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 }
 
 // TODO: add tests for this
-func getExifDate(path string) (time.Time, error) {
-	cmd := exec.Command("exiftool", "-DateTimeOriginal", "-s3", path)
-
-	output, err := cmd.Output()
+func getExifCreationDate(img []byte) (time.Time, error) {
+	metadata, err := bimg.Metadata(img)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to get EXIF date: %w", err)
+		return time.Time{}, fmt.Errorf("failed to get EXIF metadata: %w", err)
 	}
 
-	dateStr := strings.TrimSpace(string(output))
-	if dateStr == "" {
-		return time.Time{}, fmt.Errorf("no EXIF date found")
-	}
+	dateStr := metadata.EXIF.DateTimeOriginal
 
-	const exifDateFormat = "2006:01:02 15:04:05"
-	t, err := time.Parse(exifDateFormat, dateStr)
+	timeLayout := "2006:01:02 15:04:05"
+	t, err := time.Parse(timeLayout, dateStr)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("failed to parse EXIF date: %w", err)
 	}
