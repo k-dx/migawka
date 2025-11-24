@@ -10,6 +10,7 @@ import (
 	"image/draw"
 	"image/jpeg"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -256,11 +257,20 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			Str("hash", hex.EncodeToString(hash[:])).
 			Msg("Loaded media item")
 
+		creatationDatetime, err := getExifDate(filePath)
+		if err != nil {
+			log.Info().
+				Str("file", filePath).
+				Err(err).
+				Msg("Failed to get EXIF date, using file modification time instead")
+			creatationDatetime = info.ModTime()
+		}
+
 		// Store in map
 		ms.items[hash] = NewMediaItemMetadata(
 			hash,
 			filePath,
-			info.ModTime(), // TODO: use EXIF for images if available
+			creatationDatetime,
 		)
 
 		return nil
@@ -346,6 +356,29 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	}
 
 	return nil
+}
+
+// TODO: add tests for this
+func getExifDate(path string) (time.Time, error) {
+	cmd := exec.Command("exiftool", "-DateTimeOriginal", "-s3", path)
+
+	output, err := cmd.Output()
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to get EXIF date: %w", err)
+	}
+
+	dateStr := strings.TrimSpace(string(output))
+	if dateStr == "" {
+		return time.Time{}, fmt.Errorf("no EXIF date found")
+	}
+
+	const exifDateFormat = "2006:01:02 15:04:05"
+	t, err := time.Parse(exifDateFormat, dateStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse EXIF date: %w", err)
+	}
+
+	return t, nil
 }
 
 func generateThumbnail(data []byte) ([]byte, error) {
