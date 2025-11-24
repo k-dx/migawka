@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"image"
 	"image/jpeg"
 	"os"
 	"os/exec"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
+	"github.com/h2non/bimg"
 	"github.com/rs/zerolog/log"
 )
 
@@ -385,20 +385,45 @@ func generateThumbnail(data []byte) ([]byte, error) {
 }
 
 func optimizeJpg(in []byte) ([]byte, error) {
-	img, _, err := image.Decode(bytes.NewReader(in))
+	img := bimg.NewImage(in)
+
+	size, err := img.Size()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get image size: %w", err)
 	}
 
-	// TODO: copy EXIF metadata from original image
+	TARGET_LONGER_SIDE := 1024
 
-	var buf bytes.Buffer
-	opts := &jpeg.Options{Quality: 50}
-	if err := jpeg.Encode(&buf, img, opts); err != nil {
-		return nil, err
+	target_w := 0
+	target_h := 0
+
+	if size.Width >= size.Height {
+		if size.Width > TARGET_LONGER_SIDE {
+			target_w = TARGET_LONGER_SIDE
+			target_h = 0 // will preserve aspect ratio
+		}
+	} else {
+		if size.Height > TARGET_LONGER_SIDE {
+			target_w = 0 // will preserve aspect ratio
+			target_h = TARGET_LONGER_SIDE
+		}
 	}
 
-	return buf.Bytes(), nil
+	options := bimg.Options{
+		Width:         target_w,
+		Height:        target_h,
+		Quality:       80,
+		Interlace:     true,
+		StripMetadata: false, // keep EXIF metadata
+		// Compression:  9, // what does this do?
+	}
+
+	newImage, err := img.Process(options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process image: %w", err)
+	}
+
+	return newImage, nil
 }
 
 // ResizeToThumbnail takes raw image bytes and returns JPEG-encoded bytes of an

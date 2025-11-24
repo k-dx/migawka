@@ -1,6 +1,10 @@
 # Server
 
-Generating protobuf files
+## Prerequisites
+
+* libvips library installed. For Ubuntu install `libvips-dev` package. [Installation for other platforms](https://www.libvips.org/install.html)
+
+## Generating protobuf files
 
 ```sh
 # run from root migawka directory
@@ -10,7 +14,7 @@ protoc \
 grpc/grpc.proto
 ```
 
-Running the server
+## Running the server
 
 ```sh
 # replace mediadir with your photo directory
