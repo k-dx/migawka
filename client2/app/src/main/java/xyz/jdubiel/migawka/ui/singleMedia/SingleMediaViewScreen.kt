@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,8 +42,8 @@ import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 
 @Composable
 fun ActionButtons(buttons: List<@Composable () -> Unit>, content: @Composable () -> Unit) {
-    // TODO: this should be remembered between device rotations
-    var showButtons by remember { mutableStateOf(false) }
+    // TODO: this should be remembered when gone back to image gallery then chose another photo
+    var showButtons by rememberSaveable { mutableStateOf(true) }
 
     Box(
         modifier = Modifier
