@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.RotateLeft
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,8 +40,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
@@ -48,9 +52,30 @@ import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
+
+@Preview(showBackground = true)
+@Composable
+fun OverlayPreview() {
+    MediaOverlay(
+        topOverlayContent = { Text("2022/01/02") },
+        buttons = listOf(
+            { Button(onClick = {}) { Text("Button 1") } }
+        )
+    ) {
+        Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel venenatis nulla. Proin sed luctus tellus, eu elementum nisl. Duis iaculis arcu a interdum ultricies. Aliquam viverra urna egestas nulla sodales, porta venenatis neque placerat. Nulla convallis elit vel diam facilisis, at elementum nibh pellentesque. Etiam lobortis pharetra mauris at interdum. Phasellus id ipsum lobortis, ultrices massa nec, elementum turpis. Aliquam vitae condimentum nunc. Proin tempus erat gravida nisi viverra, sed elementum nunc ornare. Aliquam venenatis tincidunt sodales. Nunc ut ipsum imperdiet, interdum ante vitae, fermentum orci. Pellentesque eget scelerisque turpis. Suspendisse vitae pulvinar mauris. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer dignissim sodales lacus, a mattis arcu aliquet eget. ")
+    }
+}
 
 @Composable
-fun ActionButtons(buttons: List<@Composable () -> Unit>, content: @Composable () -> Unit) {
+fun MediaOverlay(
+    topOverlayContent: @Composable () -> Unit,
+    buttons: List<@Composable () -> Unit>,
+    content: @Composable () -> Unit
+) {
     // TODO: this should be remembered when gone back to image gallery then chose another photo
     var showButtons by rememberSaveable { mutableStateOf(true) }
 
@@ -66,27 +91,58 @@ fun ActionButtons(buttons: List<@Composable () -> Unit>, content: @Composable ()
 
         AnimatedVisibility(
             visible = showButtons,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopStart)
+        ) {
+            Box(modifier = Modifier.background(Color.White.copy(alpha = 0.7f))) {  // TODO: change to black with dark theme
+                Box(
+                    modifier = Modifier
+                        .padding(top = 24.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)
+                ) {
+                    topOverlayContent()
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showButtons,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomEnd)
-                .padding(top = 16.dp)
         ) {
-            Box(modifier = Modifier.padding(8.dp)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+            Box(modifier = Modifier.background(Color.White.copy(alpha = 0.7f))) { // TODO: change to black with dark theme
+                Box(modifier = Modifier
+                    .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 24.dp)
                 ) {
-                    buttons.forEach { it() }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                    ) {
+                        buttons.forEach { it() }
+                    }
                 }
             }
-
         }
     }
 }
+
+val locale = Locale.getDefault()
+val zone = java.time.ZoneId.systemDefault()
+val dateFormatter = DateTimeFormatter
+    .ofLocalizedDate(FormatStyle.MEDIUM)
+    .withLocale(locale)
+    .withZone(zone)
+val timeFormatter = DateTimeFormatter
+    .ofLocalizedTime(FormatStyle.MEDIUM)
+    .withLocale(locale)
+    .withZone(zone)
 
 @Composable
 fun SingleMediaViewScreen(
@@ -159,7 +215,19 @@ fun SingleMediaViewScreen(
         }
     }
 
-    ActionButtons(buttons = buttons) {
+
+
+    val creationDate: Instant? = when (image) {
+        is PagedImage.FromUri -> image.date
+        is PagedImage.FromBytes -> image.date
+        else -> null
+    }
+
+    val topOverlayContent = @Composable {
+        Text("${dateFormatter.format(creationDate)} ${timeFormatter.format(creationDate)}")
+    }
+
+    MediaOverlay(topOverlayContent = topOverlayContent, buttons = buttons) {
         Column(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
