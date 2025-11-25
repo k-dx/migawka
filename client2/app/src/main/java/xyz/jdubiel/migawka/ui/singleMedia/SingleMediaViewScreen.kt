@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -104,7 +106,8 @@ fun MediaOverlay(
             Box(modifier = Modifier.background(overlayColor)) {
                 Box(
                     modifier = Modifier
-                        .padding(top = 24.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)
+                        .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)
+                        .statusBarsPadding()
                 ) {
                     topOverlayContent()
                 }
@@ -121,7 +124,8 @@ fun MediaOverlay(
         ) {
             Box(modifier = Modifier.background(overlayColor)) {
                 Box(modifier = Modifier
-                    .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 24.dp)
+                    .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)
+                    .navigationBarsPadding()
                 ) {
                     Row(
                         modifier = Modifier

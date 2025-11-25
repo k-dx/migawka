@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.grpc.ManagedChannel
@@ -111,11 +110,12 @@ fun AnimatedSlideButtonsScreen(
 
 
 @Composable
-fun SecondScreen(content: String) {
-    AnimatedSlideButtonsScreen() {
-        Text("Tap anywhere to toggle buttons")
-        //modifier = Modifier.align(Alignment.Center)
-    }
+fun SecondScreen(modifier: Modifier = Modifier, content: String) {
+    Column(modifier = modifier) {
+        AnimatedSlideButtonsScreen() {
+            Text("Tap anywhere to toggle buttons")
+            //modifier = Modifier.align(Alignment.Center)
+        }
 
 //    val serverAddress = "192.168.5.158"
 //    Log.d("serverAddress", serverAddress)
@@ -134,6 +134,8 @@ fun SecondScreen(content: String) {
 //            shutdownChannel(channel)
 //        }
 //    )
+    }
+
 }
 
 
@@ -239,10 +241,4 @@ fun GrpcImage(
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SecondScreenPreview() {
-    SecondScreen("Second screen!")
 }
