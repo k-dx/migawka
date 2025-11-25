@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -15,12 +16,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.RotateLeft
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,7 +73,7 @@ fun ActionButtons(buttons: List<@Composable () -> Unit>, content: @Composable ()
                 .align(Alignment.BottomEnd)
                 .padding(top = 16.dp)
         ) {
-            Box() {
+            Box(modifier = Modifier.padding(8.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -87,6 +94,7 @@ fun SingleMediaViewScreen(
     initialImageId: Sha256,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     // TODO: fix a bug where going back after browsing photos left/right changes the scroll
     // position in the gallery
 
@@ -110,17 +118,45 @@ fun SingleMediaViewScreen(
         }
     }
 
-    val autoRotateEnabled = Utils.isAutoRotateEnabled(LocalContext.current)
+    val autoRotateEnabled = Utils.isAutoRotateEnabled(context)
     val image = images[pagerState.currentPage]
-    // TODO: change to icon buttons
     val buttons: List<@Composable () -> Unit> = buildList {
         if (!autoRotateEnabled) {
-            add { Button(onClick = { /* Action 1 */ }) { Text("Rotate") } }
+            add {
+                OutlinedIconButton(
+                    onClick = {
+                        Toast.makeText(context, "Rotate: Not implemented yet", Toast.LENGTH_SHORT)
+                            .show()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.RotateLeft, contentDescription = "Rotate")
+                }
+            }
         }
         if (image is PagedImage.FromBytes) {
-            add { Button(onClick = { /* Action 1 */ }) { Text("Download") } }
+            add {
+                OutlinedIconButton(
+                    onClick = {
+                        Toast.makeText(context, "Download: Not implemented yet", Toast.LENGTH_SHORT)
+                            .show()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Download, contentDescription = "Download")
+                }
+            }
         }
-        add { Button(onClick = { /* Action 1 */ }) { Text("Share") } }
+        add {
+            OutlinedIconButton(
+                onClick = {
+                    Toast.makeText(context, "Share: Not implemented yet", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(Icons.Default.Share, contentDescription = "Share")
+            }
+        }
     }
 
     ActionButtons(buttons = buttons) {
@@ -168,7 +204,9 @@ fun SingleMediaViewScreen(
                                             AsyncImage(
                                                 model = image.bytes,
                                                 contentDescription = "Full screen thumbnail",
-                                                modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .align(Alignment.Center),
                                                 contentScale = ContentScale.Fit
                                             )
                                             if (error != null) {
