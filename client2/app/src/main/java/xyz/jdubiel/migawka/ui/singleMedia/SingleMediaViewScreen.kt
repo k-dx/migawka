@@ -29,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,27 +58,30 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun OverlayPreview() {
     MediaOverlay(
         topOverlayContent = { Text("2022/01/02") },
         buttons = listOf(
-            { Button(onClick = {}) { Text("Button 1") } }
+            { Button(onClick = {}) { Text("Button 1") } },
+            { Button(onClick = {}) { Text("Bu 2") } }
         )
     ) {
         Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel venenatis nulla. Proin sed luctus tellus, eu elementum nisl. Duis iaculis arcu a interdum ultricies. Aliquam viverra urna egestas nulla sodales, porta venenatis neque placerat. Nulla convallis elit vel diam facilisis, at elementum nibh pellentesque. Etiam lobortis pharetra mauris at interdum. Phasellus id ipsum lobortis, ultrices massa nec, elementum turpis. Aliquam vitae condimentum nunc. Proin tempus erat gravida nisi viverra, sed elementum nunc ornare. Aliquam venenatis tincidunt sodales. Nunc ut ipsum imperdiet, interdum ante vitae, fermentum orci. Pellentesque eget scelerisque turpis. Suspendisse vitae pulvinar mauris. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer dignissim sodales lacus, a mattis arcu aliquet eget. ")
     }
 }
 
+// TODO: make system top bar and bottom bar disappear for a full-screen photo view when no overlay
 @Composable
 fun MediaOverlay(
     topOverlayContent: @Composable () -> Unit,
     buttons: List<@Composable () -> Unit>,
     content: @Composable () -> Unit
 ) {
+    val overlayColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
     // TODO: this should be remembered when gone back to image gallery then chose another photo
-    var showButtons by rememberSaveable { mutableStateOf(true) }
+    var showOverlay by rememberSaveable { mutableStateOf(true) }
 
     Box(
         modifier = Modifier
@@ -85,19 +89,19 @@ fun MediaOverlay(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { showButtons = !showButtons }
+            ) { showOverlay = !showOverlay }
     ) {
         content()
 
         AnimatedVisibility(
-            visible = showButtons,
+            visible = showOverlay,
             enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopStart)
         ) {
-            Box(modifier = Modifier.background(Color.White.copy(alpha = 0.7f))) {  // TODO: change to black with dark theme
+            Box(modifier = Modifier.background(overlayColor)) {
                 Box(
                     modifier = Modifier
                         .padding(top = 24.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)
@@ -108,14 +112,14 @@ fun MediaOverlay(
         }
 
         AnimatedVisibility(
-            visible = showButtons,
+            visible = showOverlay,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomEnd)
         ) {
-            Box(modifier = Modifier.background(Color.White.copy(alpha = 0.7f))) { // TODO: change to black with dark theme
+            Box(modifier = Modifier.background(overlayColor)) {
                 Box(modifier = Modifier
                     .padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 24.dp)
                 ) {
