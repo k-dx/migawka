@@ -32,9 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.Sha256
@@ -90,7 +92,6 @@ fun SingleMediaViewScreen(
 
     val images = viewModel.imageStream.collectAsLazyPagingItems()
 
-
     val initialPage = images.itemSnapshotList.items.indexOfFirst{
         when (it) {
             is PagedImage.FromUri -> it.id == initialImageId
@@ -109,12 +110,18 @@ fun SingleMediaViewScreen(
         }
     }
 
+    val autoRotateEnabled = Utils.isAutoRotateEnabled(LocalContext.current)
+    val image = images[pagerState.currentPage]
     // TODO: change to icon buttons
-    val buttons: List<@Composable () -> Unit> = listOf(
-        { Button(onClick = { /* Action 1 */ }) { Text("Rotate") } },
-        { Button(onClick = { /* Action 1 */ }) { Text("Download") } },
-        { Button(onClick = { /* Action 1 */ }) { Text("Share") } },
-    )
+    val buttons: List<@Composable () -> Unit> = buildList {
+        if (!autoRotateEnabled) {
+            add { Button(onClick = { /* Action 1 */ }) { Text("Rotate") } }
+        }
+        if (image is PagedImage.FromBytes) {
+            add { Button(onClick = { /* Action 1 */ }) { Text("Download") } }
+        }
+        add { Button(onClick = { /* Action 1 */ }) { Text("Share") } }
+    }
 
     ActionButtons(buttons = buttons) {
         Column(

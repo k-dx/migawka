@@ -1,5 +1,7 @@
 package xyz.jdubiel.migawka
 
+import android.content.Context
+import android.provider.Settings
 import android.util.Log
 import io.grpc.ManagedChannelBuilder
 import xyz.jdubiel.migawka.data.Sha256
@@ -42,6 +44,17 @@ class Utils {
                     channel.shutdownNow()
                     Thread.currentThread().interrupt()
                 }
+            }
+        }
+
+
+        fun isAutoRotateEnabled(context: Context): Boolean {
+            return try {
+                Settings.System.getInt(
+                    context.contentResolver, Settings.System.ACCELEROMETER_ROTATION
+                ) == 1
+            } catch (e: Settings.SettingNotFoundException) {
+                false
             }
         }
     }
