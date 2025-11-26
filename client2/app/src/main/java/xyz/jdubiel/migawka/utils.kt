@@ -1,8 +1,16 @@
 package xyz.jdubiel.migawka
 
+import android.app.Activity
 import android.content.Context
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import io.grpc.ManagedChannelBuilder
 import xyz.jdubiel.migawka.data.Sha256
 
@@ -55,6 +63,34 @@ class Utils {
                 ) == 1
             } catch (e: Settings.SettingNotFoundException) {
                 false
+            }
+        }
+
+        @Composable
+        fun ToggleSystemBars(visible: Boolean) {
+            // Get the view from the current composition context
+            val view = LocalView.current
+
+            // Safely find the window and insets controller, and remember them
+            // This prevents recalculating these on every recomposition
+            val windowInsetsController = remember(view) {
+                // Safely get the activity from the view's context
+                val window = (view.context as? Activity)?.window
+                window?.let { WindowCompat.getInsetsController(it, view) }
+            }
+
+            // Use SideEffect to perform the action after composition
+            SideEffect {
+                windowInsetsController?.let { controller ->
+                    if (visible) {
+                        controller.show(WindowInsetsCompat.Type.systemBars())
+                    } else {
+                        controller.hide(WindowInsetsCompat.Type.systemBars())
+                        // Set the behavior for when the bars are hidden
+                        controller.systemBarsBehavior =
+                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    }
+                }
             }
         }
     }

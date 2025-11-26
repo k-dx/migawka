@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.Utils
+import xyz.jdubiel.migawka.Utils.Companion.ToggleSystemBars
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.Sha256
@@ -74,7 +75,6 @@ fun OverlayPreview() {
     }
 }
 
-// TODO: make system top bar and bottom bar disappear for a full-screen photo view when no overlay
 @Composable
 fun MediaOverlay(
     topOverlayContent: @Composable () -> Unit,
@@ -84,6 +84,8 @@ fun MediaOverlay(
     val overlayColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
     // TODO: this should be remembered when gone back to image gallery then chose another photo
     var showOverlay by rememberSaveable { mutableStateOf(true) }
+
+    ToggleSystemBars(visible = showOverlay)
 
     Box(
         modifier = Modifier

@@ -44,6 +44,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
+import xyz.jdubiel.migawka.Utils.Companion.ToggleSystemBars
 import java.io.ByteArrayInputStream
 
 fun shutdownChannel(channel: ManagedChannel) {
@@ -61,6 +62,7 @@ fun AnimatedSlideButtonsScreen(
     content: @Composable () -> Unit
 ) {
     var showButtons by remember { mutableStateOf(false) }
+    ToggleSystemBars(visible = showButtons)
 
     Box(
         modifier = Modifier
@@ -92,7 +94,9 @@ fun AnimatedSlideButtonsScreen(
 //                        )
 //                )
                 Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
                     Button(onClick = { /* Action 1 */ }) { Text("Rotate") }
@@ -108,6 +112,24 @@ fun AnimatedSlideButtonsScreen(
 }
 
 
+
+//@Composable
+//fun ToggleSystemBars(visible: Boolean) {
+//    val view = LocalView.current
+//    val activity = LocalContext.current as Activity
+//    val window = activity.window
+//    val insetsController = WindowCompat.getInsetsController(window, view)
+//
+//    insetsController?.let { controller ->
+//        if (visible) {
+//            controller.show(WindowInsetsCompat.Type.systemBars())
+//        } else {
+//            controller.hide(WindowInsetsCompat.Type.systemBars())
+//            controller.systemBarsBehavior =
+//                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+//        }
+//    }
+//}
 
 @Composable
 fun SecondScreen(modifier: Modifier = Modifier, content: String) {
