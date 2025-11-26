@@ -9,6 +9,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type serverConcreteHash = sha256Hash
+
 // server is used to implement helloworld.MigawkaServer.
 type server struct {
 	pb.UnimplementedMigawkaServer
@@ -98,7 +100,8 @@ func (s *server) GetOptimizedMediaItem(_ context.Context, in *pb.GetMediaItemReq
 	log.Info().Str("id", in.GetId()).Msg("GetOptimizedMediaItem")
 
 	// parse id
-	id, err := NewSha256FromString(in.GetId())
+	var id serverConcreteHash
+	err := id.FromString(in.GetId())
 	if err != nil {
 		log.Error().Err(err).Str("id", in.GetId()).Msg("Invalid ID format")
 		status := pb.NewStatus(400, "Invalid ID format")
@@ -106,7 +109,7 @@ func (s *server) GetOptimizedMediaItem(_ context.Context, in *pb.GetMediaItemReq
 	}
 
 	// get media item from media store
-	mediaItem, err := s.mediaStore.GetOptimizedMediaItem(*id)
+	mediaItem, err := s.mediaStore.GetOptimizedMediaItem(&id)
 	if err != nil {
 		log.Error().Err(err).
 			Str("id", in.GetId()).
@@ -131,7 +134,8 @@ func (s *server) GetFullMediaItem(_ context.Context, in *pb.GetMediaItemRequest)
 	log.Info().Str("id", in.GetId()).Msg("GetFullMediaItem")
 
 	// parse id
-	id, err := NewSha256FromString(in.GetId())
+	var id serverConcreteHash
+	err := id.FromString(in.GetId())
 	if err != nil {
 		log.Error().Err(err).Str("id", in.GetId()).Msg("Invalid ID format")
 		status := pb.NewStatus(400, "Invalid ID format")
@@ -139,7 +143,7 @@ func (s *server) GetFullMediaItem(_ context.Context, in *pb.GetMediaItemRequest)
 	}
 
 	// get media item from media store
-	mediaItem, err := s.mediaStore.GetFullMediaItem(*id)
+	mediaItem, err := s.mediaStore.GetFullMediaItem(&id)
 	if err != nil {
 		log.Error().Err(err).
 			Str("id", in.GetId()).
