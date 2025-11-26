@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 )
@@ -9,13 +10,16 @@ const sha256HashSize = 32
 
 type sha256Hash [sha256HashSize]byte
 
-func NewSha256FromString(s string) (*sha256Hash, error) {
-	var h sha256Hash
-	err := h.FromString(s)
-	if err != nil {
-		return nil, err
+func (h *sha256Hash) Bytes() []byte {
+	return h[:]
+}
+
+func (h *sha256Hash) FromBytes(b []byte) error {
+	if len(b) != sha256HashSize {
+		return fmt.Errorf("invalid hash length: got %d, want %d", len(b), sha256HashSize)
 	}
-	return &h, nil
+	copy(h[:], b)
+	return nil
 }
 
 func (h *sha256Hash) FromString(s string) error {
@@ -32,4 +36,9 @@ func (h *sha256Hash) FromString(s string) error {
 
 func (h *sha256Hash) String() string {
 	return hex.EncodeToString(h[:])
+}
+
+func (h *sha256Hash) Calculate(data []byte) Hash {
+	*h = sha256.Sum256(data)
+	return h
 }

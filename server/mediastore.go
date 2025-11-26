@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -16,12 +14,12 @@ import (
 )
 
 type Thumbnail struct {
-	ID      sha256Hash
+	ID      Hash
 	Content []byte
 }
 
 type MediaItemMetadata struct {
-	ID           sha256Hash
+	ID           Hash
 	Path         string
 	CreationTime time.Time
 }
@@ -33,20 +31,41 @@ type MediaItem struct {
 
 type MediaStore interface {
 	GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error)
-	GetOptimizedMediaItem(id sha256Hash) (MediaItem, error)
-	GetFullMediaItem(id sha256Hash) (MediaItem, error)
-	GetCreationTimeOfMediaItem(id sha256Hash) (time.Time, error)
+	GetOptimizedMediaItem(id Hash) (MediaItem, error)
+	GetFullMediaItem(id Hash) (MediaItem, error)
+	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 
 	GetMediaItemsCountForTest() int
 }
 
-type mediaStoreImpl struct {
-	items      map[sha256Hash]MediaItemMetadata
-	thumbnails map[sha256Hash]Thumbnail
+type concreteHash = sha256Hash
+
+func calculateHash(data []byte) concreteHash {
+	var hash concreteHash
+	hash.Calculate(data)
+	return hash
 }
 
-func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id sha256Hash) (time.Time, error) {
-	item, ok := ms.items[id]
+func hashFromString(s string) (concreteHash, error) {
+	var hash concreteHash
+	err := hash.FromString(s)
+	if err != nil {
+		return hash, err
+	}
+	return hash, nil
+}
+
+func castToHash(h Hash) concreteHash {
+	return sha256Hash(h.Bytes())
+}
+
+type mediaStoreImpl struct {
+	items      map[concreteHash]MediaItemMetadata
+	thumbnails map[concreteHash]Thumbnail
+}
+
+func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id Hash) (time.Time, error) {
+	item, ok := ms.items[castToHash(id)]
 	if !ok {
 		return time.Time{}, fmt.Errorf("media item with given id not found")
 	}
@@ -56,11 +75,11 @@ func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id sha256Hash) (time.Time, 
 // Returns at most 'count' thumbnails created before (or at) the given timestamp
 func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error) {
 	type idDatePair struct {
-		id   sha256Hash
+		id   concreteHash
 		date time.Time
 	}
 
-	// put date, sha256Hash into a list for dates >= given date
+	// put date, Hash into a list for dates >= given date
 	idsByDate := make([]idDatePair, 0, len(ms.items))
 	for id, item := range ms.items {
 		// filter out items after the given date
@@ -79,14 +98,14 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 	})
 
 	// return the first 'count' items
-	ids := make([]sha256Hash, 0, count)
+	ids := make([]concreteHash, 0, count)
 	for i := 0; i < int(count) && i < len(idsByDate); i++ {
 		ids = append(ids, idsByDate[i].id)
 	}
 	return ms.getThumbnailsByIDs(ids)
 }
 
-func (ms *mediaStoreImpl) getThumbnailsByIDs(ids []sha256Hash) ([]Thumbnail, error) {
+func (ms *mediaStoreImpl) getThumbnailsByIDs(ids []concreteHash) ([]Thumbnail, error) {
 	thumbnails := make([]Thumbnail, 0)
 
 	for _, id := range ids {
@@ -100,8 +119,8 @@ func (ms *mediaStoreImpl) getThumbnailsByIDs(ids []sha256Hash) ([]Thumbnail, err
 	return thumbnails, nil
 }
 
-func (ms *mediaStoreImpl) GetFullMediaItem(id sha256Hash) (MediaItem, error) {
-	item, ok := ms.items[id]
+func (ms *mediaStoreImpl) GetFullMediaItem(id Hash) (MediaItem, error) {
+	item, ok := ms.items[castToHash(id)]
 	if !ok {
 		return MediaItem{}, fmt.Errorf("media item with given id not found")
 	}
@@ -123,7 +142,7 @@ func (ms *mediaStoreImpl) GetFullMediaItem(id sha256Hash) (MediaItem, error) {
 	return itemFull, nil
 }
 
-func NewMediaItemMetadata(id sha256Hash, path string, creationTime time.Time) MediaItemMetadata {
+func NewMediaItemMetadata(id Hash, path string, creationTime time.Time) MediaItemMetadata {
 	return MediaItemMetadata{
 		ID:           id,
 		Path:         path,
@@ -138,7 +157,7 @@ func NewMediaItem(metadata MediaItemMetadata, content []byte) MediaItem {
 	}
 }
 
-func (ms *mediaStoreImpl) GetOptimizedMediaItem(id sha256Hash) (MediaItem, error) {
+func (ms *mediaStoreImpl) GetOptimizedMediaItem(id Hash) (MediaItem, error) {
 	// TODO: generate optimized version on first request and cache it
 	// or generate all optimized versions on startup
 	mediaItem, err := ms.GetFullMediaItem(id)
@@ -171,8 +190,8 @@ func (ms *mediaStoreImpl) GetOptimizedMediaItem(id sha256Hash) (MediaItem, error
 func NewMediaStore(path string) (MediaStore, error) {
 	log.Debug().Msg("Creating new MediaStore")
 	ms := &mediaStoreImpl{
-		items:      make(map[sha256Hash]MediaItemMetadata),
-		thumbnails: make(map[sha256Hash]Thumbnail),
+		items:      make(map[concreteHash]MediaItemMetadata),
+		thumbnails: make(map[concreteHash]Thumbnail),
 	}
 	err := ms.loadMediaItems(path, filepath.Join(path, ".thumbnails"))
 	if err != nil {
@@ -244,12 +263,11 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			return fmt.Errorf("failed to read file %s: %w", filePath, err)
 		}
 
-		// Calculate SHA256 hash
-		hash := sha256.Sum256(content)
+		hash := calculateHash(content)
 
 		log.Debug().
 			Str("file", filePath).
-			Str("hash", hex.EncodeToString(hash[:])).
+			Str("hash", hash.String()).
 			Msg("Loaded media item")
 
 		creatationDatetime, err := getExifCreationDate(content)
@@ -263,7 +281,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 
 		// Store in map
 		ms.items[hash] = NewMediaItemMetadata(
-			hash,
+			&hash,
 			filePath,
 			creatationDatetime,
 		)
@@ -289,15 +307,15 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		}
 
 		filenameWithoutExt := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-		var hash sha256Hash
-		err = hash.FromString(filenameWithoutExt)
+
+		hash, err := hashFromString(filenameWithoutExt)
 		if err != nil {
 			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
 		} else if _, mediaItemPresent := ms.items[hash]; !mediaItemPresent {
 			log.Warn().Str("file", filePath).Msg("thumbnail does not match any media item. ignoring")
 		} else {
 			ms.thumbnails[hash] = Thumbnail{
-				ID:      hash,
+				ID:      &hash,
 				Content: content,
 			}
 		}
@@ -332,7 +350,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			}
 			// store thumbnail in map
 			ms.thumbnails[id] = Thumbnail{
-				ID:      id,
+				ID:      &id,
 				Content: thumbnailContent,
 			}
 			// save thumbnail to disk
