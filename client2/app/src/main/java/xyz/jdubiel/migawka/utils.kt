@@ -2,6 +2,8 @@ package xyz.jdubiel.migawka
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -93,5 +95,28 @@ class Utils {
                 }
             }
         }
+
+        fun toggleDeviceOrientation(activity: Activity) {
+            // Toggle between portrait and landscape
+            if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            } else {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            }
+        }
     }
+}
+
+// https://stackoverflow.com/questions/64675386/how-to-get-activity-in-compose
+fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) {
+            return context
+        }
+        context = context.baseContext
+    }
+    // The context is not an Activity, but it might be the base context of an Activity.
+    // This is less common but can happen.
+    return context as? Activity
 }

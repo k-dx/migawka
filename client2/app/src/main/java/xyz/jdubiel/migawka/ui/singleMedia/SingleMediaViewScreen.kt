@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -46,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -55,6 +57,7 @@ import xyz.jdubiel.migawka.Utils.Companion.ToggleSystemBars
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.Sha256
+import xyz.jdubiel.migawka.findActivity
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -161,6 +164,8 @@ fun SingleMediaViewScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
+    val activity = view.context.findActivity()
     // TODO: fix a bug where going back after browsing photos left/right changes the scroll
     // position in the gallery
 
@@ -191,8 +196,11 @@ fun SingleMediaViewScreen(
             add {
                 OutlinedIconButton(
                     onClick = {
-                        Toast.makeText(context, "Rotate: Not implemented yet", Toast.LENGTH_SHORT)
-                            .show()
+                        if (activity != null) {
+                            Utils.toggleDeviceOrientation(activity)
+                        } else {
+                            Log.e("SingleMediaViewScreen", "activity is null, cannot rotate")
+                        }
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
