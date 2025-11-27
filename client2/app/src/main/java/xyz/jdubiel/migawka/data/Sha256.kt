@@ -37,11 +37,23 @@ class Sha256 private constructor(private val bytes: ByteArray) : Hash {
     }
 }
 
+class Sha256Digest() : Digest {
+    private val digest = MessageDigest.getInstance("SHA-256")
+
+    override fun update(input: ByteArray, offset: Int, len: Int) {
+        digest.update(input, offset, len)
+    }
+
+    override fun digest(): ByteArray {
+        return digest.digest()
+    }
+}
+
 class Sha256Hasher() : Hasher {
     override fun fromHex(hex: String): Sha256 = Sha256.fromHex(hex)
     override fun fromBytes(bytes: ByteArray): Sha256 = Sha256.of(bytes)
 
-    override fun getInstance(): MessageDigest {
-        return MessageDigest.getInstance("SHA-256")
+    override fun getInstance(): Digest {
+        return Sha256Digest()
     }
 }

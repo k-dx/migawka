@@ -2,8 +2,34 @@ package xyz.jdubiel.migawka
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import xyz.jdubiel.migawka.data.Sha256
+import xyz.jdubiel.migawka.data.Sha256Hasher
 
 class Sha256UnitTests {
+    @Test
+    fun calculatesCorrectValue() {
+        val data = "The quick brown fox jumps over the lazy dog".toByteArray(charset("UTF-8"))
+
+        val hasher = Sha256Hasher()
+
+        val digest = hasher.getInstance()
+        digest.update(data, 0, data.size)
+
+        val hash = hasher.fromBytes(digest.digest())
+
+        val expected = "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
+        assertEquals(expected, hash.toHex())
+    }
+
+    @Test
+    fun parsesHexCorrectly() {
+        val expected = "a"
+
+        val h = Sha256.fromHex(expected)
+        assertEquals(expected, h.toHex())
+    }
+
+
     @Test
     fun comparison_isCorrect() {
         val v1: Sha256 = Sha256.fromHex("ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb")
