@@ -1,7 +1,9 @@
 package xyz.jdubiel.migawka.data
 
-import java.security.MessageDigest
-
+interface Digest {
+    fun update(input: ByteArray, offset: Int, len: Int)
+    fun digest(): ByteArray
+}
 
 /**
  * This interface is responsible for creating hashes.
@@ -9,5 +11,5 @@ import java.security.MessageDigest
 interface Hasher {
     fun fromHex(hex: String): Hash
     fun fromBytes(bytes: ByteArray): Hash
-    fun getInstance(): MessageDigest
+    fun getInstance(): Digest
 }

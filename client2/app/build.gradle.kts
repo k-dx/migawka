@@ -105,4 +105,5 @@ dependencies {
     implementation(libs.grpc.kotlin.stub)
     implementation(libs.javax.annotation.api)
     implementation(libs.protobuf.javalite)
+    implementation("org.lz4:lz4-java:1.8.0") // TODO
 }
