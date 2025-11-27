@@ -23,9 +23,8 @@ class Sha256UnitTests {
 
     @Test
     fun parsesHexCorrectly() {
-        val expected = "a"
-
-        val h = Sha256.fromHex(expected)
+        val h = Sha256.fromHex("a")
+        val expected = "000000000000000000000000000000000000000000000000000000000000000a"
         assertEquals(expected, h.toHex())
     }
 
