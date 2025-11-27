@@ -53,7 +53,7 @@ message FileDownloadReply {
 }
 
 message Thumbnail {
-  // sha256 hash
+  // hash
   string id = 1;
 
   bytes content = 2;
