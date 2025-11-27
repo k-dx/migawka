@@ -69,3 +69,20 @@ func TestSha256Hash_FromBytes(t *testing.T) {
 		}
 	}
 }
+
+func TestSha256Hash_FromStringParsesPrefixZeros(t *testing.T) {
+	var h sha256Hash
+	err := h.FromString("00a")
+	if err != nil {
+		t.Fatalf("Failed to parse sha256 hash from string: %v", err)
+	}
+	expected := "000000000000000000000000000000000000000000000000000000000000000a"
+	expectedLength := 64
+	actual := h.String()
+	if actual != expected {
+		t.Fatalf("Sha256 hash.String() with leading zeros incorrect: got %s, want %s", actual, expected)
+	}
+	if len(actual) != expectedLength {
+		t.Fatalf("Sha256 hash.String() length incorrect: got %d, want %d", len(actual), expectedLength)
+	}
+}

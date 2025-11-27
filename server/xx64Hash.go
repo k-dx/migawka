@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cespare/xxhash/v2"
 )
@@ -37,7 +38,9 @@ func (h *xx64Hash) FromString(s string) error {
 }
 
 func (h *xx64Hash) String() string {
-	return strconv.FormatUint(uint64(*h), 16)
+	hex := strconv.FormatUint(uint64(*h), 16)
+	// Pad with leading zeros to ensure fixed length
+	return strings.Repeat("0", xx64HashSize*2-len(hex)) + hex
 }
 
 func (h *xx64Hash) Calculate(data []byte) Hash {
