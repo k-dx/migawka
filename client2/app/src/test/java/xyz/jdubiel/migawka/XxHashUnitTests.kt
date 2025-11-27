@@ -23,7 +23,7 @@ class XxHashUnitTests {
         val hashHexString: String = hash.toString(16)
         val expected = "b242d361fda71bc"
 
-        assert(hashHexString == expected)
+        assertEquals(expected, hashHexString)
     }
 
     @Test
@@ -44,7 +44,7 @@ class XxHashUnitTests {
         val hashHexString: String = hash.toString(16)
         val expected = "b242d361fda71bc"
 
-        assert(hashHexString == expected)
+        assertEquals(expected, hashHexString)
     }
 
     @Test
@@ -59,10 +59,39 @@ class XxHashUnitTests {
         val hash = hasher.fromBytes(digest.digest())
 
         val hashHexString: String = hash.toHex()
-        val expected = "b242d361fda71bc"
+        val expected = "0b242d361fda71bc"
 
-        assert(hashHexString == expected)
+        assertEquals(expected, hashHexString)
     }
+
+    @Test
+    fun parsesHexCorrectly() {
+        val expected = "000000000000000a"
+
+        val h = Xx64Hash.fromHex(expected)
+        assertEquals(expected, h.toHex())
+    }
+
+    @Test
+    fun parsesHexCorrectly2() {
+        val expected = "000000000000000a"
+        val h = Xx64Hash.fromHex("00a")
+        assertEquals(expected, h.toHex())
+    }
+
+    @Test
+    fun comparison_isCorrect() {
+        val v1: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdca")
+        val v2: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdca")
+        val v3: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdcd")
+
+        val result1 = v1 == v2
+        assertEquals(true, result1)
+
+        val result2 = v1 == v3
+        assertEquals(false, result2)
+    }
+
 
     @Test
     fun hashCode_isCorrect() {
