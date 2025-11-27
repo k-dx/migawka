@@ -8,9 +8,8 @@ import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.TAG
-import java.security.MessageDigest
+import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -22,7 +21,7 @@ class MediaStoreImageProvider(
     private val contentResolver: ContentResolver
 ) : LocalImageProvider {
 
-    private var sha256ToUri: MutableMap<Sha256, Uri> = mutableMapOf()
+    private var hashToUri: MutableMap<Hash, Uri> = mutableMapOf()
 
     // TODO: change this to be saved in a database provided by Android
     //       (or at least be sorted by Instant)
@@ -61,33 +60,33 @@ class MediaStoreImageProvider(
             for (i in 0 until minOf(count, uriToDateBefore.size)) {
                 val uri = uriToDateBefore[i].first
                 val date = uriToDateBefore[i].second
-                val sha256 = computeSha256(uri)
-                sha256?.let {
+                val id = computeHash(uri)
+                id?.let {
                     localImages.add(LocalImage(uri, date, it))
-                    sha256ToUri[it] = uri
-//                    Log.d(TAG, "calculated sha256 of uri $uri: $it")
+                    hashToUri[it] = uri
+//                    Log.d(TAG, "calculated hash of uri $uri: $it")
                 }
             }
             localImages
         }
     }
 
-    override suspend fun getImage(id: Sha256): LocalImage {
+    override suspend fun getImage(id: Hash): LocalImage {
         Log.d(TAG, "MediaStoreImageProvider, getImage(${id.toHex()})")
-        if (!sha256ToUri.containsKey(id)) {
-            Log.e("MediaStoreImageProvider.getImage", "No image with SHA-256 $id found")
-            throw IllegalArgumentException("No image with SHA-256 $id found")
+        if (!hashToUri.containsKey(id)) {
+            Log.e("MediaStoreImageProvider.getImage", "No image with hash $id found")
+            throw IllegalArgumentException("No image with hash $id found")
         }
-        Log.d(TAG, "MediaStoreImageProvider, getImage, accessing sha256ToUri")
-        val contentUri = sha256ToUri[id]!!
+        Log.d(TAG, "MediaStoreImageProvider, getImage, accessing hashToUri")
+        val contentUri = hashToUri[id]!!
         Log.d(TAG, "MediaStoreImageProvider, getImage, contentUri = $contentUri")
         try {
             val date = queryDateTaken(contentUri); // TODO: should this happen in a coroutine?
             Log.d(TAG, "MediaStoreImageProvider, getImage, date = $date")
-            return LocalImage(contentUri = contentUri, date = date, sha256 = id)
+            return LocalImage(contentUri = contentUri, date = date, hash = id)
 
         } catch (e: NoSuchElementException) {
-            Log.e("MediaStoreImageProvider.getImage", "No date found for image with SHA-256 $id")
+            Log.e("MediaStoreImageProvider.getImage", "No date found for image with hash $id")
             throw NoSuchElementException("No image with given id found in MediaStore")
         }
     }
@@ -164,19 +163,20 @@ class MediaStoreImageProvider(
         return date
     }
 
-    private fun computeSha256(uri: Uri): Sha256? {
+    private fun computeHash(uri: Uri): Hash? {
         return try {
             contentResolver.openInputStream(uri)?.use { inputStream ->
-                val digest = MessageDigest.getInstance("SHA-256")
+                val digest = hasher.getInstance()
                 val buffer = ByteArray(8192)
                 var bytesRead: Int
                 while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                     digest.update(buffer, 0, bytesRead)
                 }
-                Sha256.Companion.of(digest.digest())
+
+                hasher.fromBytes(digest.digest())
             }
         } catch (e: Exception) {
-            Log.e("MediaStoreImageProvider", "Failed to compute SHA-256 for $uri", e)
+            Log.e("MediaStoreImageProvider", "Failed to compute hash for $uri", e)
             null
         }
     }

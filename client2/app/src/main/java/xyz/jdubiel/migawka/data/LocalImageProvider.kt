@@ -1,14 +1,13 @@
 package xyz.jdubiel.migawka.data
 
 import android.net.Uri
-import xyz.jdubiel.migawka.data.Sha256
 import java.time.Instant
 
 // Data class to hold processed local image information
 data class LocalImage(
     val contentUri: Uri,
     val date: Instant,
-    val sha256: Sha256 // Assuming you have a Sha256 class
+    val hash: Hash
 )
 
 // Interface for our provider
@@ -22,7 +21,7 @@ interface LocalImageProvider {
      */
     suspend fun getImages(limit: Int, imagesBefore: Instant?): List<LocalImage>
 
-    suspend fun getImage(id: Sha256): LocalImage
+    suspend fun getImage(id: Hash): LocalImage
 
     // TODO: add getThumbnailsBeforeTimestamp, use Android's thumbnails for this?
 }

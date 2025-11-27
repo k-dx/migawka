@@ -6,14 +6,13 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.TAG
 
 class ImageRepository(private val contentResolver: ContentResolver) {
     private val localImageProvider: LocalImageProvider = MediaStoreImageProvider(contentResolver)
     private val remoteImageProvider = RemoteImageProvider()
 
-    suspend fun getImage(id: Sha256): LocalImage {
+    suspend fun getImage(id: Hash): LocalImage {
         Log.d(TAG, "imageRepository, getImage")
         return localImageProvider.getImage(id)
     }
@@ -26,7 +25,7 @@ class ImageRepository(private val contentResolver: ContentResolver) {
         pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
     ).flow
 
-    suspend fun getRemoteImage(id: Sha256): RemoteImage {
+    suspend fun getRemoteImage(id: Hash): RemoteImage {
         Log.d(TAG, "imageRepository, getRemoteImage")
         return remoteImageProvider.getImage(id)
     }

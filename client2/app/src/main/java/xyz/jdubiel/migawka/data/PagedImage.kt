@@ -1,20 +1,19 @@
 package xyz.jdubiel.migawka.data
 
 import android.net.Uri
-import xyz.jdubiel.migawka.data.Sha256
 import java.time.Instant
 
 sealed class PagedImage {
     abstract val date: Instant
 
     data class FromUri(
-        val id: Sha256,
+        val id: Hash,
         val contentUri: Uri,
         override val date: Instant
     ) : PagedImage()
 
     data class FromBytes(
-        val id: Sha256,
+        val id: Hash,
         val bytes: ByteArray,
         val fullBytes: ByteArray? = null,
         override val date: Instant

@@ -14,11 +14,11 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.grpc.ManagedChannelBuilder
-import xyz.jdubiel.migawka.data.Sha256
+import xyz.jdubiel.migawka.data.Hash
 
 class Utils {
     companion object {
-        suspend fun fetchImageBytesGrpc(id: Sha256): MediaItem {
+        suspend fun fetchImageBytesGrpc(id: Hash): MediaItem {
             val serverAddress = "192.168.5.158"
             Log.d("serverAddress", serverAddress)
             val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)

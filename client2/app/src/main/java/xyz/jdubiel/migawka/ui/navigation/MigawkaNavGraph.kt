@@ -15,7 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import xyz.jdubiel.migawka.Migawka
 import xyz.jdubiel.migawka.TAG
-import xyz.jdubiel.migawka.data.Sha256
+import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
@@ -74,7 +74,7 @@ fun MigawkaNavHost(
                 if (initialImageId != null) {
                     SingleMediaViewScreen(
                         viewModel = imageGalleryViewModel,
-                        initialImageId = Sha256.fromHex(initialImageId)
+                        initialImageId = hasher.fromHex(initialImageId)
                     )
                 } else {
                     Log.e("SingleMediaViewScreen", "initialImageId is null")
