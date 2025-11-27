@@ -8,9 +8,9 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
-import xyz.jdubiel.migawka.data.Sha256
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -23,7 +23,7 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
     val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
         .cachedIn(viewModelScope)
 
-    suspend fun getRemoteImage(id: Sha256) = withContext(Dispatchers.IO) {
+    suspend fun getRemoteImage(id: Hash) = withContext(Dispatchers.IO) {
         imageRepository.getRemoteImage(id)
     }
 

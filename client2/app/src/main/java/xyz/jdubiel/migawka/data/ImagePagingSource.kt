@@ -6,7 +6,6 @@ import androidx.paging.PagingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.TAG
 import java.time.Instant
 
@@ -39,11 +38,11 @@ class ImagePagingSource(
             }
 
             val localImages = localImagesResult.await()
-                .map { PagedImage.FromUri(it.sha256, it.contentUri, it.date) }
-            val localImageIds: Set<Sha256> = localImages.map { it.id }.toSet()
+                .map { PagedImage.FromUri(it.hash, it.contentUri, it.date) }
+            val localImageIds: Set<Hash> = localImages.map { it.id }.toSet()
 
             val remoteImages = remoteImagesResult.await()
-                .map { PagedImage.FromBytes(id = it.sha256, bytes = it.bytes, date = it.date) }
+                .map { PagedImage.FromBytes(id = it.hash, bytes = it.bytes, date = it.date) }
                 // filter out remote images that we have locally
                 .filter { !localImageIds.contains(it.id) }
 

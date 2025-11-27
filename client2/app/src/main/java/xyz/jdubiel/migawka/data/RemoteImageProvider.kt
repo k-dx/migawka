@@ -5,14 +5,14 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.ThumbnailsTimestampRequest
+import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 
 data class RemoteImage(
     var bytes: ByteArray,
     val date: Instant,
-    val sha256: Sha256
+    val hash: Hash
 )
 
 class RemoteImageProvider { // TODO: make it a singleton
@@ -20,6 +20,7 @@ class RemoteImageProvider { // TODO: make it a singleton
     // TODO: gracefully shutdown the channel when the instance gets removed?
     private val channel: ManagedChannel
     private val stub: MigawkaGrpcKt.MigawkaCoroutineStub
+
 
     init {
         // TODO: don't hardcode IP or PORT
@@ -54,7 +55,7 @@ class RemoteImageProvider { // TODO: make it a singleton
 
                 remoteImages.add(
                     RemoteImage(
-                        sha256 = Sha256.Companion.fromHex(it.id),
+                        hash = hasher.fromHex(it.id),
                         bytes = it.content.toByteArray(),
                         date = date
                     )
@@ -68,7 +69,7 @@ class RemoteImageProvider { // TODO: make it a singleton
         return remoteImages
     }
 
-    suspend fun getImage(id: Sha256): RemoteImage {
+    suspend fun getImage(id: Hash): RemoteImage {
         val request = GetMediaItemRequest.newBuilder()
             .setId(id.toHex())
             .build()
@@ -85,7 +86,7 @@ class RemoteImageProvider { // TODO: make it a singleton
         }
 
         return RemoteImage(
-            sha256 = id,
+            hash = id,
             bytes = response.mediaItem.content.toByteArray(),
             date = Instant.parse(response.mediaItem.creationTime)
         )

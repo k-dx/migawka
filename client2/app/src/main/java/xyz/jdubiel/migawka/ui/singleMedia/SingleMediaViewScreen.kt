@@ -54,9 +54,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.Utils.Companion.ToggleSystemBars
+import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
-import xyz.jdubiel.migawka.data.Sha256
 import xyz.jdubiel.migawka.findActivity
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import java.time.Instant
@@ -160,7 +160,7 @@ val timeFormatter = DateTimeFormatter
 @Composable
 fun SingleMediaViewScreen(
     viewModel: ImageGalleryViewModel,
-    initialImageId: Sha256,
+    initialImageId: Hash,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
