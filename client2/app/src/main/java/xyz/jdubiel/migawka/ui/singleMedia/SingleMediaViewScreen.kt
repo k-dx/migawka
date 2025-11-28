@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -224,7 +225,19 @@ fun SingleMediaViewScreen(
         add {
             OutlinedIconButton(
                 onClick = {
-                    Toast.makeText(context, "Share: Not implemented yet", Toast.LENGTH_SHORT).show()
+                    if (image is PagedImage.FromUri) {
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_STREAM, image.contentUri)
+                            type = "image/*"
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(
+                            Intent.createChooser(shareIntent, "Share image via")
+                        )
+                    } else {
+                        Toast.makeText(context, "Share: Not implemented for remote photos yet", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.size(48.dp)
             ) {
