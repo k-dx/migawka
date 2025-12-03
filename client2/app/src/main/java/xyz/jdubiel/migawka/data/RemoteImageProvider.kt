@@ -69,7 +69,7 @@ class RemoteImageProvider { // TODO: make it a singleton
         return remoteImages
     }
 
-    suspend fun getImage(id: Hash): RemoteImage {
+    suspend fun getOptimizedImage(id: Hash): RemoteImage {
         val request = GetMediaItemRequest.newBuilder()
             .setId(id.toHex())
             .build()
@@ -82,13 +82,36 @@ class RemoteImageProvider { // TODO: make it a singleton
         }
 
         if (response.mediaItem.id != id.toHex()) {
-            Log.e("gRPC", "getImage: returned MediaItemID is different from requested!")
+            Log.e("gRPC", "getOptimizedImage: returned MediaItemID is different from requested!")
         }
 
         return RemoteImage(
             hash = id,
             bytes = response.mediaItem.content.toByteArray(),
             date = Instant.parse(response.mediaItem.creationTime)
+        )
+    }
+
+    suspend fun getFullImage(id: Hash): RemoteImage {
+        val request = GetMediaItemRequest.newBuilder()
+            .setId(id.toHex())
+            .build()
+
+        val response = stub.getFullMediaItem(request)
+
+        if (response.status.code != 200) {
+            Log.e("gRPC", "Error: `${response.status.message}`")
+            throw Exception("Error: `${response.status.message}`")
+        }
+
+        if (response.mediaItem.id != id.toHex()) {
+            Log.e("gRPC", "getFullImage: returned MediaItemID is different from requested!")
+        }
+
+        return RemoteImage(
+            hash = id,
+            bytes = response.mediaItem.content.toByteArray(),
+            date = Instant.parse(response.mediaItem.creationTime),
         )
     }
 }

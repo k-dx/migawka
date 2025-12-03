@@ -213,8 +213,9 @@ fun SingleMediaViewScreen(
             add {
                 OutlinedIconButton(
                     onClick = {
-                        Toast.makeText(context, "Download: Not implemented yet", Toast.LENGTH_SHORT)
+                        Toast.makeText(context, "Download started", Toast.LENGTH_SHORT)
                             .show()
+                        viewModel.downloadImage(image.id)
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
@@ -242,8 +243,17 @@ fun SingleMediaViewScreen(
         else -> null
     }
 
+    val hash: Hash? = when(image) {
+        is PagedImage.FromUri -> image.id
+        is PagedImage.FromBytes -> image.id
+        else -> null
+    }
+
     val topOverlayContent = @Composable {
-        Text("${dateFormatter.format(creationDate)} ${timeFormatter.format(creationDate)}")
+        Column() {
+            Text("${dateFormatter.format(creationDate)} ${timeFormatter.format(creationDate)}")
+            Text("${hash?.toHex()}") // TODO: remove me
+        }
     }
 
     MediaOverlay(topOverlayContent = topOverlayContent, buttons = buttons) {
@@ -305,7 +315,7 @@ fun SingleMediaViewScreen(
                                     }
                                     LaunchedEffect(fullImage) {
                                         try {
-                                            fullImage = viewModel.getRemoteImage(image.id)
+                                            fullImage = viewModel.getRemoteOptimizedImage(image.id)
                                         } catch (e: Exception) {
                                             error = e.message
                                         }

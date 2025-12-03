@@ -25,8 +25,12 @@ class ImageRepository(private val contentResolver: ContentResolver) {
         pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
     ).flow
 
-    suspend fun getRemoteImage(id: Hash): RemoteImage {
+    suspend fun getRemoteOptimizedImage(id: Hash): RemoteImage {
         Log.d(TAG, "imageRepository, getRemoteImage")
-        return remoteImageProvider.getImage(id)
+        return remoteImageProvider.getOptimizedImage(id)
+    }
+
+    suspend fun getRemoteFullImage(id: Hash): RemoteImage {
+        return remoteImageProvider.getFullImage(id)
     }
 }
