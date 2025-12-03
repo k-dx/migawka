@@ -2,7 +2,6 @@ package xyz.jdubiel.migawka.ui.imageGallery
 
 import android.app.Application
 import android.content.ContentValues
-import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -38,7 +37,6 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
     fun downloadImage(id: Hash) {
         viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
             try {
-                // Download image bytes
                 val img = imageRepository.getRemoteFullImage(id)
 
                 val file = File(img.path)
@@ -55,10 +53,8 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
                     // This is problematic since photos can "move" to the top of the timeline after
                     // download.
                     // put(MediaStore.Images.Media.DATE_MODIFIED, date_modified.epochSecond)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        put(MediaStore.Images.Media.RELATIVE_PATH, path)
-                        put(MediaStore.Images.Media.IS_PENDING, true)
-                    }
+                    put(MediaStore.Images.Media.RELATIVE_PATH, path)
+                    put(MediaStore.Images.Media.IS_PENDING, true)
                 }
 
                 // Insert to MediaStore
@@ -71,20 +67,13 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
                     output.write(img.bytes)
                 }
 
-                // Mark as complete (Android 10+)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    values.clear()
-                    values.put(MediaStore.Images.Media.IS_PENDING, false)
-                    application.contentResolver.update(uri, values, null, null)
-                }
-
-                // Optional: Notify UI on main thread
-//                withContext(Dispatchers.Main) {
-//                    // Show success toast or update UI
-//                }
+                // Mark as complete
+                values.clear()
+                values.put(MediaStore.Images.Media.IS_PENDING, false)
+                application.contentResolver.update(uri, values, null, null)
             } catch (e: Exception) {
-                // TODO: Handle error
                 Log.d(TAG, "error when downloading image: ${e.message}")
+                // TODO: Display info about the error to the user
             }
         }
     }
