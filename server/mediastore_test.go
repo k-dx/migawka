@@ -198,4 +198,9 @@ func TestMediaStore_GetMediaItem(t *testing.T) {
 			t.Fatalf("Byte mismatch at position %d: expected %d, got %d", i, expectedFirst128Bytes[i], mediaItem.Content[i])
 		}
 	}
+
+	expectedPath := "lake.jpg"
+	if mediaItem.Metadata.Path != expectedPath {
+		t.Fatalf("Expected media item path to be '%s', got '%s'", expectedPath, mediaItem.Metadata.Path)
+	}
 }

@@ -365,7 +365,7 @@ func (x *FileDownloadReply) GetMessage() string {
 
 type Thumbnail struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// sha256 hash
+	// hash
 	Id      string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Content []byte `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	// ISO 8601
@@ -580,6 +580,7 @@ type MediaItem struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	CreationTime  string                 `protobuf:"bytes,2,opt,name=creationTime,proto3" json:"creationTime,omitempty"`
 	Content       []byte                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	Path          string                 `protobuf:"bytes,4,opt,name=path,proto3" json:"path,omitempty"` // optional
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -633,6 +634,13 @@ func (x *MediaItem) GetContent() []byte {
 		return x.Content
 	}
 	return nil
+}
+
+func (x *MediaItem) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
 }
 
 type GetMediaItemResponse struct {
@@ -725,11 +733,12 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	".ThumbnailR\n" +
 	"thumbnails\"%\n" +
 	"\x13GetMediaItemRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"Y\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"m\n" +
 	"\tMediaItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
 	"\fcreationTime\x18\x02 \x01(\tR\fcreationTime\x12\x18\n" +
-	"\acontent\x18\x03 \x01(\fR\acontent\"a\n" +
+	"\acontent\x18\x03 \x01(\fR\acontent\x12\x12\n" +
+	"\x04path\x18\x04 \x01(\tR\x04path\"a\n" +
 	"\x14GetMediaItemResponse\x12\x1f\n" +
 	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12(\n" +
 	"\tmediaItem\x18\x02 \x01(\v2\n" +

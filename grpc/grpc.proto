@@ -83,6 +83,9 @@ message MediaItem {
   string id = 1;
   string creationTime = 2;
   bytes content = 3;
+
+  // Optional. Rooted at `mediadir` directory, without a leading `/`. 
+  string path = 4; // optional
 }
 
 message GetMediaItemResponse {

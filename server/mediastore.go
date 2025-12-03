@@ -56,6 +56,7 @@ type mediaStoreImpl struct {
 	Hasher     Hasher
 	items      map[Key]MediaItemMetadata
 	thumbnails map[Key]Thumbnail
+	mediadir   string
 }
 
 func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
@@ -64,6 +65,7 @@ func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 		Hasher:     hasher,
 		items:      make(map[Key]MediaItemMetadata),
 		thumbnails: make(map[Key]Thumbnail),
+		mediadir:   path,
 	}
 	err := ms.loadMediaItems(path, filepath.Join(path, ".thumbnails"))
 	if err != nil {
@@ -147,8 +149,20 @@ func (ms *mediaStoreImpl) GetFullMediaItem(id Hash) (MediaItem, error) {
 		return MediaItem{}, fmt.Errorf("failed to read media item from disk: %w", err)
 	}
 
+	fullPath := item.Path
+	pathRootedAtMediadir, err := filepath.Rel(ms.mediadir, fullPath)
+	if err != nil || strings.HasPrefix(pathRootedAtMediadir, "/") {
+		return MediaItem{}, fmt.Errorf("failed to get path relative to mediadir: %w", err)
+	}
+
+	metadata := NewMediaItemMetadata(
+		item.ID,
+		pathRootedAtMediadir,
+		item.CreationTime,
+	)
+
 	itemFull := MediaItem{
-		Metadata: item,
+		Metadata: metadata,
 		Content:  content,
 	}
 	return itemFull, nil

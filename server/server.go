@@ -152,6 +152,7 @@ func (s *server) GetFullMediaItem(_ context.Context, in *pb.GetMediaItemRequest)
 	pbMediaItem := &pb.MediaItem{
 		Id:           mediaItem.Metadata.ID.String(),
 		CreationTime: mediaItem.Metadata.CreationTime.UTC().Format(time.RFC3339),
+		Path:         mediaItem.Metadata.Path,
 		Content:      mediaItem.Content,
 	}
 
