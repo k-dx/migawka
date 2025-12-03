@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ContentValues
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
@@ -13,9 +14,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
+import java.io.File
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -38,8 +41,9 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
                 // Download image bytes
                 val img = imageRepository.getRemoteFullImage(id)
 
-                val filename = "${img.hash.toHex()}.jpg" // TODO
-                val path = "Pictures/Migawka" // TODO
+                val file = File(img.path)
+                val filename = file.name
+                val path = "Pictures/Migawka/${file.parent}"
                 // Prepare ContentValues for MediaStore
                 val values = ContentValues().apply {
                     put(MediaStore.Images.Media.DISPLAY_NAME, filename)
@@ -80,6 +84,7 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
 //                }
             } catch (e: Exception) {
                 // TODO: Handle error
+                Log.d(TAG, "error when downloading image: ${e.message}")
             }
         }
     }

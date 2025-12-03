@@ -30,7 +30,7 @@ class ImageRepository(private val contentResolver: ContentResolver) {
         return remoteImageProvider.getOptimizedImage(id)
     }
 
-    suspend fun getRemoteFullImage(id: Hash): RemoteImage {
+    suspend fun getRemoteFullImage(id: Hash): RemoteFullImage {
         return remoteImageProvider.getFullImage(id)
     }
 }

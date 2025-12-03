@@ -12,7 +12,14 @@ import java.time.Instant
 data class RemoteImage(
     var bytes: ByteArray,
     val date: Instant,
-    val hash: Hash
+    val hash: Hash,
+)
+
+data class RemoteFullImage(
+    var bytes: ByteArray,
+    val date: Instant,
+    val hash: Hash,
+    val path: String
 )
 
 class RemoteImageProvider { // TODO: make it a singleton
@@ -92,7 +99,7 @@ class RemoteImageProvider { // TODO: make it a singleton
         )
     }
 
-    suspend fun getFullImage(id: Hash): RemoteImage {
+    suspend fun getFullImage(id: Hash): RemoteFullImage {
         val request = GetMediaItemRequest.newBuilder()
             .setId(id.toHex())
             .build()
@@ -108,10 +115,11 @@ class RemoteImageProvider { // TODO: make it a singleton
             Log.e("gRPC", "getFullImage: returned MediaItemID is different from requested!")
         }
 
-        return RemoteImage(
+        return RemoteFullImage(
             hash = id,
             bytes = response.mediaItem.content.toByteArray(),
             date = Instant.parse(response.mediaItem.creationTime),
+            path = response.mediaItem.path
         )
     }
 }
