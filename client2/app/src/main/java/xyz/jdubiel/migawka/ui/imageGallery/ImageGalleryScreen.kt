@@ -32,8 +32,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.TAG
+import xyz.jdubiel.migawka.data.PagedImage
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
@@ -97,56 +97,6 @@ fun ImageGrid(
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 120.dp),
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(4.dp)
-    ) {
-        items(images.itemCount) { index ->
-            val image = images[index]
-
-            when (image) {
-                is PagedImage.FromUri -> {
-                    val imageUri = image.contentUri
-                    val imageId = image.id
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = "Gallery Image",
-                        modifier = Modifier
-                            .aspectRatio(1f) // Make it square
-                            .fillMaxWidth()
-                            .clickable { onImageClick(imageId.toHex()) },
-                        contentScale = ContentScale.Crop // Crop to fill the square
-                    )
-                }
-                is PagedImage.FromBytes -> {
-                    val imageId = image.id
-                    val content = image.bytes
-//                    JpgFromBytes(image.bytes, modifier = Modifier
-//                        .aspectRatio(1f) // Make it square
-//                        .fillMaxWidth()
-//                        .clickable { onImageClick(imageId.toHex()) }
-//                    )
-                    AsyncImage(
-                        model = content,
-                        contentDescription = "Gallery Image",
-                        modifier = Modifier
-                            .aspectRatio(1f) // Make it square
-                            .fillMaxWidth()
-                            .clickable { onImageClick(imageId.toHex()) },
-                        contentScale = ContentScale.Crop // Crop to fill the square
-                    )
-                }
-                null -> {
-                    Log.e(TAG, "ImageGrid: images[$index] == null")
-                }
-            }
-
-        }
-    }
-
     when (images.loadState.refresh) {
         is LoadState.Loading -> {
             Column(
@@ -160,7 +110,57 @@ fun ImageGrid(
         is LoadState.Error -> {
             Text("Error loading images.", modifier = modifier.padding(16.dp))
         }
-        else -> {}
+        else -> {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 120.dp),
+                modifier = modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                contentPadding = PaddingValues(4.dp)
+            ) {
+                items(images.itemCount) { index ->
+                    val image = images[index]
+
+                    when (image) {
+                        is PagedImage.FromUri -> {
+                            val imageUri = image.contentUri
+                            val imageId = image.id
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "Gallery Image",
+                                modifier = Modifier
+                                    .aspectRatio(1f) // Make it square
+                                    .fillMaxWidth()
+                                    .clickable { onImageClick(imageId.toHex()) },
+                                contentScale = ContentScale.Crop // Crop to fill the square
+                            )
+                        }
+                        is PagedImage.FromBytes -> {
+                            val imageId = image.id
+                            val content = image.bytes
+//                    JpgFromBytes(image.bytes, modifier = Modifier
+//                        .aspectRatio(1f) // Make it square
+//                        .fillMaxWidth()
+//                        .clickable { onImageClick(imageId.toHex()) }
+//                    )
+                            AsyncImage(
+                                model = content,
+                                contentDescription = "Gallery Image",
+                                modifier = Modifier
+                                    .aspectRatio(1f) // Make it square
+                                    .fillMaxWidth()
+                                    .clickable { onImageClick(imageId.toHex()) },
+                                contentScale = ContentScale.Crop // Crop to fill the square
+                            )
+                        }
+                        null -> {
+                            Log.e(TAG, "ImageGrid: images[$index] == null")
+                        }
+                    }
+
+                }
+            }
+        }
     }
 }
 
