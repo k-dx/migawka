@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.Utils.Companion.ToggleSystemBars
 import xyz.jdubiel.migawka.data.Hash
@@ -170,6 +174,7 @@ fun SingleMediaViewScreen(
     val context = LocalContext.current
     val view = LocalView.current
     val activity = view.context.findActivity()
+    val scope = rememberCoroutineScope()
     // TODO: fix a bug where going back after browsing photos left/right changes the scroll
     // position in the gallery
 
@@ -193,8 +198,60 @@ fun SingleMediaViewScreen(
         }
     }
 
-    val autoRotateEnabled = Utils.isAutoRotateEnabled(context)
     val image = images[pagerState.currentPage]
+    val imageId = when (image) {
+        is PagedImage.FromUri -> image.id
+        is PagedImage.FromBytes -> image.id
+        else -> null
+    }
+    // single full-image slot and metadata about which page it belongs to
+    var fullImage by remember { mutableStateOf<RemoteImage?>(null) }
+    var fullImagePage by remember { mutableStateOf<Int?>(null) }
+    var fullImageError by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var lastRequestId by remember { mutableStateOf(0) } // to cancel/stale-guard
+
+    // When page changes, (re)download the full image for that page.
+    LaunchedEffect(pagerState.currentPage) {
+        val index = pagerState.currentPage
+        // clear or keep previous full image while loading — here we clear to show thumbnail immediately
+        fullImage = null
+        fullImagePage = null
+        fullImageError = null
+        isLoading = true
+
+        if (images[index] is PagedImage.FromBytes && imageId != null) {
+            // increment request id so earlier downloads don't override newer ones
+            val requestId = ++lastRequestId
+
+            // launch download on IO dispatcher
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val downloaded = viewModel.getRemoteOptimizedImage(imageId)
+                    withContext(Dispatchers.Main) {
+                        // only set if this is the latest request
+                        if (requestId == lastRequestId) {
+                            fullImage = downloaded
+                            fullImagePage = index
+                        }
+                    }
+                } catch (e: Exception) {
+                    // keep thumbnail on failure; optionally set an error image
+                    withContext(Dispatchers.Main) {
+                        if (requestId == lastRequestId) {
+                            fullImageError = e.message
+                        }
+                    }
+                } finally {
+                    withContext(Dispatchers.Main) {
+                        if (requestId == lastRequestId) isLoading = false
+                    }
+                }
+            }
+        }
+    }
+
+    val autoRotateEnabled = Utils.isAutoRotateEnabled(context)
     val buttons: List<@Composable () -> Unit> = buildList {
         if (!autoRotateEnabled) {
             add {
@@ -243,23 +300,28 @@ fun SingleMediaViewScreen(
                             )
                         }
                         is PagedImage.FromBytes -> {
-                            val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
-                            val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
-                                outputStream().use { it.write(image.bytes) }
+                            if (fullImage != null) {
+                                val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
+                                val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
+                                    outputStream().use { it.write(fullImage!!.bytes) }
+                                }
+                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cacheFile)
+
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "image/*"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+
+                                context.startActivity(
+                                    Intent.createChooser(shareIntent, "Share image via")
+                                )
+
+                                // TODO: remove the file after sharing
+                            } else {
+                                Toast.makeText(context, "Cannot share thumbnail. Please wait for the image to load.", Toast.LENGTH_LONG).show()
+
                             }
-                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cacheFile)
-
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "image/*"
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-
-                            context.startActivity(
-                                Intent.createChooser(shareIntent, "Share image via")
-                            )
-
-                            // TODO: remove the file after sharing
                         }
                         else -> null
                     }
@@ -317,10 +379,7 @@ fun SingleMediaViewScreen(
                                 )
                             }
                             is PagedImage.FromBytes -> {
-                                var fullImage: RemoteImage? by remember { mutableStateOf(null) }
-                                var error by remember { mutableStateOf<String?>(null) }
-
-                                if (fullImage != null) {
+                                if (fullImage != null && fullImagePage == pageIndex) {
                                     AsyncImage(
                                         model = fullImage!!.bytes,
                                         contentDescription = "Full screen image",
@@ -342,18 +401,11 @@ fun SingleMediaViewScreen(
                                                     .align(Alignment.Center),
                                                 contentScale = ContentScale.Fit
                                             )
-                                            if (error != null) {
-                                                Text("Fetching error: $error")
+                                            if (fullImageError != null) {
+                                                Text("Fetching error: $fullImageError")
                                             } else {
                                                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                                             }
-                                        }
-                                    }
-                                    LaunchedEffect(fullImage) {
-                                        try {
-                                            fullImage = viewModel.getRemoteOptimizedImage(image.id)
-                                        } catch (e: Exception) {
-                                            error = e.message
                                         }
                                     }
                                 }
