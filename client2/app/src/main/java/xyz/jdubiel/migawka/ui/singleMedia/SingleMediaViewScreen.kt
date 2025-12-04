@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -50,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.Utils
@@ -59,6 +61,7 @@ import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.findActivity
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -224,9 +227,42 @@ fun SingleMediaViewScreen(
             }
         }
         add {
+
             OutlinedIconButton(
                 onClick = {
-                    Toast.makeText(context, "Share: Not implemented yet", Toast.LENGTH_SHORT).show()
+                    when (image) {
+                        is PagedImage.FromUri -> {
+                            val shareIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_STREAM, image.contentUri)
+                                type = "image/*"
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(
+                                Intent.createChooser(shareIntent, "Share image via")
+                            )
+                        }
+                        is PagedImage.FromBytes -> {
+                            val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
+                            val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
+                                outputStream().use { it.write(image.bytes) }
+                            }
+                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cacheFile)
+
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "image/*"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+
+                            context.startActivity(
+                                Intent.createChooser(shareIntent, "Share image via")
+                            )
+
+                            // TODO: remove the file after sharing
+                        }
+                        else -> null
+                    }
                 },
                 modifier = Modifier.size(48.dp)
             ) {
