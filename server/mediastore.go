@@ -86,7 +86,8 @@ func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 	return item.CreationTime, nil
 }
 
-// Returns at most 'count' thumbnails created before (or at) the given timestamp
+// Returns at most 'count' thumbnails created before the given timestamp
+// Will return more if there are multiple items with the same timestamp as the last one
 func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error) {
 	type idDatePair struct {
 		id   Key
@@ -97,23 +98,25 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 	idsByDate := make([]idDatePair, 0, len(ms.items))
 	for id, item := range ms.items {
 		// filter out items after the given date
-		if item.CreationTime.After(date) {
-			continue
+		if item.CreationTime.Before(date) {
+			idsByDate = append(idsByDate, idDatePair{
+				id:   id,
+				date: item.CreationTime,
+			})
 		}
-		idsByDate = append(idsByDate, idDatePair{
-			id:   id,
-			date: item.CreationTime,
-		})
 	}
 
 	// sort by date descending
 	sort.Slice(idsByDate, func(i, j int) bool {
 		return idsByDate[i].date.After(idsByDate[j].date)
 	})
-
-	// return the first 'count' items
+	// take first 'count' ids, plus any with the same date as the last one
 	ids := make([]Key, 0, count)
-	for i := 0; i < int(count) && i < len(idsByDate); i++ {
+	i := 0
+	for ; i < int(count) && i < len(idsByDate); i++ {
+		ids = append(ids, idsByDate[i].id)
+	}
+	for ; i > 0 && i < len(idsByDate) && idsByDate[i].date.Equal(idsByDate[i-1].date); i++ {
 		ids = append(ids, idsByDate[i].id)
 	}
 	return ms.getThumbnailsByIDs(ids)
