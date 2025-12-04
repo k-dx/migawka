@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -208,8 +209,7 @@ fun SingleMediaViewScreen(
     var fullImage by remember { mutableStateOf<RemoteImage?>(null) }
     var fullImagePage by remember { mutableStateOf<Int?>(null) }
     var fullImageError by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-    var lastRequestId by remember { mutableStateOf(0) } // to cancel/stale-guard
+    var lastRequestId by remember { mutableIntStateOf(0) } // to cancel/stale-guard
 
     // When page changes, (re)download the full image for that page.
     LaunchedEffect(pagerState.currentPage) {
@@ -218,7 +218,6 @@ fun SingleMediaViewScreen(
         fullImage = null
         fullImagePage = null
         fullImageError = null
-        isLoading = true
 
         if (images[index] is PagedImage.FromBytes && imageId != null) {
             // increment request id so earlier downloads don't override newer ones
@@ -241,10 +240,6 @@ fun SingleMediaViewScreen(
                         if (requestId == lastRequestId) {
                             fullImageError = e.message
                         }
-                    }
-                } finally {
-                    withContext(Dispatchers.Main) {
-                        if (requestId == lastRequestId) isLoading = false
                     }
                 }
             }
