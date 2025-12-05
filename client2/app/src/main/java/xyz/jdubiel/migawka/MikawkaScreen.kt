@@ -47,6 +47,7 @@ fun Migawka(
     onImageClick: (String) -> Unit,
     onSettingsButtonClick: () -> Unit,
     onSecondScreenButtonClick: () -> Unit,
+    onFolderViewButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -59,6 +60,9 @@ fun Migawka(
         ) {
             Button(onClick = { onSettingsButtonClick() }) {
                 Text(text = stringResource(R.string.settings))
+            }
+            Button(onClick = { onFolderViewButtonClick() }) {
+                Text("Folders")
             }
             Button(onClick = {
                 val serverAddress = "192.168.5.158"
@@ -174,7 +178,8 @@ fun MigawkaPreview() {
             viewModel = viewModel<ImageGalleryViewModel>(),
             onSettingsButtonClick = {},
             onSecondScreenButtonClick = {},
-            onImageClick = {}
+            onImageClick = {},
+            onFolderViewButtonClick = {}
         )
     }
 }
