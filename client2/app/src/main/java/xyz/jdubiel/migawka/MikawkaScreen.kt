@@ -60,6 +60,36 @@ fun Migawka(
             Button(onClick = { onSettingsButtonClick() }) {
                 Text(text = stringResource(R.string.settings))
             }
+            Button(onClick = {
+                val serverAddress = "192.168.5.158"
+                Log.d("serverAddress", serverAddress)
+                val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+                    .usePlaintext()
+                    .build()
+
+                val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
+
+                coroutineScope.launch {
+                    try {
+                        val request = GetFileListPageRequest.newBuilder()
+                            .setPath("")
+                            .build()
+
+                        val response = stub.getFileListPage(request)
+
+                        // Update the UI with the response on the main thread
+                        Log.i(
+                            "gRPC",
+                            "Response: ${response.status} ${response.entriesList}"
+                        )
+
+                    } catch (e: Exception) {
+                        Log.e("gRPC", "Error: ${e.message}", e)
+                    }
+                }
+            }) {
+                Text(text = "Get dir")
+            }
             Button(onClick = { onSecondScreenButtonClick() }) {
                 Text(text = "Second screen")
             }
