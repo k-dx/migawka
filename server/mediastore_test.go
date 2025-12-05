@@ -4,19 +4,9 @@ import (
 	"image"
 	_ "image/jpeg"
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 )
-
-func copyDir(t *testing.T, src string, dst string) {
-	cmd := exec.Command("cp", "-r", src, dst)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		// handle error; out contains combined stdout/stderr
-		t.Fatalf("Failed to copy directory from %s to %s: %v, output: %s", src, dst, err, string(out))
-	}
-}
 
 func TestMediaStore_loadMediaItems_shouldCreateThumbnailDirectory(t *testing.T) {
 	copyDir(t, "./tests/test1", "./test")
@@ -202,5 +192,51 @@ func TestMediaStore_GetMediaItem(t *testing.T) {
 	expectedPath := "lake.jpg"
 	if mediaItem.Metadata.Path != expectedPath {
 		t.Fatalf("Expected media item path to be '%s', got '%s'", expectedPath, mediaItem.Metadata.Path)
+	}
+}
+
+func TestMediaStore_GetThumbnailsByPath(t *testing.T) {
+	copyDir(t, "./tests/test2", "./test")
+	t.Cleanup(func() {
+		os.RemoveAll("./test")
+	})
+
+	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	if err != nil {
+		t.Fatalf("Failed to create media store: %v", err)
+	}
+
+	thumbnails, err := mediaStore.GetThumbnailsByPath("")
+	if err != nil {
+		t.Fatalf("Failed to get thumbnails by path: %v", err)
+	}
+
+	expectedThumbnailsCount := 2
+	got := len(thumbnails)
+	if got != expectedThumbnailsCount {
+		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	}
+}
+
+func TestMediaStore_GetThumbnailsByPath2(t *testing.T) {
+	copyDir(t, "./tests/test4", "./test")
+	t.Cleanup(func() {
+		os.RemoveAll("./test")
+	})
+
+	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	if err != nil {
+		t.Fatalf("Failed to create media store: %v", err)
+	}
+
+	thumbnails, err := mediaStore.GetThumbnailsByPath("dir/sub")
+	if err != nil {
+		t.Fatalf("Failed to get thumbnails by path: %v", err)
+	}
+
+	expectedThumbnailsCount := 1
+	got := len(thumbnails)
+	if got != expectedThumbnailsCount {
+		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
 	}
 }
