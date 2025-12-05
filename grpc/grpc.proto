@@ -16,6 +16,7 @@ service Migawka {
   rpc GetThumbnailsBeforeTimestamp(ThumbnailsTimestampRequest) returns (ThumbnailsTimestampResponse);
   rpc GetOptimizedMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFullMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
+  rpc GetFileListPage(GetFileListPageRequest) returns (GetFileListPageResponse);
 }
 
 message Status {
@@ -94,3 +95,32 @@ message GetMediaItemResponse {
   MediaItem mediaItem = 2;
 }
 
+message GetFileListPageRequest {
+  string path = 1;
+  uint32 pageNumber = 2;
+  uint32 pageSize = 3;
+}
+
+message GetFileListPageResponse {
+  Status status = 1;
+  repeated DirectoryEntry entries = 2;
+}
+
+message DirectoryEntry {
+  enum FileType {
+    DIRECTORY = 0;
+    REGULAR = 1; // symlinks are treated as files
+  }
+
+  FileType type = 1;
+  string name = 2;
+
+  // for image files
+  MediaItem mediaItem = 3;
+}
+
+
+
+// message GetMediaItemByPathRequest {
+
+// }

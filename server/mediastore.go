@@ -37,6 +37,7 @@ type MediaStore interface {
 	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 
 	GetThumbnailsByPath(path string) ([]Thumbnail, error)
+	GetMediaDirectory() string
 
 	GetMediaItemsCountForTest() int
 }
@@ -74,6 +75,10 @@ func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 		return nil, err
 	}
 	return ms, nil
+}
+
+func (ms *mediaStoreImpl) GetMediaDirectory() string {
+	return ms.mediadir
 }
 
 func (ms *mediaStoreImpl) GetHasher() Hasher {

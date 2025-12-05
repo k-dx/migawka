@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"path/filepath"
+	"strings"
 	"time"
 
 	pb "migawka-server/grpc"
@@ -159,4 +161,87 @@ func (s *server) GetFullMediaItem(_ context.Context, in *pb.GetMediaItemRequest)
 	status := pb.NewStatus(200, "")
 
 	return pb.NewGetMediaItemResponse(pbMediaItem, status), nil
+}
+
+func IsPathInsideBase(basePath, targetPath string) (bool, error) {
+	absBasePath, err := filepath.Abs(basePath)
+	if err != nil {
+		return false, err
+	}
+
+	absTargetPath, err := filepath.Abs(targetPath)
+	if err != nil {
+		return false, err
+	}
+
+	relPath, err := filepath.Rel(absBasePath, absTargetPath)
+	if err != nil {
+		return false, err
+	}
+
+	return !strings.HasPrefix(relPath, ".."), nil
+}
+
+func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageRequest) (*pb.GetFileListPageResponse, error) {
+	log.Info().
+		Str("path", in.GetPath()).
+		Uint32("page_number", in.GetPageNumber()).
+		Uint32("page_size", in.GetPageSize()).
+		Msg("GetFileListPage")
+
+	requestedRelativePath := in.GetPath()
+	// pageNumber := in.GetPageNumber()
+	// pageSize := in.GetPageSize()
+
+	mediaDir := s.mediaStore.GetMediaDirectory()
+
+	requestedAbsPath := filepath.Join(mediaDir, requestedRelativePath)
+
+	// check that requestedRelativePath is inside media store directory
+
+	if ok, err := IsPathInsideBase(mediaDir, requestedAbsPath); err != nil || !ok {
+		log.Warn().
+			Str("path", requestedRelativePath).
+			Msg("Requested path is outside media directory")
+		status := pb.NewStatus(400, "Requested path is outside media directory")
+		return pb.NewGetFileListPageResponse(nil, status), nil
+	}
+
+	dirs, err := GetDirsInDir(mediaDir, requestedRelativePath)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("path", requestedRelativePath).
+			Msg("Failed to get directories in path")
+		status := pb.NewStatus(500, "Failed to get directories in path")
+		return pb.NewGetFileListPageResponse(nil, status), nil
+	}
+
+	thumbnails, err := s.mediaStore.GetThumbnailsByPath(requestedRelativePath)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("path", requestedRelativePath).
+			Msg("Failed to get thumbnails in path")
+		status := pb.NewStatus(500, "Failed to get thumbnails in path")
+		return pb.NewGetFileListPageResponse(nil, status), nil
+	}
+
+	// TODO: pagination
+
+	var entries []*pb.DirectoryEntry
+	for _, dir := range dirs {
+		entries = append(entries, &pb.DirectoryEntry{
+			Name: dir.Name,
+			Type: pb.DirectoryEntry_DIRECTORY,
+		})
+	}
+	for _, thumbnail := range thumbnails {
+		entries = append(entries, &pb.DirectoryEntry{
+			Name: thumbnail.ID.String(),
+			Type: pb.DirectoryEntry_REGULAR,
+		})
+	}
+
+	return pb.NewGetFileListPageResponse(entries, pb.NewStatus(200, "")), nil
 }

@@ -20,3 +20,10 @@ func NewStatus(code int32, message string) *Status {
 		Message: message,
 	}
 }
+
+func NewGetFileListPageResponse(entries []*DirectoryEntry, status *Status) *GetFileListPageResponse {
+	return &GetFileListPageResponse{
+		Status:  status,
+		Entries: entries,
+	}
+}

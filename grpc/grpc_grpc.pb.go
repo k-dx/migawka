@@ -25,6 +25,7 @@ const (
 	Migawka_GetThumbnailsBeforeTimestamp_FullMethodName = "/Migawka/GetThumbnailsBeforeTimestamp"
 	Migawka_GetOptimizedMediaItem_FullMethodName        = "/Migawka/GetOptimizedMediaItem"
 	Migawka_GetFullMediaItem_FullMethodName             = "/Migawka/GetFullMediaItem"
+	Migawka_GetFileListPage_FullMethodName              = "/Migawka/GetFileListPage"
 )
 
 // MigawkaClient is the client API for Migawka service.
@@ -40,6 +41,7 @@ type MigawkaClient interface {
 	GetThumbnailsBeforeTimestamp(ctx context.Context, in *ThumbnailsTimestampRequest, opts ...grpc.CallOption) (*ThumbnailsTimestampResponse, error)
 	GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
+	GetFileListPage(ctx context.Context, in *GetFileListPageRequest, opts ...grpc.CallOption) (*GetFileListPageResponse, error)
 }
 
 type migawkaClient struct {
@@ -110,6 +112,16 @@ func (c *migawkaClient) GetFullMediaItem(ctx context.Context, in *GetMediaItemRe
 	return out, nil
 }
 
+func (c *migawkaClient) GetFileListPage(ctx context.Context, in *GetFileListPageRequest, opts ...grpc.CallOption) (*GetFileListPageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetFileListPageResponse)
+	err := c.cc.Invoke(ctx, Migawka_GetFileListPage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MigawkaServer is the server API for Migawka service.
 // All implementations must embed UnimplementedMigawkaServer
 // for forward compatibility.
@@ -123,6 +135,7 @@ type MigawkaServer interface {
 	GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error)
 	GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
+	GetFileListPage(context.Context, *GetFileListPageRequest) (*GetFileListPageResponse, error)
 	mustEmbedUnimplementedMigawkaServer()
 }
 
@@ -150,6 +163,9 @@ func (UnimplementedMigawkaServer) GetOptimizedMediaItem(context.Context, *GetMed
 }
 func (UnimplementedMigawkaServer) GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFullMediaItem not implemented")
+}
+func (UnimplementedMigawkaServer) GetFileListPage(context.Context, *GetFileListPageRequest) (*GetFileListPageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFileListPage not implemented")
 }
 func (UnimplementedMigawkaServer) mustEmbedUnimplementedMigawkaServer() {}
 func (UnimplementedMigawkaServer) testEmbeddedByValue()                 {}
@@ -280,6 +296,24 @@ func _Migawka_GetFullMediaItem_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Migawka_GetFileListPage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFileListPageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MigawkaServer).GetFileListPage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Migawka_GetFileListPage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MigawkaServer).GetFileListPage(ctx, req.(*GetFileListPageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Migawka_ServiceDesc is the grpc.ServiceDesc for Migawka service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -310,6 +344,10 @@ var Migawka_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFullMediaItem",
 			Handler:    _Migawka_GetFullMediaItem_Handler,
+		},
+		{
+			MethodName: "GetFileListPage",
+			Handler:    _Migawka_GetFileListPage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
