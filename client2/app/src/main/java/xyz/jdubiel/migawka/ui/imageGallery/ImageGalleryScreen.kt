@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -29,11 +31,53 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.insertSeparators
+import androidx.paging.map
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.PagedImage
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+sealed interface ImageGalleryTimelineEntry {
+    data class ImageItem(val image: PagedImage) : ImageGalleryTimelineEntry
+    data class MonthHeader(val monthYear: String) : ImageGalleryTimelineEntry
+}
+
+private fun getMonthYearHeaderIfNeeded(
+    before: PagedImage?,
+    after: PagedImage?
+): ImageGalleryTimelineEntry.MonthHeader? {
+    val locale = Locale.getDefault()
+    val zone = java.time.ZoneId.systemDefault()
+    val monthYearFormatter = DateTimeFormatter
+        .ofPattern("LLLL uuuu") // LLLL gives non-conjugated month name 'listopad' instead of 'listopada'
+        .withLocale(locale)
+        .withZone(zone)
+
+    if (after == null) {
+        // No item after, so no header needed
+        return null
+    }
+    if (before == null) {
+        // First item in the list, always show a header
+        val header = monthYearFormatter.format(after.date)
+        return ImageGalleryTimelineEntry.MonthHeader(header)
+
+    }
+
+    val beforeMonthYear = monthYearFormatter.format(before.date)
+    val afterMonthYear = monthYearFormatter.format(after.date)
+
+    if (beforeMonthYear != afterMonthYear) {
+        return ImageGalleryTimelineEntry.MonthHeader(afterMonthYear)
+    }
+
+    return null
+}
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
@@ -42,12 +86,24 @@ fun ImageGalleryScreen(
     modifier: Modifier = Modifier,
     viewModel: ImageGalleryViewModel = viewModel()
 ) {
-    // This is an extension function from the androidx.paging:paging-compose
-    // library. Its job is to collect the PagingData from the imageStream and
-    // convert it into a LazyPagingItems<Uri> object. This object is what
-    // connects the Paging library's data loading mechanism with Jetpack
-    // Compose's lazy layouts.
-    val images = viewModel.imageStream.collectAsLazyPagingItems()
+    // collectAsLazyPagingItems is an extension function from the
+    // androidx.paging:paging-compose library. Its job is to collect the
+    // PagingData from the imageStream and convert it into a
+    // LazyPagingItems<Uri> object. This object is what connects the Paging
+    // library's data loading mechanism with Jetpack Compose's lazy layouts.
+    val images = remember(viewModel.imageStream) {
+        viewModel.imageStream
+            .map { pagingData ->
+                pagingData.map { pagedImage ->
+                    ImageGalleryTimelineEntry.ImageItem(pagedImage)
+                }
+            }
+            .map { pagingData ->
+                pagingData.insertSeparators { before: ImageGalleryTimelineEntry.ImageItem?, after: ImageGalleryTimelineEntry.ImageItem? ->
+                    getMonthYearHeaderIfNeeded(before?.image, after?.image)
+                }
+            }
+    }.collectAsLazyPagingItems() // Now this collects from a stable Flow
     Log.d(TAG, "images.itemCount = ${images.itemCount}")
 
     ImageGrid(
@@ -93,7 +149,7 @@ fun JpgFromBytes(jpgBytes: ByteArray, modifier: Modifier = Modifier) {
 
 @Composable
 fun ImageGrid(
-    images: LazyPagingItems<PagedImage>,
+    images: LazyPagingItems<ImageGalleryTimelineEntry>,
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -108,7 +164,13 @@ fun ImageGrid(
             }
         }
         is LoadState.Error -> {
-            Text("Error loading images.", modifier = modifier.padding(16.dp))
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Error loading images.", modifier = modifier.padding(16.dp))
+            }
         }
         else -> {
             LazyVerticalGrid(
@@ -118,46 +180,65 @@ fun ImageGrid(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = PaddingValues(4.dp)
             ) {
-                items(images.itemCount) { index ->
-                    val image = images[index]
-
-                    when (image) {
-                        is PagedImage.FromUri -> {
-                            val imageUri = image.contentUri
-                            val imageId = image.id
-                            AsyncImage(
-                                model = imageUri,
-                                contentDescription = "Gallery Image",
-                                modifier = Modifier
-                                    .aspectRatio(1f) // Make it square
-                                    .fillMaxWidth()
-                                    .clickable { onImageClick(imageId.toHex()) },
-                                contentScale = ContentScale.Crop // Crop to fill the square
-                            )
+                items(
+                    count = images.itemCount,
+                    key = { index ->
+                        when (val item = images.peek(index)) {
+                            is ImageGalleryTimelineEntry.ImageItem -> {
+                                when(item.image) {
+                                    is PagedImage.FromUri -> item.image.id.toHex()
+                                    is PagedImage.FromBytes -> item.image.id.toHex()
+                                }
+                            }
+                            is ImageGalleryTimelineEntry.MonthHeader -> item.monthYear
+                            null -> "placeholder_$index"
                         }
-                        is PagedImage.FromBytes -> {
-                            val imageId = image.id
-                            val content = image.bytes
-//                    JpgFromBytes(image.bytes, modifier = Modifier
-//                        .aspectRatio(1f) // Make it square
-//                        .fillMaxWidth()
-//                        .clickable { onImageClick(imageId.toHex()) }
-//                    )
-                            AsyncImage(
-                                model = content,
-                                contentDescription = "Gallery Image",
-                                modifier = Modifier
-                                    .aspectRatio(1f) // Make it square
-                                    .fillMaxWidth()
-                                    .clickable { onImageClick(imageId.toHex()) },
-                                contentScale = ContentScale.Crop // Crop to fill the square
-                            )
-                        }
-                        null -> {
-                            Log.e(TAG, "ImageGrid: images[$index] == null")
+                    },
+                    span = { index ->
+                        when (images.peek(index)) {
+                            is ImageGalleryTimelineEntry.MonthHeader -> GridItemSpan(maxLineSpan)
+                            else -> GridItemSpan(1)
                         }
                     }
-
+                ) { index ->
+                    val uiModel = images[index]
+                    if (uiModel != null) {
+                        when (uiModel) {
+                            is ImageGalleryTimelineEntry.MonthHeader -> {
+                                Text(
+                                    text = uiModel.monthYear,
+                                    modifier = Modifier
+                                        .padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+                                )
+                            }
+                            is ImageGalleryTimelineEntry.ImageItem -> {
+                                when (val image = uiModel.image) {
+                                    is PagedImage.FromUri -> {
+                                        AsyncImage(
+                                            model = image.contentUri,
+                                            contentDescription = "Gallery Image",
+                                            modifier = Modifier
+                                                .aspectRatio(1f)
+                                                .fillMaxWidth()
+                                                .clickable { onImageClick(image.id.toHex()) },
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                    is PagedImage.FromBytes -> {
+                                        AsyncImage(
+                                            model = image.bytes,
+                                            contentDescription = "Gallery Image",
+                                            modifier = Modifier
+                                                .aspectRatio(1f)
+                                                .fillMaxWidth()
+                                                .clickable { onImageClick(image.id.toHex()) },
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

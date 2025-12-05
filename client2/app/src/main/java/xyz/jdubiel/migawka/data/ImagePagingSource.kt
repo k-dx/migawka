@@ -6,8 +6,9 @@ import androidx.paging.PagingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.TAG
 import java.time.Instant
+
+const val PAGING_TAG = "Paging"
 
 class ImagePagingSource(
     private val localImageProvider: LocalImageProvider,
@@ -18,7 +19,7 @@ class ImagePagingSource(
     // the photos are taken before the datetime (given as key), not inclusive
     override suspend fun load(params: LoadParams<Instant>): LoadResult<Instant, PagedImage> =
         withContext(Dispatchers.IO) {
-            Log.d(TAG, "load with params: loadSize = ${params.loadSize}, key = ${params.key}")
+            Log.d(PAGING_TAG, "load with params: loadSize = ${params.loadSize}, key = ${params.key}")
             val start = System.nanoTime()
 
             val key = params.key
@@ -32,7 +33,7 @@ class ImagePagingSource(
 
             // query the remote API
             val dateForRequest = key ?: Instant.now()
-            Log.d(TAG, "dateForRequest is `${dateForRequest}`")
+            Log.d(PAGING_TAG, "dateForRequest is `${dateForRequest}`")
             val remoteImagesResult = async {
                 remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
             }
