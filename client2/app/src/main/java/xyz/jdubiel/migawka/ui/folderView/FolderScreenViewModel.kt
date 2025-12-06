@@ -8,7 +8,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.Flow
-import xyz.jdubiel.migawka.DirectoryEntry
+import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.FolderEntriesPagingSource
 
 class FolderScreenViewModel(
@@ -16,9 +16,7 @@ class FolderScreenViewModel(
     private val pageSize: Int = 30
 ) : ViewModel() {
 
-    private val pathForRequest = path.removePrefix("/")
-
-    val dirEntriesStream: Flow<PagingData<DirectoryEntry>> =
+    val dirEntriesStream: Flow<PagingData<DirectoryEntryK>> =
         Pager(
             config = PagingConfig(
                 pageSize = pageSize,

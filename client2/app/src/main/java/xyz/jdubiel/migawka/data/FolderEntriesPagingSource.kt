@@ -11,6 +11,10 @@ import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.DirectoryEntry
 import xyz.jdubiel.migawka.GetFileListPageRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
+import xyz.jdubiel.migawka.data.DirectoryEntryK.DirectoryK
+import xyz.jdubiel.migawka.data.DirectoryEntryK.ThumbnailK
+import xyz.jdubiel.migawka.hasher
+import java.time.Instant
 
 
 class RemoteFileExplorer { // TODO: make it a singleton
@@ -62,10 +66,40 @@ class RemoteFileExplorer { // TODO: make it a singleton
 
 const val FILE_PAGING_TAG = "FilePaging"
 
-class FolderEntriesPagingSource(val path: String, private val pageSize: Int = 30) : PagingSource<Int, DirectoryEntry>() {
+interface DirectoryEntryK { // K as in Kotlin
+    val name: String
+    class DirectoryK(
+        override val name: String
+    ) : DirectoryEntryK
+    class ThumbnailK(
+        override val name: String,
+        val id: Hash,
+        val content: ByteArray,
+        val creationTime: Instant
+    ) : DirectoryEntryK
+}
+
+fun convert(entry: DirectoryEntry): DirectoryEntryK {
+    return when (entry.type) {
+        DirectoryEntry.FileType.DIRECTORY -> {
+            DirectoryK(entry.name)
+        }
+        DirectoryEntry.FileType.REGULAR -> {
+            ThumbnailK(
+                entry.name,
+                hasher.fromHex(entry.thumbnail.id),
+                entry.thumbnail.content.toByteArray(),
+                Instant.parse(entry.thumbnail.creationTime)
+            )
+        }
+        DirectoryEntry.FileType.UNRECOGNIZED -> throw Exception("Unknown file type")
+    }
+}
+
+class FolderEntriesPagingSource(val path: String, private val pageSize: Int = 30) : PagingSource<Int, DirectoryEntryK>() {
     private val fileExplorer = RemoteFileExplorer()
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, DirectoryEntry> =
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, DirectoryEntryK> =
         withContext(Dispatchers.IO) {
             Log.d(FILE_PAGING_TAG, "load with params: loadSize = ${params.loadSize}, key = ${params.key}")
 
@@ -75,7 +109,7 @@ class FolderEntriesPagingSource(val path: String, private val pageSize: Int = 30
                 fileExplorer.getFileList(path, pageNumber, pageSize)
             }
 
-            val entries = remoteDirectoryEntries.await()
+            val entries = remoteDirectoryEntries.await().map(::convert)
 
             val prevKey = if (pageNumber > 0) pageNumber - 1 else null
             val nextKey = if (entries.isEmpty()) null else pageNumber + 1
@@ -89,7 +123,7 @@ class FolderEntriesPagingSource(val path: String, private val pageSize: Int = 30
         }
 
     // from https://developer.android.com/reference/kotlin/androidx/paging/PagingSource
-    override fun getRefreshKey(state: PagingState<Int, DirectoryEntry>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, DirectoryEntryK>): Int? {
         return state.anchorPosition?.let {
             state.closestPageToPosition(it)?.prevKey?.plus(1)
                 ?: state.closestPageToPosition(it)?.nextKey?.minus(1)
