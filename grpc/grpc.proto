@@ -116,11 +116,5 @@ message DirectoryEntry {
   string name = 2;
 
   // for image files
-  MediaItem mediaItem = 3;
+  Thumbnail thumbnail = 3;
 }
-
-
-
-// message GetMediaItemByPathRequest {
-
-// }

@@ -859,7 +859,7 @@ type DirectoryEntry struct {
 	Type  DirectoryEntry_FileType `protobuf:"varint,1,opt,name=type,proto3,enum=DirectoryEntry_FileType" json:"type,omitempty"`
 	Name  string                  `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// for image files
-	MediaItem     *MediaItem `protobuf:"bytes,3,opt,name=mediaItem,proto3" json:"mediaItem,omitempty"`
+	Thumbnail     *Thumbnail `protobuf:"bytes,3,opt,name=thumbnail,proto3" json:"thumbnail,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -908,9 +908,9 @@ func (x *DirectoryEntry) GetName() string {
 	return ""
 }
 
-func (x *DirectoryEntry) GetMediaItem() *MediaItem {
+func (x *DirectoryEntry) GetThumbnail() *Thumbnail {
 	if x != nil {
-		return x.MediaItem
+		return x.Thumbnail
 	}
 	return nil
 }
@@ -975,8 +975,8 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x0eDirectoryEntry\x12,\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x18.DirectoryEntry.FileTypeR\x04type\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12(\n" +
-	"\tmediaItem\x18\x03 \x01(\v2\n" +
-	".MediaItemR\tmediaItem\"&\n" +
+	"\tthumbnail\x18\x03 \x01(\v2\n" +
+	".ThumbnailR\tthumbnail\"&\n" +
 	"\bFileType\x12\r\n" +
 	"\tDIRECTORY\x10\x00\x12\v\n" +
 	"\aREGULAR\x10\x012\xc9\x03\n" +
@@ -1032,7 +1032,7 @@ var file_grpc_grpc_proto_depIdxs = []int32{
 	1,  // 4: GetFileListPageResponse.status:type_name -> Status
 	16, // 5: GetFileListPageResponse.entries:type_name -> DirectoryEntry
 	0,  // 6: DirectoryEntry.type:type_name -> DirectoryEntry.FileType
-	12, // 7: DirectoryEntry.mediaItem:type_name -> MediaItem
+	8,  // 7: DirectoryEntry.thumbnail:type_name -> Thumbnail
 	2,  // 8: Migawka.SayHello:input_type -> HelloRequest
 	4,  // 9: Migawka.UploadFile:input_type -> FileUploadRequest
 	6,  // 10: Migawka.DownloadFile:input_type -> FileDownloadRequest

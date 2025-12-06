@@ -85,16 +85,20 @@ func (s *server) GetThumbnailsBeforeTimestamp(_ context.Context, in *pb.Thumbnai
 			return pb.NewThumbnailsTimestampResponse(nil, status), nil
 		}
 
-		pbThumbnails = append(pbThumbnails, &pb.Thumbnail{
-			Id:           thumbnail.ID.String(),
-			CreationTime: creationTime.UTC().Format(time.RFC3339),
-			Content:      thumbnail.Content,
-		})
+		pbThumbnails = append(pbThumbnails, toPbThumbnail(thumbnail, creationTime))
 	}
 	return pb.NewThumbnailsTimestampResponse(
 		pbThumbnails,
 		pb.NewStatus(200, ""),
 	), nil
+}
+
+func toPbThumbnail(thumbnail Thumbnail, creationTime time.Time) *pb.Thumbnail {
+	return &pb.Thumbnail{
+		Id:           thumbnail.ID.String(),
+		CreationTime: creationTime.UTC().Format(time.RFC3339),
+		Content:      thumbnail.Content,
+	}
 }
 
 func (s *server) GetOptimizedMediaItem(_ context.Context, in *pb.GetMediaItemRequest) (*pb.GetMediaItemResponse, error) {
@@ -257,10 +261,20 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 			Type: pb.DirectoryEntry_DIRECTORY,
 		})
 	}
+
+	// convert to gRPC thumbnails type
 	for _, thumb := range thumbsWithNames {
+		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(thumb.thumb.ID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get creation time of media item")
+			status := pb.NewStatus(500, "Failed to get creation time of media item")
+			return pb.NewGetFileListPageResponse(nil, status), nil
+		}
+
 		entries = append(entries, &pb.DirectoryEntry{
-			Name: thumb.filename,
-			Type: pb.DirectoryEntry_REGULAR,
+			Name:      thumb.filename,
+			Type:      pb.DirectoryEntry_REGULAR,
+			Thumbnail: toPbThumbnail(thumb.thumb, creationTime),
 		})
 	}
 
