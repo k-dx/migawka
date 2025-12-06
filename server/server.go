@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -190,15 +191,14 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 		Msg("GetFileListPage")
 
 	requestedRelativePath := in.GetPath()
-	// pageNumber := in.GetPageNumber()
-	// pageSize := in.GetPageSize()
+	pageNumber := in.GetPageNumber()
+	pageSize := in.GetPageSize()
 
 	mediaDir := s.mediaStore.GetMediaDirectory()
 
 	requestedAbsPath := filepath.Join(mediaDir, requestedRelativePath)
 
 	// check that requestedRelativePath is inside media store directory
-
 	if ok, err := IsPathInsideBase(mediaDir, requestedAbsPath); err != nil || !ok {
 		log.Warn().
 			Str("path", requestedRelativePath).
@@ -217,7 +217,11 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 		return pb.NewGetFileListPageResponse(nil, status), nil
 	}
 
-	thumbnails, err := s.mediaStore.GetThumbnailsByPath(requestedRelativePath)
+	sort.Slice(dirs, func(i, j int) bool {
+		return dirs[i].Name < dirs[j].Name
+	})
+
+	thumbnails, thumbnailFilenames, err := s.mediaStore.GetThumbnailsByPath(requestedRelativePath)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -227,7 +231,24 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 		return pb.NewGetFileListPageResponse(nil, status), nil
 	}
 
-	// TODO: pagination
+	// sort thumbnails and thumbnailsFilenames by filename
+	// so that they correspond to each other
+	// (assuming thumbnailFilenames are unique)
+	type thumbWithName struct {
+		thumb    Thumbnail
+		filename string
+	}
+	var thumbsWithNames []thumbWithName
+	for i, thumb := range thumbnails {
+		thumbsWithNames = append(thumbsWithNames, thumbWithName{
+			thumb:    thumb,
+			filename: thumbnailFilenames[i],
+		})
+	}
+	// sort by filename
+	sort.Slice(thumbsWithNames, func(i, j int) bool {
+		return thumbsWithNames[i].filename < thumbsWithNames[j].filename
+	})
 
 	var entries []*pb.DirectoryEntry
 	for _, dir := range dirs {
@@ -236,12 +257,23 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 			Type: pb.DirectoryEntry_DIRECTORY,
 		})
 	}
-	for _, thumbnail := range thumbnails {
+	for _, thumb := range thumbsWithNames {
 		entries = append(entries, &pb.DirectoryEntry{
-			Name: thumbnail.ID.String(),
+			Name: thumb.filename,
 			Type: pb.DirectoryEntry_REGULAR,
 		})
 	}
+
+	// pagination
+	startIndex := int(pageNumber * pageSize)
+	endIndex := startIndex + int(pageSize)
+	if startIndex > len(entries) {
+		startIndex = len(entries)
+	}
+	if endIndex > len(entries) {
+		endIndex = len(entries)
+	}
+	entries = entries[startIndex:endIndex]
 
 	return pb.NewGetFileListPageResponse(entries, pb.NewStatus(200, "")), nil
 }

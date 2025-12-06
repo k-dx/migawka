@@ -36,7 +36,9 @@ type MediaStore interface {
 	GetFullMediaItem(id Hash) (MediaItem, error)
 	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 
-	GetThumbnailsByPath(path string) ([]Thumbnail, error)
+	// path does not start with a slash, is relative to mediadir.
+	// The ordering of the results is arbitrary.
+	GetThumbnailsByPath(path string) ([]Thumbnail, []string, error)
 	GetMediaDirectory() string
 
 	GetMediaItemsCountForTest() int
@@ -499,9 +501,9 @@ func ResizeToThumbnail(in []byte) ([]byte, error) {
 	return newImage, nil
 }
 
-// path does not start with a slash, is relative to mediadir
-func (ms *mediaStoreImpl) GetThumbnailsByPath(path string) ([]Thumbnail, error) {
+func (ms *mediaStoreImpl) GetThumbnailsByPath(path string) ([]Thumbnail, []string, error) {
 	results := make([]Thumbnail, 0)
+	filenames := make([]string, 0)
 
 	absPath := filepath.Join(ms.mediadir, path)
 	for key, item := range ms.items {
@@ -514,10 +516,12 @@ func (ms *mediaStoreImpl) GetThumbnailsByPath(path string) ([]Thumbnail, error) 
 				continue
 			}
 			results = append(results, thumbnail)
+			filename := filepath.Base(item.Path)
+			filenames = append(filenames, filename)
 		}
 	}
 
-	return results, nil
+	return results, filenames, nil
 }
 
 // In mediastore_test.go or mediastore.go
