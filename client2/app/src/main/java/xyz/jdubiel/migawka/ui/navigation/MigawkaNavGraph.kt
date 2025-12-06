@@ -50,7 +50,7 @@ fun MigawkaNavHost(
                     onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) },
                     onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
                     onFolderViewButtonClick = {
-                        val rawPath = "/hello/world/my/path"
+                        val rawPath = "/"
                         val encoded = Uri.encode(rawPath)
                         navController.navigate("${MigawkaScreen.FolderView.name}/$encoded") },
                     viewModel = imageGalleryViewModel,
