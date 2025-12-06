@@ -71,6 +71,10 @@ fun MigawkaNavHost(
                     val decoded = Uri.decode(path)
                     FolderScreen(
                         path = decoded,
+                        navigateToPath = { path ->
+                            val encoded = Uri.encode(path)
+                            navController.navigate("${MigawkaScreen.FolderView.name}/$encoded")
+                        },
                         modifier = Modifier.padding(innerPadding)
                     )
                 } else {
