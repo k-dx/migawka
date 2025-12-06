@@ -73,7 +73,18 @@ fun MigawkaNavHost(
                         path = decoded,
                         navigateToPath = { path ->
                             val encoded = Uri.encode(path)
-                            navController.navigate("${MigawkaScreen.FolderView.name}/$encoded")
+                            val targetRoute = "${MigawkaScreen.FolderView.name}/$encoded"
+
+                            // Try to pop back to target first
+                            val popped = navController.popBackStack(
+                                route = targetRoute,
+                                inclusive = false
+                            )
+
+                            if (!popped) {
+                                // Target not in back stack, navigate to it
+                                navController.navigate(targetRoute)
+                            }
                         },
                         modifier = Modifier.padding(innerPadding)
                     )
