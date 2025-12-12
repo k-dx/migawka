@@ -269,3 +269,23 @@ func TestMediaStore_GetThumbnailsByPath2(t *testing.T) {
 		}
 	}
 }
+
+func TestMediaStore_SymlinkedFiles(t *testing.T) {
+	copyDir(t, "./tests/test5", "./test")
+	t.Cleanup(func() {
+		os.RemoveAll("./test")
+	})
+
+	// we want to ignore symlinks
+
+	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	if err != nil {
+		t.Fatalf("Failed to create media store: %v", err)
+	}
+
+	expectedMediaItemsCount := 1
+	got := mediaStore.GetMediaItemsCountForTest()
+	if got != expectedMediaItemsCount {
+		t.Fatalf("Expected %d media items, got %d", expectedMediaItemsCount, got)
+	}
+}
