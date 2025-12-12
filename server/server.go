@@ -199,6 +199,7 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 	pageSize := in.GetPageSize()
 
 	mediaDir := s.mediaStore.GetMediaDirectory()
+	thumbnailDir := s.mediaStore.GetThumbnailDirectory()
 
 	requestedAbsPath := filepath.Join(mediaDir, requestedRelativePath)
 
@@ -211,7 +212,7 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 		return pb.NewGetFileListPageResponse(nil, status), nil
 	}
 
-	dirs, err := GetDirsInDir(mediaDir, requestedRelativePath)
+	dirs, err := GetDirsInDir(mediaDir, thumbnailDir, requestedRelativePath)
 	if err != nil {
 		log.Error().
 			Err(err).

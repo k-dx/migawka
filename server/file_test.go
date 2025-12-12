@@ -13,7 +13,7 @@ func TestGetDirsInDir(t *testing.T) {
 	})
 
 	// This is a placeholder test. Implement actual test logic here.
-	dirs, err := GetDirsInDir("./test", "")
+	dirs, err := GetDirsInDir("./test", "dir/.thumbnails", "")
 	if err != nil {
 		t.Fatalf("GetDirsInDir failed: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestGetDirsInDir2(t *testing.T) {
 	})
 
 	// This is a placeholder test. Implement actual test logic here.
-	dirs, err := GetDirsInDir("./test", "dir")
+	dirs, err := GetDirsInDir("./test", "dir/.thumbnails", "dir")
 	if err != nil {
 		t.Fatalf("GetDirsInDir failed: %v", err)
 	}

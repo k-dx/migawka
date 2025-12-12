@@ -9,8 +9,12 @@ type Directory struct {
 	Name string
 }
 
-func GetDirsInDir(mediadir string, path string) ([]Directory, error) {
-	absPath := filepath.Join(mediadir, path)
+// GetDirsInDir returns a list of directories in the given path relative to
+// mediadir. It's non-recursive (only immediate subdirectories in path are
+// returned). Ignores the thumbnail directory, given by thmbnaildir relative
+// to mediadir.
+func GetDirsInDir(absMediaDir, absThumbnailDir, path string) ([]Directory, error) {
+	absPath := filepath.Join(absMediaDir, path)
 	entries, err := os.ReadDir(absPath)
 	if err != nil {
 		return nil, err
@@ -18,7 +22,9 @@ func GetDirsInDir(mediadir string, path string) ([]Directory, error) {
 
 	var dirs []Directory
 	for _, entry := range entries {
-		if entry.IsDir() {
+		absEntryPath := filepath.Join(absPath, entry.Name())
+		// skip thumbnail directory
+		if entry.IsDir() && absEntryPath != absThumbnailDir {
 			dirs = append(dirs, Directory{Name: entry.Name()})
 		}
 	}

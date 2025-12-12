@@ -37,10 +37,12 @@ type MediaStore interface {
 	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 
 	// Path does not start with a slash, is relative to mediadir. The ordering
-	// of the results is arbitrary. Returns thumbnails and corresponding
-	// filenames only in path, not in subdirectories.
+	// of the results is arbitrary. Returns thumbnails of media items in the
+	// given path (without subdirectories) and corresponding filenames. Ignores
+	// thumbnaildir.
 	GetThumbnailsByPath(path string) ([]Thumbnail, []string, error)
 	GetMediaDirectory() string
+	GetThumbnailDirectory() string
 
 	GetMediaItemsCountForTest() int
 }
@@ -63,17 +65,20 @@ type mediaStoreImpl struct {
 	items      map[Key]MediaItemMetadata
 	thumbnails map[Key]Thumbnail
 	mediadir   string
+	// directory to store thumbnails in, absolute path
+	thumbnaildir string
 }
 
 func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 	log.Debug().Msg("Creating new MediaStore")
 	ms := &mediaStoreImpl{
-		Hasher:     hasher,
-		items:      make(map[Key]MediaItemMetadata),
-		thumbnails: make(map[Key]Thumbnail),
-		mediadir:   path,
+		Hasher:       hasher,
+		items:        make(map[Key]MediaItemMetadata),
+		thumbnails:   make(map[Key]Thumbnail),
+		mediadir:     path,
+		thumbnaildir: filepath.Join(path, ".thumbnails"),
 	}
-	err := ms.loadMediaItems(path, filepath.Join(path, ".thumbnails"))
+	err := ms.loadMediaItems(path, ms.thumbnaildir)
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +87,10 @@ func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 
 func (ms *mediaStoreImpl) GetMediaDirectory() string {
 	return ms.mediadir
+}
+
+func (ms *mediaStoreImpl) GetThumbnailDirectory() string {
+	return ms.thumbnaildir
 }
 
 func (ms *mediaStoreImpl) GetHasher() Hasher {
