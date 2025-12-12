@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 )
@@ -12,8 +13,9 @@ func TestGetDirsInDir(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	// This is a placeholder test. Implement actual test logic here.
-	dirs, err := GetDirsInDir("./test", "dir/.thumbnails", "")
+	relativeThumbnailDir := "dir/.thumbnails"
+	absThumbnailDir := filepath.Join("./test", relativeThumbnailDir)
+	dirs, err := GetDirsInDir("./test", absThumbnailDir, "")
 	if err != nil {
 		t.Fatalf("GetDirsInDir failed: %v", err)
 	}
@@ -47,8 +49,9 @@ func TestGetDirsInDir2(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	// This is a placeholder test. Implement actual test logic here.
-	dirs, err := GetDirsInDir("./test", "dir/.thumbnails", "dir")
+	relativeThumbnailDir := "dir/.thumbnails"
+	absThumbnailDir := filepath.Join("./test", relativeThumbnailDir)
+	dirs, err := GetDirsInDir("./test", absThumbnailDir, "dir")
 	if err != nil {
 		t.Fatalf("GetDirsInDir failed: %v", err)
 	}
