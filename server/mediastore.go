@@ -36,8 +36,9 @@ type MediaStore interface {
 	GetFullMediaItem(id Hash) (MediaItem, error)
 	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 
-	// path does not start with a slash, is relative to mediadir.
-	// The ordering of the results is arbitrary.
+	// Path does not start with a slash, is relative to mediadir. The ordering
+	// of the results is arbitrary. Returns thumbnails and corresponding
+	// filenames only in path, not in subdirectories.
 	GetThumbnailsByPath(path string) ([]Thumbnail, []string, error)
 	GetMediaDirectory() string
 

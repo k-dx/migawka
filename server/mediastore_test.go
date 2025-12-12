@@ -206,7 +206,7 @@ func TestMediaStore_GetThumbnailsByPath(t *testing.T) {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
 
-	thumbnails, err := mediaStore.GetThumbnailsByPath("")
+	thumbnails, filenames, err := mediaStore.GetThumbnailsByPath("")
 	if err != nil {
 		t.Fatalf("Failed to get thumbnails by path: %v", err)
 	}
@@ -215,6 +215,21 @@ func TestMediaStore_GetThumbnailsByPath(t *testing.T) {
 	got := len(thumbnails)
 	if got != expectedThumbnailsCount {
 		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	}
+
+	expectedFilenamesCount := 2
+	got = len(filenames)
+	if got != expectedFilenamesCount {
+		t.Fatalf("Expected %d filenames, got %d", expectedFilenamesCount, got)
+	}
+	expectedFilenames := map[string]bool{
+		"lake.jpg": true,
+		"dog.jpg":  true,
+	}
+	for _, filename := range filenames {
+		if !expectedFilenames[filename] {
+			t.Fatalf("Unexpected filename '%s' in results", filename)
+		}
 	}
 }
 
@@ -229,7 +244,7 @@ func TestMediaStore_GetThumbnailsByPath2(t *testing.T) {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
 
-	thumbnails, err := mediaStore.GetThumbnailsByPath("dir/sub")
+	thumbnails, filenames, err := mediaStore.GetThumbnailsByPath("dir/sub")
 	if err != nil {
 		t.Fatalf("Failed to get thumbnails by path: %v", err)
 	}
@@ -238,5 +253,19 @@ func TestMediaStore_GetThumbnailsByPath2(t *testing.T) {
 	got := len(thumbnails)
 	if got != expectedThumbnailsCount {
 		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	}
+
+	expectedFilenamesCount := 1
+	got = len(filenames)
+	if got != expectedFilenamesCount {
+		t.Fatalf("Expected %d filenames, got %d", expectedFilenamesCount, got)
+	}
+	expectedFilenames := map[string]bool{
+		"lake.jpg": true,
+	}
+	for _, filename := range filenames {
+		if !expectedFilenames[filename] {
+			t.Fatalf("Unexpected filename '%s' in results", filename)
+		}
 	}
 }
