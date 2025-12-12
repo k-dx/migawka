@@ -274,7 +274,7 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 
 		entries = append(entries, &pb.DirectoryEntry{
 			Name:      thumb.filename,
-			Type:      pb.DirectoryEntry_REGULAR,
+			Type:      pb.DirectoryEntry_MEDIA,
 			Thumbnail: toPbThumbnail(thumb.thumb, creationTime),
 		})
 	}

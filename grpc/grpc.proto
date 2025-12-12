@@ -109,7 +109,8 @@ message GetFileListPageResponse {
 message DirectoryEntry {
   enum FileType {
     DIRECTORY = 0;
-    REGULAR = 1; // symlinks are treated as files
+    MEDIA = 1;
+    OTHER = 2; // symlinks are treated as files
   }
 
   FileType type = 1;

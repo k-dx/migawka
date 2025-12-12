@@ -84,7 +84,7 @@ fun convert(entry: DirectoryEntry): DirectoryEntryK {
         DirectoryEntry.FileType.DIRECTORY -> {
             DirectoryK(entry.name)
         }
-        DirectoryEntry.FileType.REGULAR -> {
+        DirectoryEntry.FileType.MEDIA -> {
             ThumbnailK(
                 entry.name,
                 hasher.fromHex(entry.thumbnail.id),
@@ -92,6 +92,7 @@ fun convert(entry: DirectoryEntry): DirectoryEntryK {
                 Instant.parse(entry.thumbnail.creationTime)
             )
         }
+        DirectoryEntry.FileType.OTHER -> throw Exception("Other file type not supported")
         DirectoryEntry.FileType.UNRECOGNIZED -> throw Exception("Unknown file type")
     }
 }

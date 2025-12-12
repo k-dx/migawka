@@ -25,18 +25,21 @@ type DirectoryEntry_FileType int32
 
 const (
 	DirectoryEntry_DIRECTORY DirectoryEntry_FileType = 0
-	DirectoryEntry_REGULAR   DirectoryEntry_FileType = 1 // symlinks are treated as files
+	DirectoryEntry_MEDIA     DirectoryEntry_FileType = 1
+	DirectoryEntry_OTHER     DirectoryEntry_FileType = 2 // symlinks are treated as files
 )
 
 // Enum value maps for DirectoryEntry_FileType.
 var (
 	DirectoryEntry_FileType_name = map[int32]string{
 		0: "DIRECTORY",
-		1: "REGULAR",
+		1: "MEDIA",
+		2: "OTHER",
 	}
 	DirectoryEntry_FileType_value = map[string]int32{
 		"DIRECTORY": 0,
-		"REGULAR":   1,
+		"MEDIA":     1,
+		"OTHER":     2,
 	}
 )
 
@@ -971,15 +974,16 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"e\n" +
 	"\x17GetFileListPageResponse\x12\x1f\n" +
 	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12)\n" +
-	"\aentries\x18\x02 \x03(\v2\x0f.DirectoryEntryR\aentries\"\xa4\x01\n" +
+	"\aentries\x18\x02 \x03(\v2\x0f.DirectoryEntryR\aentries\"\xad\x01\n" +
 	"\x0eDirectoryEntry\x12,\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x18.DirectoryEntry.FileTypeR\x04type\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12(\n" +
 	"\tthumbnail\x18\x03 \x01(\v2\n" +
-	".ThumbnailR\tthumbnail\"&\n" +
+	".ThumbnailR\tthumbnail\"/\n" +
 	"\bFileType\x12\r\n" +
-	"\tDIRECTORY\x10\x00\x12\v\n" +
-	"\aREGULAR\x10\x012\xc9\x03\n" +
+	"\tDIRECTORY\x10\x00\x12\t\n" +
+	"\x05MEDIA\x10\x01\x12\t\n" +
+	"\x05OTHER\x10\x022\xc9\x03\n" +
 	"\aMigawka\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
