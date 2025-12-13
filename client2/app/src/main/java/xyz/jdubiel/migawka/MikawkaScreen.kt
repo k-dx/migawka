@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,7 @@ import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.ui.GalleryPermissionWrapper
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
 import xyz.jdubiel.migawka.ui.navigation.MigawkaNavHost
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
@@ -29,7 +32,11 @@ import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 @Composable
 fun MigawkaApp(
     navController: NavHostController = rememberNavController(),
-    imageGalleryViewModel: ImageGalleryViewModel = viewModel()
+    imageGalleryViewModel: ImageGalleryViewModel = viewModel(
+        factory = ImageGalleryViewModelFactory(
+            LocalContext.current.applicationContext as Application
+        )
+    )
 ) {
     // TODO: probably MikawkaNavHost should be moved outside Scaffold (?)
 //    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -54,7 +61,9 @@ fun Migawka(
 
     Column(modifier = modifier) {
         Row(
-            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
 //            .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {

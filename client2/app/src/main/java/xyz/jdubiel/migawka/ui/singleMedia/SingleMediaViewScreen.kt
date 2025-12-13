@@ -65,7 +65,6 @@ import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.findActivity
-import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -168,7 +167,7 @@ val timeFormatter = DateTimeFormatter
 
 @Composable
 fun SingleMediaViewScreen(
-    viewModel: ImageGalleryViewModel,
+    viewModel: SingleMediaViewModelI,
     initialImageId: Hash,
     modifier: Modifier = Modifier
 ) {
@@ -188,15 +187,29 @@ fun SingleMediaViewScreen(
         }
     }
 
+    if (initialPage == -1) {
+        // This accounts for the fact that initialPage might not be found during the first (few)
+        // compositions since collecting from flow is done asynchronously. Since we know that the
+        // photo should be found eventually, we just display loading screen if data is not yet
+        // there.
+
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     val pagerState = rememberPagerState(
-        initialPage = if (initialPage != -1) initialPage else 0,
+        initialPage = initialPage,
         pageCount = { images.itemCount }
     )
 
     LaunchedEffect(initialPage) {
-        if (initialPage != -1) {
-            pagerState.scrollToPage(initialPage)
-        }
+        pagerState.scrollToPage(initialPage)
     }
 
     val image = images[pagerState.currentPage]

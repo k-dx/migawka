@@ -28,7 +28,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
@@ -42,8 +41,9 @@ import xyz.jdubiel.migawka.data.DirectoryEntryK
 fun FolderScreen(
     path: String, // this has the form with leading slash `/`
     navigateToPath: (String) -> Unit,
+    onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FolderScreenViewModel = viewModel(factory = FolderScreenViewModelFactory(path, 30))
+    viewModel: FolderScreenViewModel
 ) {
     val entries = viewModel.dirEntriesStream.collectAsLazyPagingItems()
     Column(modifier = modifier.padding(4.dp)) {
@@ -59,6 +59,7 @@ fun FolderScreen(
                     CircularProgressIndicator()
                 }
             }
+
             is LoadState.Error -> {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -68,11 +69,17 @@ fun FolderScreen(
                     Text("Error loading directory.", modifier = modifier.padding(16.dp))
                 }
             }
+
             else -> {
-                FolderScreenGrid(entries, onDirClick = { dirName ->
-                    val newPath = if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
-                    navigateToPath(newPath)
-                })
+                FolderScreenGrid(
+                    entries,
+                    onDirClick = { dirName ->
+                        val newPath =
+                            if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
+                        navigateToPath(newPath)
+                    },
+                    onImageClick = onImageClick
+                )
             }
         }
     }
@@ -131,6 +138,7 @@ fun PathBarPreview() {
 fun FolderScreenGrid(
     entries: LazyPagingItems<DirectoryEntryK>,
     onDirClick: (String) -> Unit = {},
+    onImageClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -165,8 +173,8 @@ fun FolderScreenGrid(
                             model = item.content,
                             contentDescription = "Gallery Image",
                             modifier = Modifier
-                                .aspectRatio(1f),
-                            //.clickable { onImageClick(image.id.toHex()) },
+                                .aspectRatio(1f)
+                                .clickable { onImageClick(item.id.toHex()) },
                             contentScale = ContentScale.Crop)
                     }
                 }

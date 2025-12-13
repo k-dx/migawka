@@ -5,6 +5,8 @@ import android.content.ContentValues
 import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -13,28 +15,32 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
 import java.io.File
 
-class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val imageRepository = ImageRepository(application.contentResolver)
+class ImageGalleryViewModel(
+    application: Application,
+    private val imageRepository: ImageRepository
+) :
+    AndroidViewModel(application), SingleMediaViewModelI {
 
     // This is a Flow of PagingData<Uri>> provided by ImageGalleryViewModel. The
     // Paging library is responsible for creating this stream, fetching data
     // from data source (like the device's local storage) in small chunks called
     // pages.
-    val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
+    override val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
         .cachedIn(viewModelScope)
 
-    suspend fun getRemoteOptimizedImage(id: Hash) = withContext(Dispatchers.IO) {
+    override suspend fun getRemoteOptimizedImage(id: Hash) = withContext(Dispatchers.IO) {
         imageRepository.getRemoteOptimizedImage(id)
     }
 
-    fun downloadImage(id: Hash) {
+    override fun downloadImage(id: Hash) {
         viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
             try {
                 val img = imageRepository.getRemoteFullImage(id)
@@ -77,5 +83,18 @@ class ImageGalleryViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
+}
 
+class ImageGalleryViewModelFactory(
+    private val application: Application
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ImageGalleryViewModel::class.java)) {
+            val imageRepository = (application as MigawkaApplication).imageRepository
+            return ImageGalleryViewModel(application, imageRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+    }
 }

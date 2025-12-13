@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka.ui.navigation
 
+import android.app.Application
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,6 +22,8 @@ import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
 import xyz.jdubiel.migawka.ui.folderView.FolderScreen
+import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModel
+import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModelFactory
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
@@ -39,6 +44,10 @@ fun MigawkaNavHost(
 ) {
     val initialImageIdArg = "initialImageId"
     val initialFolderPath = "/"
+
+    // This is a way of passing the FolderScreenViewModel that is on the top of the navigation
+    // stack to the SingleMediaViewScreen. Might not be the best solution, but it works.
+    var topFolderScreenViewModel: FolderScreenViewModel? = null
 
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding -> // TODO: this is a bit ugly
         NavHost(
@@ -69,6 +78,15 @@ fun MigawkaNavHost(
                 val path = backStackEntry.arguments?.getString(initialFolderPath)
                 if (path != null) {
                     val decoded = Uri.decode(path)
+                    val folderScreenViewModel: FolderScreenViewModel = viewModel(
+                        factory = FolderScreenViewModelFactory(
+                            path,
+                            30,
+                            LocalContext.current.applicationContext as Application
+                        )
+                    )
+                    topFolderScreenViewModel = folderScreenViewModel
+
                     FolderScreen(
                         path = decoded,
                         navigateToPath = { path ->
@@ -86,6 +104,11 @@ fun MigawkaNavHost(
                                 navController.navigate(targetRoute)
                             }
                         },
+                        onImageClick = { imageId: String ->
+                            Log.d("FolderScreen", "clicked on image with id $imageId")
+                            navController.navigate("${MigawkaScreen.SingleMediaView.name}/$imageId")
+                        },
+                        viewModel = folderScreenViewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                 } else {
@@ -114,8 +137,11 @@ fun MigawkaNavHost(
                 val initialImageId = backStackEntry.arguments
                     ?.getString(initialImageIdArg)
                 if (initialImageId != null) {
+                    Log.d("SingleMediaViewScreen", "initialImageId = $initialImageId, using folderScreenViewModel = ${topFolderScreenViewModel != null}")
                     SingleMediaViewScreen(
-                        viewModel = imageGalleryViewModel,
+                        viewModel = if (topFolderScreenViewModel != null)
+                            topFolderScreenViewModel!!
+                            else imageGalleryViewModel,
                         initialImageId = hasher.fromHex(initialImageId)
                     )
                 } else {
