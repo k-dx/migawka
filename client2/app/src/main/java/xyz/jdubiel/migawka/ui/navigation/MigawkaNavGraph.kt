@@ -9,6 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,6 +22,7 @@ import xyz.jdubiel.migawka.ui.SecondScreen
 import xyz.jdubiel.migawka.ui.folderView.FolderScreen
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelFactory
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 
 enum class MigawkaScreen {
@@ -115,7 +117,10 @@ fun MigawkaNavHost(
                     ?.getString(initialImageIdArg)
                 if (initialImageId != null) {
                     SingleMediaViewScreen(
-                        viewModel = imageGalleryViewModel,
+                        viewModel = viewModel(factory = SingleMediaViewModelFactory(
+                            imageStream = imageGalleryViewModel.imageStream,
+                            imageRepository = imageGalleryViewModel.imageRepository
+                        )),
                         initialImageId = hasher.fromHex(initialImageId)
                     )
                 } else {

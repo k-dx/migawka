@@ -65,7 +65,7 @@ import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.findActivity
-import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModel
 import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -168,7 +168,7 @@ val timeFormatter = DateTimeFormatter
 
 @Composable
 fun SingleMediaViewScreen(
-    viewModel: ImageGalleryViewModel,
+    viewModel: SingleMediaViewModel,
     initialImageId: Hash,
     modifier: Modifier = Modifier
 ) {

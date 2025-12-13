@@ -21,7 +21,7 @@ import java.io.File
 
 class ImageGalleryViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val imageRepository = ImageRepository(application.contentResolver)
+    val imageRepository = ImageRepository(application.contentResolver)
 
     // This is a Flow of PagingData<Uri>> provided by ImageGalleryViewModel. The
     // Paging library is responsible for creating this stream, fetching data
