@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.ui.folderView
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -13,8 +14,10 @@ import androidx.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
+import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.FolderEntriesPagingSource
 import xyz.jdubiel.migawka.data.Hash
@@ -57,9 +60,16 @@ class FolderScreenViewModel(
             }
         }
 
-
     override fun downloadImage(id: Hash) {
-        TODO("Not yet implemented")
+        viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
+            try {
+                val img = imageRepository.getRemoteFullImage(id)
+                imageRepository.saveImageToGallery(img)
+            } catch (e: Exception) {
+                Log.d(TAG, "error when downloading image: ${e.message}")
+                // TODO: Display info about the error to the user
+            }
+        }
     }
 
     override suspend fun getRemoteOptimizedImage(id: Hash) = withContext(Dispatchers.IO) {
