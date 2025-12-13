@@ -379,6 +379,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			if err != nil {
 				log.Error().
 					Str("ID", id.String()).
+					Str("mediaItem", item.Path).
 					Err(err).
 					Msg("failed to generate thumbnail")
 				continue
@@ -398,7 +399,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 					Msg("failed to write thumbnail")
 			}
 			log.Debug().Str("ID", id.String()).
-				Str("file", thumbnailFilePath).
+				Str("thumbnail", thumbnailFilePath).
+				Str("mediaItem", item.Path).
 				Msg("Generated and saved new thumbnail")
 		}
 	}
