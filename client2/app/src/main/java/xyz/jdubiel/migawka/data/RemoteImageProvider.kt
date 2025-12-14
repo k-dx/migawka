@@ -22,7 +22,7 @@ data class RemoteFullImage(
     val path: String
 )
 
-class RemoteImageProvider { // TODO: make it a singleton
+class RemoteImageProvider(private val endpoint: IPEndpoint) { // TODO: make it a singleton
 
     // TODO: gracefully shutdown the channel when the instance gets removed?
     private val channel: ManagedChannel
@@ -30,9 +30,7 @@ class RemoteImageProvider { // TODO: make it a singleton
 
 
     init {
-        // TODO: don't hardcode IP or PORT
-        val serverAddress = "192.168.5.158"
-        channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+        channel = ManagedChannelBuilder.forAddress(endpoint.ip, endpoint.port)
             .usePlaintext() // TODO: don't use plaintext!
             .build()
 

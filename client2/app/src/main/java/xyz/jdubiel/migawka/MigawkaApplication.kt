@@ -2,10 +2,13 @@ package xyz.jdubiel.migawka
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.runBlocking
 import xyz.jdubiel.migawka.data.Hasher
+import xyz.jdubiel.migawka.data.IPEndpoint
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
 import xyz.jdubiel.migawka.data.UserSettingsRepository
@@ -19,7 +22,6 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 
 val hasher: Hasher = Xx64Hasher()
 
-
 class MigawkaApplication : Application() {
     lateinit var userSettingsRepository: UserSettingsRepository
     lateinit var imageRepository: ImageRepository
@@ -28,6 +30,15 @@ class MigawkaApplication : Application() {
         super.onCreate()
 //        userSettingsRepository = InMemoryUserSettingsRepository()
         userSettingsRepository = PersistentUserSettingsRepository(dataStore)
-        imageRepository = ImageRepository(this.contentResolver)
+
+        val serverAddress = runBlocking {
+            userSettingsRepository.getServerAddress()
+        }
+
+        Log.d("gRPC", "server address is $serverAddress")
+        imageRepository = ImageRepository(
+            this.contentResolver,
+            IPEndpoint(serverAddress, 50051)
+        )
     }
 }

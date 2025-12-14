@@ -11,9 +11,16 @@ import kotlinx.coroutines.flow.Flow
 import xyz.jdubiel.migawka.TAG
 import java.io.File
 
-class ImageRepository(private val contentResolver: ContentResolver) {
+class ImageRepository(
+    private val contentResolver: ContentResolver,
+    private val remoteEndpoint: IPEndpoint
+) {
     private val localImageProvider: LocalImageProvider = MediaStoreImageProvider(contentResolver)
-    private val remoteImageProvider = RemoteImageProvider()
+    private val remoteImageProvider = RemoteImageProvider(remoteEndpoint)
+
+    init {
+        Log.d("IP", "${remoteEndpoint.ip}:${remoteEndpoint.port}")
+    }
 
     suspend fun getImage(id: Hash): LocalImage {
         Log.d(TAG, "imageRepository, getImage")
