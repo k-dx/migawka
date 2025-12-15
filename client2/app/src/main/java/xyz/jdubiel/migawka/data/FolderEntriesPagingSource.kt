@@ -17,7 +17,7 @@ import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 
 
-class RemoteFileExplorer { // TODO: make it a singleton
+class RemoteFileExplorer(private val endpoint: IPEndpoint) { // TODO: make it a singleton
 
     // TODO: gracefully shutdown the channel when the instance gets removed?
     // TODO: move channel management to another class created at app startup
@@ -26,9 +26,7 @@ class RemoteFileExplorer { // TODO: make it a singleton
 
 
     init {
-        // TODO: don't hardcode IP or PORT
-        val serverAddress = "192.168.5.158"
-        channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+        channel = ManagedChannelBuilder.forAddress(endpoint.ip, endpoint.port)
             .usePlaintext() // TODO: don't use plaintext!
             .build()
 
@@ -97,8 +95,11 @@ fun convert(entry: DirectoryEntry): DirectoryEntryK {
     }
 }
 
-class FolderEntriesPagingSource(val path: String, private val pageSize: Int = 30) : PagingSource<Int, DirectoryEntryK>() {
-    private val fileExplorer = RemoteFileExplorer()
+class FolderEntriesPagingSource(
+    val path: String,
+    private val pageSize: Int = 30,
+    private val fileExplorer: RemoteFileExplorer
+) : PagingSource<Int, DirectoryEntryK>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, DirectoryEntryK> =
         withContext(Dispatchers.IO) {

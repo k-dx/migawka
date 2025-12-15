@@ -23,12 +23,14 @@ import xyz.jdubiel.migawka.data.FolderEntriesPagingSource
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
+import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
 
 class FolderScreenViewModel(
     private val path: String,
     private val pageSize: Int = 30,
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    private val remoteFileExplorer: RemoteFileExplorer
 ) : ViewModel(), SingleMediaViewModelI {
 
     private val baseDirEntriesStream: Flow<PagingData<DirectoryEntryK>> =
@@ -37,7 +39,7 @@ class FolderScreenViewModel(
                 pageSize = pageSize,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = { FolderEntriesPagingSource(path, pageSize) }
+            pagingSourceFactory = { FolderEntriesPagingSource(path, pageSize, remoteFileExplorer) }
         ).flow
         .cachedIn(viewModelScope)
 
@@ -86,8 +88,9 @@ class FolderScreenViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val imageRepository = (application as MigawkaApplication).imageRepository
+        val remoteFileExplorer = (application as MigawkaApplication).remoteFileExplorer
         if (modelClass.isAssignableFrom(FolderScreenViewModel::class.java)) {
-            return FolderScreenViewModel(path, pageSize, imageRepository) as T
+            return FolderScreenViewModel(path, pageSize, imageRepository, remoteFileExplorer) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

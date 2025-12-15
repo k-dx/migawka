@@ -11,6 +11,7 @@ import xyz.jdubiel.migawka.data.Hasher
 import xyz.jdubiel.migawka.data.IPEndpoint
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
+import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.Xx64Hasher
 
@@ -25,6 +26,7 @@ val hasher: Hasher = Xx64Hasher()
 class MigawkaApplication : Application() {
     lateinit var userSettingsRepository: UserSettingsRepository
     lateinit var imageRepository: ImageRepository
+    lateinit var remoteFileExplorer: RemoteFileExplorer
 
     override fun onCreate() {
         super.onCreate()
@@ -34,11 +36,22 @@ class MigawkaApplication : Application() {
         val serverAddress = runBlocking {
             userSettingsRepository.getServerAddress()
         }
+        val endpoint = IPEndpoint(serverAddress, 50051)
 
         Log.d("gRPC", "server address is $serverAddress")
         imageRepository = ImageRepository(
             this.contentResolver,
-            IPEndpoint(serverAddress, 50051)
+            endpoint
         )
+
+        remoteFileExplorer = RemoteFileExplorer(endpoint)
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        // TODO: Gracefully shutdown the gRPC channel
+//        if (::remoteFileExplorer.isInitialized) {
+//            remoteFileExplorer.shutdown()
+//        }
     }
 }
