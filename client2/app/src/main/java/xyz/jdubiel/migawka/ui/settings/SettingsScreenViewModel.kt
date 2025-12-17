@@ -37,10 +37,22 @@ class SettingsScreenViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ""
     )
+    val serverPort: StateFlow<Int> = userSettingsRepository.serverPort.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0
+    )
 
     fun setServerAddress(serverAddress: String) {
         viewModelScope.launch {
             userSettingsRepository.setServerAddress(serverAddress)
+        }
+        _settingsModified.value = true
+    }
+
+    fun setServerPort(port: Int) {
+        viewModelScope.launch {
+            userSettingsRepository.setServerPort(port)
         }
         _settingsModified.value = true
     }

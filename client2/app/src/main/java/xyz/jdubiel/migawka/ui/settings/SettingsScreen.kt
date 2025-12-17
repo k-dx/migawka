@@ -3,6 +3,7 @@ package xyz.jdubiel.migawka.ui.settings
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.map
 import java.util.regex.Pattern
 
 // TODO: move validation to UserSettingsRepository
@@ -48,6 +50,12 @@ fun isIpv4OrIpv4Port(input: String): Boolean {
     // either just IPv4 or IPv4:PORT
     val pattern = Pattern.compile("^($ipv4)(?::($port))?$")
     return pattern.matcher(input).matches()
+}
+
+fun isValidServerPort(input: String): Boolean {
+    Log.d("KUBA", "isValidServerPort called with input: $input")
+    val port = input.toIntOrNull(10) ?: return false
+    return port in 0..65535
 }
 
 // Validation: non-empty and basic URI/host validation
@@ -86,20 +94,68 @@ fun RestartOnBack(
 }
 
 @Composable
+fun Section(
+    text: String,
+    setText: (String) -> Unit,
+    isTextValid: Boolean,
+    label: String,
+    placeholder: String,
+    hintIfBlank: String,
+    hintIfInvalid: String,
+    hintIfOk: String
+) {
+    OutlinedTextField(
+        value = text,
+        onValueChange = { setText(it) },
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    if (text.isBlank()) {
+        Text(
+            text = hintIfBlank,
+            color = MaterialTheme.colorScheme.error
+        )
+    } else if (!isTextValid) {
+        Text(
+            text = hintIfInvalid,
+            color = MaterialTheme.colorScheme.error
+        )
+    } else {
+        Text(
+            text = hintIfOk,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
 fun SettingsContent(
     modifier: Modifier = Modifier,
     viewModel: SettingsScreenViewModel
 ) {
     val savedAddress by viewModel.serverAddress.collectAsState()
+    val savedPort by viewModel.serverPort.map { it.toString(10) }.collectAsState("")
 
-    var text by remember { mutableStateOf(savedAddress) }
+    var textAddress by remember { mutableStateOf(savedAddress) }
+    var textPort by remember { mutableStateOf(savedPort) }
     // keep text synced when savedAddress changes externally
     LaunchedEffect(savedAddress) {
-        if (savedAddress != text) text = savedAddress
+        if (savedAddress != textAddress) textAddress = savedAddress
+    }
+    LaunchedEffect(savedPort) {
+        if (savedPort != textPort)  textPort = savedPort
     }
 
-    val isValid = remember(text) { isValidServerAddress(text) }
-    val isChanged = text != savedAddress
+    val isAddressValid = remember(textAddress) { isValidServerAddress(textAddress) }
+    val isPortValid = remember(textPort) { isValidServerPort(textPort) }
+
+    val isChanged = (textAddress != savedAddress) || (textPort != savedPort)
 
     Card(
         modifier = modifier.padding(16.dp),
@@ -114,39 +170,40 @@ fun SettingsContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("Server address") },
-                placeholder = { Text("192.168.1.42 or 192.168.1.42:1234") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                modifier = Modifier.fillMaxWidth()
+            Section(
+                text = textAddress,
+                setText = { textAddress = it },
+                isTextValid = isAddressValid,
+                label = "Server address",
+                placeholder = "192.168.1.42",
+                hintIfBlank = "Server address cannot be empty.",
+                hintIfInvalid = "Enter a valid host, e.g. 192.168.1.42",
+                hintIfOk = "Saved address: ${savedAddress.ifBlank { "(none)" }}"
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (text.isBlank()) {
-                Text(
-                    text = "Server address cannot be empty.",
-                    color = MaterialTheme.colorScheme.error
-                )
-            } else if (!isValid) {
-                Text(
-                    text = "Enter a valid host (optionally with port), e.g. 192.168.1.42 or 192.168.1.42:8080",
-                    color = MaterialTheme.colorScheme.error
-                )
-            } else {
-                Text(
-                    text = "Saved address: ${savedAddress.ifBlank { "(none)" }}",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
+            Section(
+                text = textPort,
+                setText = { textPort = it },
+                isTextValid = isPortValid,
+                label = "Server port ($savedPort) [$isPortValid]",
+                placeholder = "50051",
+                hintIfBlank = "Server port cannot be empty.",
+                hintIfInvalid = "Enter a valid port, e.g. 50051",
+                hintIfOk = "Saved port: $savedPort"
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = { text = savedAddress }) {
+                TextButton(
+                    onClick = {
+                        textAddress = savedAddress
+                        textPort = savedPort
+                    },
+                    enabled = isChanged
+                ) {
                     Text("Cancel")
                 }
 
@@ -154,9 +211,10 @@ fun SettingsContent(
 
                 Button(
                     onClick = {
-                        viewModel.setServerAddress(text.trim())
+                        viewModel.setServerAddress(textAddress.trim())
+                        viewModel.setServerPort(textPort.trim().toInt())
                     },
-                    enabled = isValid && isChanged
+                    enabled = isAddressValid && isPortValid && isChanged
                 ) {
                     Text("Save")
                 }

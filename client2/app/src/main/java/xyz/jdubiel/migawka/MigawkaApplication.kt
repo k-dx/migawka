@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import xyz.jdubiel.migawka.data.Hasher
 import xyz.jdubiel.migawka.data.ImageRepository
@@ -35,14 +36,19 @@ class MigawkaApplication : Application() {
 //        userSettingsRepository = InMemoryUserSettingsRepository()
         userSettingsRepository = PersistentUserSettingsRepository(dataStore)
 
-        val serverAddress = runBlocking {
-            userSettingsRepository.getServerAddress()
+        val (serverAddress, serverPort) = runBlocking {
+            val serverAddressDeferred = async { userSettingsRepository.getServerAddress() }
+            val serverPortDeferred = async { userSettingsRepository.getServerPort() }
+
+            val address = serverAddressDeferred.await()
+            val port = serverPortDeferred.await()
+            Pair(address, port)
         }
-        val endpoint = IPEndpoint(serverAddress, 50051)
+        val endpoint = IPEndpoint(serverAddress, serverPort)
         grpcProvider = GrpcProvider(endpoint)
 
 
-        Log.d("gRPC", "server address is $serverAddress")
+        Log.d("gRPC", "server address is $serverAddress:$serverPort")
         imageRepository = ImageRepository(
             this.contentResolver,
             grpcProvider.getMigawkaServiceStub()
