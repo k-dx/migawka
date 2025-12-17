@@ -26,6 +26,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Uncomment to build and run a 'release' build variant
+            // DO NOT USE IN PRODUCTION!
+            // signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
