@@ -1,20 +1,19 @@
 <resources>
-    <string name="app_name">Migawka</string>
-    <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
-
-    <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
-
-    <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails
-    </string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
-
-
+    <string name="app_name" translatable="false">Migawka</string>
     <string name="settings">Settings</string>
+    <string name="settings_server_address_label">Server address</string>
+    <string name="settings_example_server_ip" translatable="false">192.168.1.42</string>
+    <string name="settings_server_address_cannot_be_empty">Server address cannot be empty.</string>
+    <string name="settings_enter_a_valid_host">Enter a valid host, e.g. %1$s</string>
+    <string name="settings_saved_address">Saved address: %1$s</string>
+    <string name="settings_server_port">Server port</string>
+    <string name="settings_example_port" translatable="false">50051</string>
+    <string name="settings_server_port_cannot_be_empty">Server port cannot be empty.</string>
+    <string name="settings_enter_a_valid_port">Enter a valid port, e.g. %1$s</string>
+    <string name="settings_saved_port">Saved port: %1$s</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="apply_changes">Apply changes</string>
+    <string name="the_app_will_be_restarted_to_apply_the_changes">The app will be restarted to apply the changes.</string>
+    <string name="ok">Ok</string>
 </resources>

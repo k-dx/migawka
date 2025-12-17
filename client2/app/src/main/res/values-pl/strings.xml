@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Ustawienia</string>
+    <string name="settings_server_address_label">Adres serwera</string>
+    <string name="settings_server_address_cannot_be_empty">Adres serwera nie może być pusty</string>
+    <string name="settings_enter_a_valid_host">Wprowadź poprawny adres, np. %1$s</string>
+    <string name="settings_saved_address">Zapisany adres: %1$s</string>
+    <string name="settings_server_port">Port serwera</string>
+    <string name="settings_server_port_cannot_be_empty">Port serwera nie może być pusty</string>
+    <string name="settings_enter_a_valid_port">Podaj poprawny port, np. %1$s</string>
+    <string name="settings_saved_port">Zapisany port: %1$s</string>
+    <string name="cancel">Anuluj</string>
+    <string name="save">Zapisz</string>
+    <string name="apply_changes">Zastosuj zmiany</string>
+    <string name="the_app_will_be_restarted_to_apply_the_changes">Zrestartuj aplikację by wprowadzić zmiany.</string>
+    <string name="ok">Ok</string>
+</resources>

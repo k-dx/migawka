@@ -3,7 +3,6 @@ package xyz.jdubiel.migawka.ui.settings
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,11 +31,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.map
+import xyz.jdubiel.migawka.R
 import java.util.regex.Pattern
 
 // TODO: move validation to UserSettingsRepository
@@ -53,7 +54,6 @@ fun isIpv4OrIpv4Port(input: String): Boolean {
 }
 
 fun isValidServerPort(input: String): Boolean {
-    Log.d("KUBA", "isValidServerPort called with input: $input")
     val port = input.toIntOrNull(10) ?: return false
     return port in 0..65535
 }
@@ -78,16 +78,16 @@ fun RestartOnBack(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Apply changes") },
-            text = { Text("The app will be restarted to apply the changes.") },
+            title = { Text(stringResource(R.string.apply_changes)) },
+            text = { Text(stringResource(R.string.the_app_will_be_restarted_to_apply_the_changes)) },
             confirmButton = {
                 Button(onClick = {
                     showDialog = false
                     onBack()
-                }) { Text("Ok") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                Button(onClick = { showDialog = false }) { Text("Cancel") }
+                Button(onClick = { showDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -166,7 +166,10 @@ fun SettingsContent(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(text = "Settings", style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = stringResource(R.string.settings),
+                style = MaterialTheme.typography.titleSmall
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -174,11 +177,14 @@ fun SettingsContent(
                 text = textAddress,
                 setText = { textAddress = it },
                 isTextValid = isAddressValid,
-                label = "Server address",
-                placeholder = "192.168.1.42",
-                hintIfBlank = "Server address cannot be empty.",
-                hintIfInvalid = "Enter a valid host, e.g. 192.168.1.42",
-                hintIfOk = "Saved address: ${savedAddress.ifBlank { "(none)" }}"
+                label = stringResource(R.string.settings_server_address_label),
+                placeholder = stringResource(R.string.settings_example_server_ip),
+                hintIfBlank = stringResource(R.string.settings_server_address_cannot_be_empty),
+                hintIfInvalid = stringResource(
+                    R.string.settings_enter_a_valid_host,
+                    stringResource(R.string.settings_example_server_ip)
+                ),
+                hintIfOk = stringResource(R.string.settings_saved_address, savedAddress)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -187,11 +193,14 @@ fun SettingsContent(
                 text = textPort,
                 setText = { textPort = it },
                 isTextValid = isPortValid,
-                label = "Server port ($savedPort) [$isPortValid]",
-                placeholder = "50051",
-                hintIfBlank = "Server port cannot be empty.",
-                hintIfInvalid = "Enter a valid port, e.g. 50051",
-                hintIfOk = "Saved port: $savedPort"
+                label = stringResource(R.string.settings_server_port),
+                placeholder = stringResource(R.string.settings_example_port),
+                hintIfBlank = stringResource(R.string.settings_server_port_cannot_be_empty),
+                hintIfInvalid = stringResource(
+                    R.string.settings_enter_a_valid_port,
+                    stringResource(R.string.settings_example_port)
+                ),
+                hintIfOk = stringResource(R.string.settings_saved_port, savedPort)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -204,7 +213,7 @@ fun SettingsContent(
                     },
                     enabled = isChanged
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -216,7 +225,7 @@ fun SettingsContent(
                     },
                     enabled = isAddressValid && isPortValid && isChanged
                 ) {
-                    Text("Save")
+                    Text(stringResource(R.string.save))
                 }
             }
         }
