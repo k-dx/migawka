@@ -3,8 +3,6 @@ package xyz.jdubiel.migawka.data
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -17,22 +15,7 @@ import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 
 
-class RemoteFileExplorer(private val endpoint: IPEndpoint) { // TODO: make it a singleton
-
-    // TODO: gracefully shutdown the channel when the instance gets removed?
-    // TODO: move channel management to another class created at app startup
-    private val channel: ManagedChannel
-    private val stub: MigawkaGrpcKt.MigawkaCoroutineStub
-
-
-    init {
-        channel = ManagedChannelBuilder.forAddress(endpoint.ip, endpoint.port)
-            .usePlaintext() // TODO: don't use plaintext!
-            .build()
-
-        stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
-    }
-
+class RemoteFileExplorer(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
     suspend fun getFileList(path: String, pageNumber: Int, pageSize: Int): List<DirectoryEntry> {
         try {
             val request = GetFileListPageRequest.newBuilder()

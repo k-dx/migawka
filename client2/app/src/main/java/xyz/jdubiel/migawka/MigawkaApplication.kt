@@ -8,12 +8,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.runBlocking
 import xyz.jdubiel.migawka.data.Hasher
-import xyz.jdubiel.migawka.data.IPEndpoint
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.Xx64Hasher
+import xyz.jdubiel.migawka.data.network.GrpcProvider
+import xyz.jdubiel.migawka.data.network.IPEndpoint
 
 // DataStore setup
 private const val SETTINGS_PREFERENCE_NAME = "settings_prefs"
@@ -27,6 +28,7 @@ class MigawkaApplication : Application() {
     lateinit var userSettingsRepository: UserSettingsRepository
     lateinit var imageRepository: ImageRepository
     lateinit var remoteFileExplorer: RemoteFileExplorer
+    lateinit var grpcProvider: GrpcProvider
 
     override fun onCreate() {
         super.onCreate()
@@ -37,21 +39,21 @@ class MigawkaApplication : Application() {
             userSettingsRepository.getServerAddress()
         }
         val endpoint = IPEndpoint(serverAddress, 50051)
+        grpcProvider = GrpcProvider(endpoint)
+
 
         Log.d("gRPC", "server address is $serverAddress")
         imageRepository = ImageRepository(
             this.contentResolver,
-            endpoint
+            grpcProvider.getMigawkaServiceStub()
         )
 
-        remoteFileExplorer = RemoteFileExplorer(endpoint)
+        remoteFileExplorer = RemoteFileExplorer(grpcProvider.getMigawkaServiceStub())
     }
 
     override fun onTerminate() {
         super.onTerminate()
-        // TODO: Gracefully shutdown the gRPC channel
-//        if (::remoteFileExplorer.isInitialized) {
-//            remoteFileExplorer.shutdown()
-//        }
+
+        grpcProvider.shutdown()
     }
 }

@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka.data
+package xyz.jdubiel.migawka.data.network
 
 data class IPEndpoint(
     val ip: String,
@@ -11,4 +11,3 @@ data class IPEndpoint(
 
     override fun toString(): String = "$ip:$port"
 }
-

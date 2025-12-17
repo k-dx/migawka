@@ -1,8 +1,6 @@
 package xyz.jdubiel.migawka.data
 
 import android.util.Log
-import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.ThumbnailsTimestampRequest
@@ -22,21 +20,7 @@ data class RemoteFullImage(
     val path: String
 )
 
-class RemoteImageProvider(private val endpoint: IPEndpoint) { // TODO: make it a singleton
-
-    // TODO: gracefully shutdown the channel when the instance gets removed?
-    private val channel: ManagedChannel
-    private val stub: MigawkaGrpcKt.MigawkaCoroutineStub
-
-
-    init {
-        channel = ManagedChannelBuilder.forAddress(endpoint.ip, endpoint.port)
-            .usePlaintext() // TODO: don't use plaintext!
-            .build()
-
-        stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
-    }
-
+class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
     suspend fun getThumbnailsBeforeTimestamp(timestamp: Instant, count: Int): List<RemoteImage> {
         val remoteImages = mutableListOf<RemoteImage>()
 

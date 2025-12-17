@@ -8,19 +8,16 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.TAG
 import java.io.File
 
 class ImageRepository(
     private val contentResolver: ContentResolver,
-    private val remoteEndpoint: IPEndpoint
+    grpcStub: MigawkaGrpcKt.MigawkaCoroutineStub,
 ) {
     private val localImageProvider: LocalImageProvider = MediaStoreImageProvider(contentResolver)
-    private val remoteImageProvider = RemoteImageProvider(remoteEndpoint)
-
-    init {
-        Log.d("IP", "${remoteEndpoint.ip}:${remoteEndpoint.port}")
-    }
+    private val remoteImageProvider = RemoteImageProvider(grpcStub)
 
     suspend fun getImage(id: Hash): LocalImage {
         Log.d(TAG, "imageRepository, getImage")
