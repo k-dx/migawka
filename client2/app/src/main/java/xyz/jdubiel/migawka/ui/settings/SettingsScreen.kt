@@ -1,5 +1,9 @@
 package xyz.jdubiel.migawka.ui.settings
 
+import android.content.ComponentName
+import android.content.Intent
+import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,10 +27,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.util.regex.Pattern
 
@@ -48,9 +56,39 @@ fun isValidServerAddress(input: String): Boolean {
 }
 
 @Composable
-fun SettingsScreen(
+fun RestartOnBack(
+    enabled: Boolean,
+    onBack: () -> Unit,
+) {
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler(enabled = enabled) {
+        // custom back action: show confirmation dialog
+        showDialog = true
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Apply changes") },
+            text = { Text("The app will be restarted to apply the changes.") },
+            confirmButton = {
+                Button(onClick = {
+                    showDialog = false
+                    onBack()
+                }) { Text("Ok") }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+}
+
+@Composable
+fun SettingsContent(
     modifier: Modifier = Modifier,
-    viewModel: SettingsScreenViewModel = viewModel(factory = SettingsScreenViewModel.Factory)
+    viewModel: SettingsScreenViewModel
 ) {
     val savedAddress by viewModel.serverAddress.collectAsState()
 
@@ -67,9 +105,11 @@ fun SettingsScreen(
         modifier = modifier.padding(16.dp),
         elevation = CardDefaults.elevatedCardElevation()
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Text(text = "Settings", style = MaterialTheme.typography.titleSmall)
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -122,5 +162,29 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SettingsScreen(
+    modifier: Modifier = Modifier,
+    viewModel: SettingsScreenViewModel = viewModel(factory = SettingsScreenViewModel.Factory)
+) {
+    val context = LocalContext.current
+    val restartOnBack = viewModel.settingsModified.collectAsStateWithLifecycle()
+
+    Column(modifier = modifier) {
+        RestartOnBack(enabled = restartOnBack.value, onBack = {
+            // restart the app
+            // https://stackoverflow.com/questions/72932093/jetpack-compose-is-there-a-way-to-restart-whole-app-programmatically
+            val packageManager: PackageManager = context.packageManager
+            val intent: Intent = packageManager.getLaunchIntentForPackage(context.packageName)!!
+            val componentName: ComponentName = intent.component!!
+            val restartIntent: Intent = Intent.makeRestartActivityTask(componentName)
+            context.startActivity(restartIntent)
+            Runtime.getRuntime().exit(0)
+
+        })
+        SettingsContent(viewModel = viewModel)
     }
 }

@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.MigawkaApplication
@@ -16,6 +18,9 @@ import xyz.jdubiel.migawka.data.UserSettingsRepository
 class SettingsScreenViewModel(
     private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
+
+    private val _settingsModified = MutableStateFlow<Boolean>(false)
+    val settingsModified: StateFlow<Boolean> = _settingsModified.asStateFlow()
 
     // stateIn call converts (cold) Flow to (hot) StateFlow, so it's immediately available
     // about the started parameter:
@@ -37,6 +42,7 @@ class SettingsScreenViewModel(
         viewModelScope.launch {
             userSettingsRepository.setServerAddress(serverAddress)
         }
+        _settingsModified.value = true
     }
 
     companion object {
