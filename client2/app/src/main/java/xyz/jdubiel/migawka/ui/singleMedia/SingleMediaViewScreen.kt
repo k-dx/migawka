@@ -387,20 +387,20 @@ fun SingleMediaViewScreen(
                                 )
                             }
                             is PagedImage.FromBytes -> {
-                                if (fullImage != null && fullImagePage == pageIndex) {
-                                    AsyncImage(
-                                        model = fullImage!!.bytes,
-                                        contentDescription = "Full screen image",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                } else {
+                                Box() {
+                                    val loadingState = when {
+                                        fullImage != null && fullImagePage == pageIndex -> "ok"
+                                        fullImageError != null -> "error"
+                                        else -> "loading"
+                                    }
+
                                     Column(
                                         modifier = Modifier.fillMaxSize(),
                                         verticalArrangement = Arrangement.Center,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Box(modifier = Modifier.fillMaxSize()) {
+
                                             AsyncImage(
                                                 model = image.bytes,
                                                 contentDescription = "Full screen thumbnail",
@@ -409,18 +409,27 @@ fun SingleMediaViewScreen(
                                                     .align(Alignment.Center),
                                                 contentScale = ContentScale.Fit
                                             )
-                                            if (fullImageError != null) {
+                                            if (loadingState == "error") {
                                                 Text("Fetching error: $fullImageError")
-                                            } else {
+                                            } else if (loadingState == "loading") {
                                                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                                             }
                                         }
                                     }
+
+                                    if (loadingState == "ok") {
+                                        AsyncImage(
+                                            model = fullImage!!.bytes,
+                                            contentDescription = "Full screen image",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .align(Alignment.Center),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    }
                                 }
                             }
                         }
-
-
                     } else {
                         Text("Image not loaded")
                     }
