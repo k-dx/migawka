@@ -19,14 +19,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import xyz.jdubiel.migawka.ui.imageGallery.Gallery
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
 import xyz.jdubiel.migawka.ui.folderView.FolderScreen
 import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModel
 import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModelFactory
+import xyz.jdubiel.migawka.ui.imageGallery.Gallery
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
 import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
@@ -48,8 +49,12 @@ val navigateToFolderView = { navController: NavHostController ->
 @Composable
 fun MigawkaNavHost(
     navController: NavHostController,
-    imageGalleryViewModel: ImageGalleryViewModel,
-    modifier: Modifier,
+    imageGalleryViewModel: ImageGalleryViewModel = viewModel(
+        factory = ImageGalleryViewModelFactory(
+            LocalContext.current.applicationContext as Application
+        )
+    ),
+    modifier: Modifier
 ) {
     val initialImageIdArg = "initialImageId"
     val initialFolderPath = "/"
