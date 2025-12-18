@@ -19,7 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import xyz.jdubiel.migawka.Migawka
+import xyz.jdubiel.migawka.ui.imageGallery.Gallery
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
@@ -27,6 +27,7 @@ import xyz.jdubiel.migawka.ui.folderView.FolderScreen
 import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModel
 import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModelFactory
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
+import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 
@@ -74,10 +75,7 @@ fun MigawkaNavHost(
             startDestination = MigawkaScreen.Gallery.name,
         ) {
             composable(route = MigawkaScreen.Gallery.name) {
-                Migawka(
-                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) },
-                    onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
-                    onFolderViewButtonClick = { navigateToFolderView(navController) },
+                Gallery(
                     viewModel = imageGalleryViewModel,
                     onImageClick = { imageId: String ->
                         Log.d(TAG, "onImageClick, imageId = $imageId")
@@ -169,9 +167,11 @@ fun MigawkaNavHost(
             }
 
             composable(route = MigawkaScreen.Menu.name) {
-                Box(modifier = Modifier.padding(innerPadding)) {
-                    Text("Menu")
-                }
+                MenuScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
+                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) }
+                )
             }
         }
     }
