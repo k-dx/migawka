@@ -292,6 +292,9 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			return nil
 		}
 
+		// if we already have the file in the database and its modification time
+		// is unchanged, skip it
+
 		// Read file content
 		content, err := os.ReadFile(filePath)
 		if err != nil {
@@ -360,7 +363,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	if err != nil {
 		return fmt.Errorf("failed to load thumbnails: %w", err)
 	}
-	log.Debug().Int("count", len(ms.thumbnails)).Msg("Loaded thumbnails from existing files")
+	log.Debug().Int("count", len(ms.thumbnails)).
+		Msg("Loaded thumbnails from existing files")
 
 	// generate thumbnails for media items without thumbnails
 	for id, item := range ms.items {
@@ -404,6 +408,9 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 				Msg("Generated and saved new thumbnail")
 		}
 	}
+
+	log.Debug().Int("count", len(ms.thumbnails)).
+		Msg("Total thumbnails after generation")
 
 	return nil
 }
