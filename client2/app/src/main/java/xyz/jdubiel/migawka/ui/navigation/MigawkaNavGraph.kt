@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import xyz.jdubiel.migawka.Migawka
 import xyz.jdubiel.migawka.TAG
@@ -32,9 +34,15 @@ enum class MigawkaScreen {
     Second,
     Gallery,
     FolderView,
+    Menu,
     SingleMediaView,
     Settings
 }
+
+val navigateToFolderView = { navController: NavHostController ->
+    val rawPath = "/"
+    val encoded = Uri.encode(rawPath)
+    navController.navigate("${MigawkaScreen.FolderView.name}/$encoded") }
 
 @Composable
 fun MigawkaNavHost(
@@ -49,7 +57,18 @@ fun MigawkaNavHost(
     // stack to the SingleMediaViewScreen. Might not be the best solution, but it works.
     var topFolderScreenViewModel: FolderScreenViewModel? = null
 
-    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding -> // TODO: this is a bit ugly
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        bottomBar = {
+            // possibly TODO: use the navigation graph objects instead of operating on strings
+            if (getRouteNameForBottomBar(currentRoute) in bottomBarRoutes) {
+                MigawkaNavigationBar(navController)
+            }
+        }
+    ) { innerPadding -> // TODO: this is a bit ugly
         NavHost(
             navController = navController,
             startDestination = MigawkaScreen.Gallery.name,
@@ -58,10 +77,7 @@ fun MigawkaNavHost(
                 Migawka(
                     onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) },
                     onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
-                    onFolderViewButtonClick = {
-                        val rawPath = "/"
-                        val encoded = Uri.encode(rawPath)
-                        navController.navigate("${MigawkaScreen.FolderView.name}/$encoded") },
+                    onFolderViewButtonClick = { navigateToFolderView(navController) },
                     viewModel = imageGalleryViewModel,
                     onImageClick = { imageId: String ->
                         Log.d(TAG, "onImageClick, imageId = $imageId")
@@ -149,6 +165,12 @@ fun MigawkaNavHost(
                     Box(modifier = Modifier.padding(innerPadding)) {
                         Text("Error: initialImageId is null. The image could not be displayed.")
                     }
+                }
+            }
+
+            composable(route = MigawkaScreen.Menu.name) {
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    Text("Menu")
                 }
             }
         }
