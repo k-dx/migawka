@@ -13,11 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Thumbnail struct {
-	ID      Hash
-	Content []byte
-}
-
 type MediaItemMetadata struct {
 	ID           Hash
 	Path         string
@@ -41,6 +36,8 @@ type MediaStore interface {
 	// given path (without subdirectories) and corresponding filenames. Ignores
 	// thumbnaildir.
 	GetThumbnailsByPath(path string) ([]Thumbnail, []string, error)
+	GenerateMissingThumbnails()
+
 	GetMediaDirectory() string
 	GetThumbnailDirectory() string
 
@@ -61,24 +58,22 @@ type Hasher interface {
 }
 
 type mediaStoreImpl struct {
-	Hasher     Hasher
-	items      map[Key]MediaItemMetadata
-	thumbnails map[Key]Thumbnail
-	mediadir   string
-	// directory to store thumbnails in, absolute path
-	thumbnaildir string
+	Hasher            Hasher
+	thumbnailProvider ThumbnailProvider
+	items             map[Key]MediaItemMetadata
+	mediadir          string
 }
 
 func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 	log.Debug().Msg("Creating new MediaStore")
+	thumbnaildir := filepath.Join(path, ".thumbnails")
 	ms := &mediaStoreImpl{
-		Hasher:       hasher,
-		items:        make(map[Key]MediaItemMetadata),
-		thumbnails:   make(map[Key]Thumbnail),
-		mediadir:     path,
-		thumbnaildir: filepath.Join(path, ".thumbnails"),
+		Hasher:            hasher,
+		thumbnailProvider: NewThumbnailProvider(thumbnaildir, hasher),
+		items:             make(map[Key]MediaItemMetadata),
+		mediadir:          path,
 	}
-	err := ms.loadMediaItems(path, ms.thumbnaildir)
+	err := ms.loadMediaItems(path, thumbnaildir)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +85,7 @@ func (ms *mediaStoreImpl) GetMediaDirectory() string {
 }
 
 func (ms *mediaStoreImpl) GetThumbnailDirectory() string {
-	return ms.thumbnaildir
+	return ms.thumbnailProvider.GetThumbnailDirectory()
 }
 
 func (ms *mediaStoreImpl) GetHasher() Hasher {
@@ -110,6 +105,7 @@ func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error) {
 	type idDatePair struct {
 		id   Key
+		path string
 		date time.Time
 	}
 
@@ -120,6 +116,7 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 		if item.CreationTime.Before(date) {
 			idsByDate = append(idsByDate, idDatePair{
 				id:   id,
+				path: item.Path,
 				date: item.CreationTime,
 			})
 		}
@@ -130,29 +127,15 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 		return idsByDate[i].date.After(idsByDate[j].date)
 	})
 	// take first 'count' ids, plus any with the same date as the last one
-	ids := make([]Key, 0, count)
+	ids := make([]IdWithPath, 0, count)
 	i := 0
 	for ; i < int(count) && i < len(idsByDate); i++ {
-		ids = append(ids, idsByDate[i].id)
+		ids = append(ids, IdWithPath{ID: idsByDate[i].id, Path: idsByDate[i].path})
 	}
 	for ; i > 0 && i < len(idsByDate) && idsByDate[i].date.Equal(idsByDate[i-1].date); i++ {
-		ids = append(ids, idsByDate[i].id)
+		ids = append(ids, IdWithPath{ID: idsByDate[i].id, Path: idsByDate[i].path})
 	}
-	return ms.getThumbnailsByIDs(ids)
-}
-
-func (ms *mediaStoreImpl) getThumbnailsByIDs(ids []Key) ([]Thumbnail, error) {
-	thumbnails := make([]Thumbnail, 0)
-
-	for _, id := range ids {
-		thumbnail, ok := ms.thumbnails[id]
-		if !ok {
-			log.Error().Str("ID", id.String()).Msg("Thumbnail with ID not found")
-			continue
-		}
-		thumbnails = append(thumbnails, thumbnail)
-	}
-	return thumbnails, nil
+	return ms.thumbnailProvider.GetThumbnailsByIDs(ids)
 }
 
 func (ms *mediaStoreImpl) GetFullMediaItem(id Hash) (MediaItem, error) {
@@ -310,7 +293,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 
 		creatationDatetime, err := getExifCreationDate(content)
 		if err != nil {
-			log.Info().
+			log.Debug().
 				Str("file", filePath).
 				Err(err).
 				Msg("Failed to get EXIF date, using file modification time instead")
@@ -331,87 +314,6 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	}
 	log.Debug().Int("count", len(ms.items)).Msg("Loaded media items")
 
-	// walk through thumbnail directory and load thumbnails
-	err = filepath.Walk(thumbnailPath, func(filePath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			return fmt.Errorf("failed to read file %s: %w", filePath, err)
-		}
-
-		filenameWithoutExt := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-
-		hash, err := ms.Hasher.HashFromString(filenameWithoutExt)
-		if err != nil {
-			log.Error().Str("file", filePath).Err(err).Msg("ignoring bad thumbnail filename")
-		} else if _, mediaItemPresent := ms.items[ms.Hasher.HashToKey(hash)]; !mediaItemPresent {
-			log.Warn().Str("file", filePath).Msg("thumbnail does not match any media item. ignoring")
-		} else {
-			ms.thumbnails[ms.Hasher.HashToKey(hash)] = Thumbnail{
-				ID:      hash,
-				Content: content,
-			}
-		}
-
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to load thumbnails: %w", err)
-	}
-	log.Debug().Int("count", len(ms.thumbnails)).
-		Msg("Loaded thumbnails from existing files")
-
-	// generate thumbnails for media items without thumbnails
-	for id, item := range ms.items {
-		if _, ok := ms.thumbnails[id]; !ok {
-			// generate thumbnail
-			content, err := os.ReadFile(item.Path)
-			if err != nil {
-				log.Error().
-					Str("file", item.Path).
-					Err(err).
-					Msg("failed to read media item for thumbnail generation")
-				continue
-			}
-
-			thumbnailContent, err := generateThumbnail(content)
-			if err != nil {
-				log.Error().
-					Str("ID", id.String()).
-					Str("mediaItem", item.Path).
-					Err(err).
-					Msg("failed to generate thumbnail")
-				continue
-			}
-			// store thumbnail in map
-			ms.thumbnails[id] = Thumbnail{
-				ID:      ms.Hasher.HashFromKey(id),
-				Content: thumbnailContent,
-			}
-			// save thumbnail to disk
-			thumbnailFilePath := filepath.Join(thumbnailPath, id.String()+".jpg")
-			err = os.WriteFile(thumbnailFilePath, thumbnailContent, os.ModePerm)
-			if err != nil {
-				log.Error().
-					Str("file", thumbnailFilePath).
-					Err(err).
-					Msg("failed to write thumbnail")
-			}
-			log.Debug().Str("ID", id.String()).
-				Str("thumbnail", thumbnailFilePath).
-				Str("mediaItem", item.Path).
-				Msg("Generated and saved new thumbnail")
-		}
-	}
-
-	log.Debug().Int("count", len(ms.thumbnails)).
-		Msg("Total thumbnails after generation")
-
 	return nil
 }
 
@@ -431,10 +333,6 @@ func getExifCreationDate(img []byte) (time.Time, error) {
 	}
 
 	return t, nil
-}
-
-func generateThumbnail(data []byte) ([]byte, error) {
-	return ResizeToThumbnail(data)
 }
 
 func optimizeJpg(in []byte) ([]byte, error) {
@@ -478,62 +376,23 @@ func optimizeJpg(in []byte) ([]byte, error) {
 	return newImage, nil
 }
 
-// ResizeToThumbnail takes raw image bytes and returns JPEG-encoded bytes of an
-// image resized to longer side to 256 pixels, preserving aspect ratio. It
-// respects image orientation.
-func ResizeToThumbnail(in []byte) ([]byte, error) {
-	img := bimg.NewImage(in)
-
-	size, err := img.Size()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get image size: %w", err)
-	}
-
-	TARGET_LONGER_SIDE := 256
-
-	target_w := 0
-	target_h := 0
-
-	if size.Width >= size.Height {
-		if size.Width > TARGET_LONGER_SIDE {
-			target_w = TARGET_LONGER_SIDE
-			target_h = 0 // will preserve aspect ratio
-		}
-	} else {
-		if size.Height > TARGET_LONGER_SIDE {
-			target_w = 0 // will preserve aspect ratio
-			target_h = TARGET_LONGER_SIDE
-		}
-	}
-
-	options := bimg.Options{
-		Width:     target_w,
-		Height:    target_h,
-		Quality:   50,
-		Interlace: true,
-	}
-
-	newImage, err := img.Process(options)
-	if err != nil {
-		return nil, fmt.Errorf("failed to process image: %w", err)
-	}
-	return newImage, nil
-}
-
-func (ms *mediaStoreImpl) GetThumbnailsByPath(path string) ([]Thumbnail, []string, error) {
+func (ms *mediaStoreImpl) GetThumbnailsByPath(pathRelativeToMediadir string) ([]Thumbnail, []string, error) {
 	results := make([]Thumbnail, 0)
 	filenames := make([]string, 0)
 
-	absPath := filepath.Join(ms.mediadir, path)
+	absPath := filepath.Join(ms.mediadir, pathRelativeToMediadir)
 	for key, item := range ms.items {
 		dirOfItem := filepath.Dir(item.Path)
 
 		if dirOfItem == absPath {
-			thumbnail, ok := ms.thumbnails[key]
-			if !ok {
-				log.Error().Str("ID", key.String()).Msg("Thumbnail with ID not found")
+			thumbnail, err := ms.thumbnailProvider.GetThumbnailByID(IdWithPath{ID: key, Path: item.Path})
+			if err != nil {
+				log.Error().Str("ID", key.String()).
+					Err(err).
+					Msg("Failed to get thumbnail by ID")
 				continue
 			}
+
 			results = append(results, thumbnail)
 			filename := filepath.Base(item.Path)
 			filenames = append(filenames, filename)
@@ -541,6 +400,18 @@ func (ms *mediaStoreImpl) GetThumbnailsByPath(path string) ([]Thumbnail, []strin
 	}
 
 	return results, filenames, nil
+}
+
+func (ms *mediaStoreImpl) GenerateMissingThumbnails() {
+	idsWithPath := make([]IdWithPath, 0, len(ms.items))
+	for id, item := range ms.items {
+		idsWithPath = append(idsWithPath, IdWithPath{ID: id, Path: item.Path})
+	}
+	log.Info().Msg("Generating missing thumbnails")
+	err := ms.thumbnailProvider.GenerateMissingThumbnails(idsWithPath)
+	if err != nil {
+		log.Error().Err(err).Msg("Error generating missing thumbnails")
+	}
 }
 
 // In mediastore_test.go or mediastore.go

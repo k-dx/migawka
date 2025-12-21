@@ -46,6 +46,7 @@ func main() {
 	logLevel := flag.String("loglevel", "warn", "Log level: debug, info, warn, error, fatal, panic")
 	MEDIA_DIR_ARG := "mediadir"
 	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
+	generateThumbnailsOnStartup := flag.Bool("generate-thumbs-on-startup", false, "Generate missing thumbnails on startup")
 
 	flag.Parse()
 
@@ -59,13 +60,21 @@ func main() {
 
 	initLogger(logLevel)
 
+	mediaStore, err := NewMediaStore(*mediaDirectory, Xx64Hasher{})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create media store")
+	}
+	if *generateThumbnailsOnStartup {
+		mediaStore.GenerateMissingThumbnails()
+	}
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatal().Msgf("failed to listen: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
-	migawkaServer := CreateServer(*mediaDirectory)
+	migawkaServer := CreateServer(mediaStore)
 
 	pb.RegisterMigawkaServer(grpcServer, migawkaServer)
 	log.Info().Msgf("server listening at %v", lis.Addr())

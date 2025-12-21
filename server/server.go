@@ -18,11 +18,7 @@ type server struct {
 	mediaStore MediaStore
 }
 
-func CreateServer(mediaDirectory string) *server {
-	mediaStore, err := NewMediaStore(mediaDirectory, Xx64Hasher{})
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create media store")
-	}
+func CreateServer(mediaStore MediaStore) *server {
 	return &server{
 		mediaStore: mediaStore,
 	}
