@@ -7,10 +7,10 @@ require (
 	github.com/rs/zerolog v1.34.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
+	github.com/cespare/xxhash/v2 v2.3.0
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/net v0.42.0 // indirect
