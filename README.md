@@ -4,6 +4,8 @@
 
 ## Server
 
+See [server/README.md](server/README.md).
+
 ### Dev installation
 
 * [Golang v1.25.3](https://go.dev/doc/install)

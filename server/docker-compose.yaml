@@ -1,0 +1,8 @@
+services:
+  golang-server:
+    build: .
+    ports:
+      - "50051:50051"
+    command: ["./main", "--mediadir", "/media", "--loglevel", "debug"]
+    volumes:
+      - /home/kuba/migawka_media2:/media
