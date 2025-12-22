@@ -27,8 +27,12 @@ import xyz.jdubiel.migawka.data.network.IPEndpoint
 
 // DataStore setup
 private const val SETTINGS_PREFERENCE_NAME = "settings_prefs"
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(
     name = SETTINGS_PREFERENCE_NAME
+)
+private const val LOCAL_IMAGE_PROVIDER_PREFERENCE_NAME = "local_image_provider"
+private val Context.localImageProviderDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = LOCAL_IMAGE_PROVIDER_PREFERENCE_NAME
 )
 
 val hasher: Hasher = Xx64Hasher()
@@ -46,7 +50,7 @@ class MigawkaApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 //        userSettingsRepository = InMemoryUserSettingsRepository()
-        userSettingsRepository = PersistentUserSettingsRepository(dataStore)
+        userSettingsRepository = PersistentUserSettingsRepository(settingsDataStore)
 
         val (serverAddress, serverPort) = runBlocking {
             val serverAddressDeferred = async { userSettingsRepository.getServerAddress() }
@@ -69,7 +73,8 @@ class MigawkaApplication : Application() {
             this.applicationContext,
             contentResolver,
             localMediaRepo,
-            applicationScope
+            applicationScope,
+            localImageProviderDataStore
         )
 
         imageRepository = ImageRepository(

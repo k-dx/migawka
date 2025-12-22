@@ -6,8 +6,14 @@ import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.data.database.ILocalMediaRepository
@@ -20,35 +26,48 @@ import java.time.format.DateTimeFormatter
 
 const val HERETAG = "MediaStoreImageProvider"
 
+private val LAST_MODIFIED_GENERATION = intPreferencesKey("last_modified_generation")
+private val DB_MEDIA_STORE_VERSION = stringPreferencesKey("db_media_store_version")
+
 class MediaStoreImageProvider(
     private val context: android.content.Context,
     private val contentResolver: ContentResolver,
     private val db: ILocalMediaRepository,
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    dataStore: DataStore<Preferences>
 ) : LocalImageProvider {
 
     // TODO: add logic to observe newly added photos, after initialization
 
-    var lastModifiedGeneration = -1; // TODO: save in datastore
-    var dbMediaStoreVersion = "" // TODO: save in datastore
     val initializationJob = scope.launch(Dispatchers.IO) {
+        val prefs = dataStore.data.first()
+        var lastKnownModifiedGeneration = prefs[LAST_MODIFIED_GENERATION] ?: -1
+        var lastKnownMediaStoreVersion = prefs[DB_MEDIA_STORE_VERSION] ?: ""
+
+        Log.d(HERETAG, "lastModifiedGeneration = $lastKnownModifiedGeneration")
+        Log.d(HERETAG, "dbMediaStoreVersion = $lastKnownMediaStoreVersion")
+
         val currentMediaStoreVersion = MediaStore.getVersion(context)
         Log.d(HERETAG, "currentMediaStoreVersion = $currentMediaStoreVersion")
-        if (currentMediaStoreVersion != dbMediaStoreVersion) {
+
+        val indexedModifiedGeneration = if (currentMediaStoreVersion != lastKnownMediaStoreVersion) {
             // do a full scan of the MediaStore
             Log.d(HERETAG, "full scan of MediaStore")
 
             db.deleteAll()
-            val indexedModifiedGeneration = indexMediaStore(-1)
-
-            dbMediaStoreVersion = currentMediaStoreVersion
-            lastModifiedGeneration = indexedModifiedGeneration
+            indexMediaStore(-1)
         } else {
             Log.d(HERETAG, "partial scan of MediaStore")
 
             // do a partial scan of the MediaStore - detect new media via GENERATION_MODIFIED column
-            val indexedModifiedGeneration = indexMediaStore(lastModifiedGeneration)
-            lastModifiedGeneration = indexedModifiedGeneration
+            indexMediaStore(lastKnownModifiedGeneration)
+        }
+
+        Log.d(HERETAG, "indexedModifiedGeneration = $indexedModifiedGeneration")
+
+        dataStore.edit { settings ->
+            settings[LAST_MODIFIED_GENERATION] = indexedModifiedGeneration
+            settings[DB_MEDIA_STORE_VERSION] = currentMediaStoreVersion
         }
     }
 
@@ -177,7 +196,7 @@ class MediaStoreImageProvider(
      */
     private suspend fun indexMediaStore(fromGenerationModified: Int): Int {
         var entries: MutableList<LocalImage> = mutableListOf()
-        var highestGenerationModified = -1
+        var highestGenerationModified = fromGenerationModified
 
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
