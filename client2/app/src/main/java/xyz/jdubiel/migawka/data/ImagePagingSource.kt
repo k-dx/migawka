@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.time.Instant
+import kotlin.time.measureTime
 
 const val PAGING_TAG = "Paging"
 
@@ -27,14 +28,30 @@ class ImagePagingSource(
 
             // query both APIs. `async` is used to run both queries in parallel
             // query the local MediaStoreAPI
+//            val localImagesResult = async {
+//                localImageProvider.getImages(pageSize, dateForRequest)
+//            }
             val localImagesResult = async {
-                localImageProvider.getImages(pageSize, dateForRequest)
+                var images: List<LocalImage>? = null
+                val duration = measureTime {
+                    images = localImageProvider.getImages(pageSize, dateForRequest)
+                }
+                Log.d(PAGING_TAG, "local image fetch took $duration")
+                images!!
             }
 
             // query the remote API
             Log.d(PAGING_TAG, "dateForRequest is `${dateForRequest}`")
+//            val remoteImagesResult = async {
+//                remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
+//            }
             val remoteImagesResult = async {
-                remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
+                var images: List<RemoteImage>? = null
+                val duration = measureTime {
+                    images = remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)
+                }
+                Log.d(PAGING_TAG, "remote image fetch took $duration")
+                images!!
             }
 
             val localImages = localImagesResult.await()
@@ -48,8 +65,6 @@ class ImagePagingSource(
 
             // combine local and remote results
             val combinedImages = mutableListOf<PagedImage>()
-
-
 
             var localImagesIndex = 0
             var remoteImagesIndex = 0
