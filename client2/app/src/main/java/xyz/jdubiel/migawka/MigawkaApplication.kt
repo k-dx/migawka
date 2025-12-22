@@ -6,6 +6,9 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import xyz.jdubiel.migawka.data.Hasher
@@ -16,6 +19,7 @@ import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.Xx64Hasher
+import xyz.jdubiel.migawka.data.database.ILocalMediaRepository
 import xyz.jdubiel.migawka.data.database.LocalMediaDatabase
 import xyz.jdubiel.migawka.data.database.LocalMediaRepository
 import xyz.jdubiel.migawka.data.network.GrpcProvider
@@ -36,6 +40,9 @@ class MigawkaApplication : Application() {
     lateinit var grpcProvider: GrpcProvider
     lateinit var localImageProvider: LocalImageProvider
 
+    // SupervisorJob ensures a failure in one task doesn't cancel the whole scope
+    val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
 //        userSettingsRepository = InMemoryUserSettingsRepository()
@@ -55,10 +62,15 @@ class MigawkaApplication : Application() {
 
         Log.d("gRPC", "server address is $serverAddress:$serverPort")
 
-        val localMediaRepo = LocalMediaRepository(
+        val localMediaRepo: ILocalMediaRepository = LocalMediaRepository(
             LocalMediaDatabase.getDatabase(this).localMediaDao()
             )
-        localImageProvider = MediaStoreImageProvider(this.contentResolver, localMediaRepo)
+        localImageProvider = MediaStoreImageProvider(
+            this.applicationContext,
+            contentResolver,
+            localMediaRepo,
+            applicationScope
+        )
 
         imageRepository = ImageRepository(
             this.contentResolver,

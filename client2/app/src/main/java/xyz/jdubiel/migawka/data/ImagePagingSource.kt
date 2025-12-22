@@ -22,17 +22,16 @@ class ImagePagingSource(
             Log.d(PAGING_TAG, "load with params: loadSize = ${params.loadSize}, key = ${params.key}")
             val start = System.nanoTime()
 
-            val key = params.key
+            val dateForRequest = params.key ?: Instant.now()
             val pageSize = params.loadSize
 
             // query both APIs. `async` is used to run both queries in parallel
             // query the local MediaStoreAPI
             val localImagesResult = async {
-                localImageProvider.getImages(pageSize, key)
+                localImageProvider.getImages(pageSize, dateForRequest)
             }
 
             // query the remote API
-            val dateForRequest = key ?: Instant.now()
             Log.d(PAGING_TAG, "dateForRequest is `${dateForRequest}`")
             val remoteImagesResult = async {
                 remoteImageProvider.getThumbnailsBeforeTimestamp(dateForRequest, pageSize)

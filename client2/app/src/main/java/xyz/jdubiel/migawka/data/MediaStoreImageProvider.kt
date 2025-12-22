@@ -6,10 +6,12 @@ import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import xyz.jdubiel.migawka.TAG
-import xyz.jdubiel.migawka.data.database.LocalMediaRepository
+import xyz.jdubiel.migawka.data.database.ILocalMediaRepository
+import xyz.jdubiel.migawka.data.database.LocalMediaEntry
 import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 import java.time.LocalDateTime
@@ -19,111 +21,228 @@ import java.time.format.DateTimeFormatter
 const val HERETAG = "MediaStoreImageProvider"
 
 class MediaStoreImageProvider(
+    private val context: android.content.Context,
     private val contentResolver: ContentResolver,
-    private val db: LocalMediaRepository
+    private val db: ILocalMediaRepository,
+    scope: CoroutineScope
 ) : LocalImageProvider {
 
-    // DB:
-    // cached_modified_generation
-    // media_store_version
-    // table(hash, uri, date)
+    // TODO: add logic to observe newly added photos, after initialization
 
-    private var hashToUri: MutableMap<Hash, Uri> = mutableMapOf()
+    var lastModifiedGeneration = -1; // TODO: save in datastore
+    var dbMediaStoreVersion = "" // TODO: save in datastore
+    val initializationJob = scope.launch(Dispatchers.IO) {
+        val currentMediaStoreVersion = MediaStore.getVersion(context)
+        Log.d(HERETAG, "currentMediaStoreVersion = $currentMediaStoreVersion")
+        if (currentMediaStoreVersion != dbMediaStoreVersion) {
+            // do a full scan of the MediaStore
+            Log.d(HERETAG, "full scan of MediaStore")
 
-    // TODO: change this to be saved in a database provided by Android
-    //       (or at least be sorted by Instant)
-    private var uriToDate: MutableList<Pair<Uri, Instant>> = mutableListOf()
+            db.deleteAll()
+            val indexedModifiedGeneration = indexMediaStore(-1)
 
-    override suspend fun getImages(count: Int, imagesBefore: Instant?): List<LocalImage> {
+            dbMediaStoreVersion = currentMediaStoreVersion
+            lastModifiedGeneration = indexedModifiedGeneration
+        } else {
+            Log.d(HERETAG, "partial scan of MediaStore")
+
+            // do a partial scan of the MediaStore - detect new media via GENERATION_MODIFIED column
+            val indexedModifiedGeneration = indexMediaStore(lastModifiedGeneration)
+            lastModifiedGeneration = indexedModifiedGeneration
+        }
+    }
+
+    override suspend fun getImages(count: Int, imagesBefore: Instant): List<LocalImage> {
+        initializationJob.join() // Wait for init to finish before returning data
+
         // Use withContext to ensure this IO-heavy operation runs on a background thread.
         return withContext(Dispatchers.IO) {
 
-            // call
-            // getExternalVolumeNames(android.content.Context)
-            // before MediaStore.getVersion()!
+            /*
+            To ensure that the images returned actually exist (e.g. have not been deleted after
+            saving to database), query the MediaStore for the URIs that I want to return. If all of
+            them are in MediaStore - great, else - repeat until no more images in database or we
+            got `count` images to return.
+             */
 
-//            if (uriToDate.isEmpty() || MediaStore.getVersion()) {
-//                // full rescan
-//                // clear migawka's db
-//                // this will take a while
-//            } else {
-//                // query for images with GENERATION_MODIFIED > cached_modified_generation
-//                // and update migawka's db
-//            }
+            val results = mutableListOf<LocalImage>()
+            val deletedUris = mutableListOf<Uri>()
+            while (results.size < count) {
+                // query the database for appropriate entries
+                // TODO: IDEA: it might be faster on average to query for e.g.
+                // 2*count or count + X once than only querying for `count`
+                // entries, to anticipate that some image might have been
+                // deleted
+                val dbEntries = db.getEntriesBeforeTimestamp(count, imagesBefore)
 
+                // query the MediaStore to make sure they exist
+                val mediaStoreEntries =
+                    getEntriesFromMediaStore(dbEntries.map { Uri.parse(it.uri) })
 
-
-            if (uriToDate.isEmpty()) {
-                // initialize on first getImages call
-
-                contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Images.Media._ID),
-                    null,
-                    null,
-                    null
-                )?.use { cursor ->
-                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-
-                    while (cursor.moveToNext()) {
-                        val id = cursor.getLong(idColumn)
-                        val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-                        // queryDateTaken should not throw here, since we are passing a valid uri
-                        val date = queryDateTaken(uri)
-
-                        uriToDate.add(uri to date)
-                        Log.d(HERETAG, "uri $uri has date $date")
+                for (dbEntry in dbEntries) {
+                    if (mediaStoreEntries.contains(Uri.parse(dbEntry.uri))) {
+                        results.add(
+                            LocalImage(
+                                Uri.parse(dbEntry.uri),
+                                dbEntry.date,
+                                hasher.fromHex(dbEntry.hash)
+                            )
+                        )
+                    } else {
+                        deletedUris.add(Uri.parse(dbEntry.uri))
                     }
                 }
-                uriToDate.sortByDescending { it.second }
-            }
 
-            val uriToDateBefore = uriToDate.filter { it.second < imagesBefore ?: Instant.now() }
-
-            val localImages = mutableListOf<LocalImage>()
-            for (i in 0 until minOf(count, uriToDateBefore.size)) {
-                val uri = uriToDateBefore[i].first
-                val date = uriToDateBefore[i].second
-                val id = computeHash(uri)
-                id?.let {
-                    localImages.add(LocalImage(uri, date, it))
-                    hashToUri[it] = uri
-//                    Log.d(TAG, "calculated hash of uri $uri: $it")
+                if (dbEntries.size < count) {
+                    // there are no more entries in the database, so we can stop
+                    break
                 }
             }
-            localImages
+
+            // update the database
+            db.delete(deletedUris)
+
+            results
         }
+    }
+
+    private fun getEntriesFromMediaStore(uriList: List<Uri>): Set<Uri> {
+        val contentResolver = context.contentResolver
+        val results = mutableSetOf<Uri>()
+
+        // Extract IDs from URIs to use in selection
+        val ids = uriList.mapNotNull { ContentUris.parseId(it).toString() }
+        if (ids.isEmpty()) return emptySet()
+
+        // Create selection: "_id IN (?, ?, ...)"
+        val placeholders = ids.joinToString { "?" }
+        val selection = "${MediaStore.MediaColumns._ID} IN ($placeholders)"
+        val selectionArgs = ids.toTypedArray() // this will substitute "?" in selection
+
+        // Projection: Only request the ID column
+        val projection = arrayOf(MediaStore.MediaColumns._ID)
+
+        // Query external content (e.g., Images, Video, or Audio)
+        contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val contentUri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+                results.add(contentUri)
+            }
+        }
+        return results
     }
 
     override suspend fun getImage(id: Hash): LocalImage {
-        // TODO: make sure to initialize the localdb before this!
-        Log.d(TAG, "MediaStoreImageProvider, getImage(${id.toHex()})")
-        if (!hashToUri.containsKey(id)) {
-            Log.e("MediaStoreImageProvider.getImage", "No image with hash $id found")
-            throw IllegalArgumentException("No image with hash $id found")
-        }
-        Log.d(TAG, "MediaStoreImageProvider, getImage, accessing hashToUri")
-        val contentUri = hashToUri[id]!!
-        Log.d(TAG, "MediaStoreImageProvider, getImage, contentUri = $contentUri")
-        try {
-            val date = queryDateTaken(contentUri); // TODO: should this happen in a coroutine?
-            Log.d(TAG, "MediaStoreImageProvider, getImage, date = $date")
-            return LocalImage(contentUri = contentUri, date = date, hash = id)
+        initializationJob.join() // Wait for init to finish before returning data
 
-        } catch (e: NoSuchElementException) {
-            Log.e("MediaStoreImageProvider.getImage", "No date found for image with hash $id")
-            throw NoSuchElementException("No image with given id found in MediaStore")
+        // query the database
+        val dbEntry = db.getByHash(id.toHex())
+        if (dbEntry == null) {
+            // TODO: probably returning null would be better
+            throw NoSuchElementException("No image with given id=${id.toHex()} found in database")
         }
+
+        // query the MediaStore
+        val mediaStoreEntries =
+            getEntriesFromMediaStore(listOf(Uri.parse(dbEntry.uri)))
+
+        if (mediaStoreEntries.size != 1 || mediaStoreEntries.first() != Uri.parse(dbEntry.uri)) {
+            // TODO: probably returning null would be better
+            throw NoSuchElementException("No image with given hash=${id.toHex()}, uri=${dbEntry.uri} found in MediaStore, probably deleted")
+        }
+
+        return LocalImage(
+            Uri.parse(dbEntry.uri),
+            dbEntry.date,
+            hasher.fromHex(dbEntry.hash)
+        )
+    }
+
+    /**
+     * (Re)indexes the MediaStore for images and inserts them into the database.
+     *
+     * @param fromGenerationModified The generation modified to start from. Can be -1 to index everything.
+     * @return highest GENERATION_MODIFIED.
+     */
+    private suspend fun indexMediaStore(fromGenerationModified: Int): Int {
+        var entries: MutableList<LocalImage> = mutableListOf()
+        var highestGenerationModified = -1
+
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.GENERATION_MODIFIED
+        )
+        val selection = "${MediaStore.MediaColumns.GENERATION_MODIFIED} > ?"
+        val selectionArgs = arrayOf(fromGenerationModified.toString())
+
+
+        withContext(Dispatchers.IO) {
+            contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val generationModifiedColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.GENERATION_MODIFIED)
+
+
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idColumn)
+                    val uri =
+                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                    val generationModified = cursor.getInt(generationModifiedColumn)
+
+                    // queryDateTaken should not throw here, since we are passing a valid uri
+                    val date = queryDateTaken(uri)
+                    val hash = computeHash(uri)
+
+                    if (hash == null) {
+                        Log.e(HERETAG, "Failed to compute hash for $uri")
+                        continue
+                    }
+
+                    entries.add(LocalImage(uri, date, hash))
+                    highestGenerationModified = maxOf(highestGenerationModified, generationModified)
+
+                    // Log.d(HERETAG, "uri $uri has date $date and hash $hash")
+                }
+            }
+
+
+            // batch insert into database
+            db.insertEntries(entries.map {
+                LocalMediaEntry(
+                    it.contentUri.toString(),
+                    it.hash.toHex(),
+                    it.date
+                )
+            })
+
+            Log.d(HERETAG, "indexed ${entries.size} images")
+        }
+
+        return highestGenerationModified
     }
 
 
+    /**
+     * Extracts the best date from the data available in MediaStore.
+     */
     private fun queryDateTaken(uri: Uri): Instant {
-        val index = uriToDate.find { it.first == uri }
-        if (index != null) {
-            return index.second
-        }
-
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DATE_ADDED,

@@ -6,11 +6,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
 /**
  * Database class with a singleton Instance object.
  */
 @Database(entities = [LocalMediaEntry::class], version = 1, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class LocalMediaDatabase : RoomDatabase() {
     abstract fun localMediaDao(): LocalMediaEntryDao
 
