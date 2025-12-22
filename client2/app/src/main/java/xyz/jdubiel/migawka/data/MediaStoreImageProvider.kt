@@ -27,33 +27,35 @@ class MediaStoreImageProvider(
     //       (or at least be sorted by Instant)
     private var uriToDate: MutableList<Pair<Uri, Instant>> = mutableListOf()
 
-    init {
-        contentResolver.query(
-             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-             arrayOf(MediaStore.Images.Media._ID),
-             null,
-             null,
-             null
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-                // queryDateTaken should not throw here, since we are passing a valid uri
-                val date = queryDateTaken(uri)
-
-                uriToDate.add(uri to date)
-                Log.d(HERETAG, "uri $uri has date $date")
-            }
-        }
-        uriToDate.sortByDescending { it.second }
-    }
-
     override suspend fun getImages(count: Int, imagesBefore: Instant?): List<LocalImage> {
         // Use withContext to ensure this IO-heavy operation runs on a background thread.
         return withContext(Dispatchers.IO) {
+            if (uriToDate.isEmpty()) {
+                // initialize on first getImages call
+
+                contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Images.Media._ID),
+                    null,
+                    null,
+                    null
+                )?.use { cursor ->
+                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idColumn)
+                        val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+                        // queryDateTaken should not throw here, since we are passing a valid uri
+                        val date = queryDateTaken(uri)
+
+                        uriToDate.add(uri to date)
+                        Log.d(HERETAG, "uri $uri has date $date")
+                    }
+                }
+                uriToDate.sortByDescending { it.second }
+            }
+
             val uriToDateBefore = uriToDate.filter { it.second < imagesBefore ?: Instant.now() }
 
             val localImages = mutableListOf<LocalImage>()

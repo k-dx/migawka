@@ -182,18 +182,20 @@ fun ImageGrid(
             ) {
                 items(
                     count = images.itemCount,
-                    key = { index ->
-                        when (val item = images.peek(index)) {
-                            is ImageGalleryTimelineEntry.ImageItem -> {
-                                when(item.image) {
-                                    is PagedImage.FromUri -> item.image.id.toHex()
-                                    is PagedImage.FromBytes -> item.image.id.toHex()
-                                }
-                            }
-                            is ImageGalleryTimelineEntry.MonthHeader -> item.monthYear
-                            null -> "placeholder_$index"
-                        }
-                    },
+                    // TODO: use hash as key but make sure they are unique first
+                    // also having hash collision should be handled gracefully
+//                    key = { index ->
+//                        when (val item = images.peek(index)) {
+//                            is ImageGalleryTimelineEntry.ImageItem -> {
+//                                when(item.image) {
+//                                    is PagedImage.FromUri -> item.image.id.toHex()
+//                                    is PagedImage.FromBytes -> item.image.id.toHex()
+//                                }
+//                            }
+//                            is ImageGalleryTimelineEntry.MonthHeader -> item.monthYear
+//                            null -> "placeholder_$index"
+//                        }
+//                    },
                     span = { index ->
                         when (images.peek(index)) {
                             is ImageGalleryTimelineEntry.MonthHeader -> GridItemSpan(maxLineSpan)
