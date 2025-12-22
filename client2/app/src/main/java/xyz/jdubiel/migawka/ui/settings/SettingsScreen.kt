@@ -227,6 +227,16 @@ fun SettingsContent(
                 ) {
                     Text(stringResource(R.string.save))
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        // TODO: clear database
+                    }
+                ) {
+                    Text("Clear internal media database")
+                }
             }
         }
     }

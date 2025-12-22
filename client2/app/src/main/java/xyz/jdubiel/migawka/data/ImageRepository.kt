@@ -15,8 +15,8 @@ import java.io.File
 class ImageRepository(
     private val contentResolver: ContentResolver,
     grpcStub: MigawkaGrpcKt.MigawkaCoroutineStub,
+    private val localImageProvider: LocalImageProvider,
 ) {
-    private val localImageProvider: LocalImageProvider = MediaStoreImageProvider(contentResolver)
     private val remoteImageProvider = RemoteImageProvider(grpcStub)
 
     suspend fun getImage(id: Hash): LocalImage {

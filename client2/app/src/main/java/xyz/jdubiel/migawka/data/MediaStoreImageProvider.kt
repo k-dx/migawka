@@ -9,6 +9,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.TAG
+import xyz.jdubiel.migawka.data.database.LocalMediaRepository
 import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 import java.time.LocalDateTime
@@ -18,8 +19,14 @@ import java.time.format.DateTimeFormatter
 const val HERETAG = "MediaStoreImageProvider"
 
 class MediaStoreImageProvider(
-    private val contentResolver: ContentResolver
+    private val contentResolver: ContentResolver,
+    private val db: LocalMediaRepository
 ) : LocalImageProvider {
+
+    // DB:
+    // cached_modified_generation
+    // media_store_version
+    // table(hash, uri, date)
 
     private var hashToUri: MutableMap<Hash, Uri> = mutableMapOf()
 
@@ -30,6 +37,22 @@ class MediaStoreImageProvider(
     override suspend fun getImages(count: Int, imagesBefore: Instant?): List<LocalImage> {
         // Use withContext to ensure this IO-heavy operation runs on a background thread.
         return withContext(Dispatchers.IO) {
+
+            // call
+            // getExternalVolumeNames(android.content.Context)
+            // before MediaStore.getVersion()!
+
+//            if (uriToDate.isEmpty() || MediaStore.getVersion()) {
+//                // full rescan
+//                // clear migawka's db
+//                // this will take a while
+//            } else {
+//                // query for images with GENERATION_MODIFIED > cached_modified_generation
+//                // and update migawka's db
+//            }
+
+
+
             if (uriToDate.isEmpty()) {
                 // initialize on first getImages call
 
@@ -74,6 +97,7 @@ class MediaStoreImageProvider(
     }
 
     override suspend fun getImage(id: Hash): LocalImage {
+        // TODO: make sure to initialize the localdb before this!
         Log.d(TAG, "MediaStoreImageProvider, getImage(${id.toHex()})")
         if (!hashToUri.containsKey(id)) {
             Log.e("MediaStoreImageProvider.getImage", "No image with hash $id found")
@@ -94,7 +118,6 @@ class MediaStoreImageProvider(
     }
 
 
-    // TODO: now
     private fun queryDateTaken(uri: Uri): Instant {
         val index = uriToDate.find { it.first == uri }
         if (index != null) {

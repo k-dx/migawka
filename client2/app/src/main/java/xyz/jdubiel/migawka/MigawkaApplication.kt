@@ -10,10 +10,14 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import xyz.jdubiel.migawka.data.Hasher
 import xyz.jdubiel.migawka.data.ImageRepository
+import xyz.jdubiel.migawka.data.LocalImageProvider
+import xyz.jdubiel.migawka.data.MediaStoreImageProvider
 import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.Xx64Hasher
+import xyz.jdubiel.migawka.data.database.LocalMediaDatabase
+import xyz.jdubiel.migawka.data.database.LocalMediaRepository
 import xyz.jdubiel.migawka.data.network.GrpcProvider
 import xyz.jdubiel.migawka.data.network.IPEndpoint
 
@@ -30,6 +34,7 @@ class MigawkaApplication : Application() {
     lateinit var imageRepository: ImageRepository
     lateinit var remoteFileExplorer: RemoteFileExplorer
     lateinit var grpcProvider: GrpcProvider
+    lateinit var localImageProvider: LocalImageProvider
 
     override fun onCreate() {
         super.onCreate()
@@ -49,9 +54,16 @@ class MigawkaApplication : Application() {
 
 
         Log.d("gRPC", "server address is $serverAddress:$serverPort")
+
+        val localMediaRepo = LocalMediaRepository(
+            LocalMediaDatabase.getDatabase(this).localMediaDao()
+            )
+        localImageProvider = MediaStoreImageProvider(this.contentResolver, localMediaRepo)
+
         imageRepository = ImageRepository(
             this.contentResolver,
-            grpcProvider.getMigawkaServiceStub()
+            grpcProvider.getMigawkaServiceStub(),
+            localImageProvider
         )
 
         remoteFileExplorer = RemoteFileExplorer(grpcProvider.getMigawkaServiceStub())
