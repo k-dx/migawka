@@ -9,12 +9,11 @@ import coil3.fetch.SourceFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
 import okio.Buffer
+import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.RemoteImageProvider
-import xyz.jdubiel.migawka.hasher
 
 // Define a marker type for requests that should use gRPC
-// TODO: this should use a Hash, not a String
-data class GrpcThumbnail(val id: String)
+data class GrpcThumbnail(val id: Hash)
 
 // Implement ImageFetcher
 class GrpcFetcher(
@@ -25,7 +24,7 @@ class GrpcFetcher(
 
     override suspend fun fetch(): FetchResult {
         // Download image bytes via gRPC
-        val response = remoteImageProvider.getThumbnailImage(hasher.fromHex(model.id))
+        val response = remoteImageProvider.getThumbnailImage(model.id)
 
         // Convert bytes to a Buffer (Okio)
         val buffer = Buffer().apply { write(response.bytes) }
@@ -51,6 +50,6 @@ class GrpcFetcher(
 // Keyer defines keys for caching the model
 class GrpcKeyer : Keyer<GrpcThumbnail> {
     override fun key(data: GrpcThumbnail, options: Options): String {
-        return "grpc_image_${data.id}"
+        return "grpc_image_${data.id.toHex()}"
     }
 }

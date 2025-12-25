@@ -116,9 +116,8 @@ fun ImageGrid(
                                 )
                             }
                             is TimelineEntryK.Remote -> {
-                                // TODO: download the image and show it
                                 AsyncImage(
-                                    model = GrpcThumbnail(item.id.toHex()),
+                                    model = GrpcThumbnail(item.id),
                                     contentDescription = "Gallery Image",
                                     modifier = Modifier
                                         .aspectRatio(1f)

@@ -264,7 +264,7 @@ fun SingleMediaViewScreenForTimeline(
                                 ) {
                                     Box(modifier = Modifier.fillMaxSize()) {
                                         AsyncImage(
-                                            model = GrpcThumbnail(entry.id.toHex()),
+                                            model = GrpcThumbnail(entry.id),
                                             contentDescription = "Full screen thumbnail",
                                             modifier = Modifier
                                                 .fillMaxWidth()
