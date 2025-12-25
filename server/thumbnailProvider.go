@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/h2non/bimg"
 	"github.com/rs/zerolog/log"
@@ -35,7 +36,8 @@ type ThumbnailProvider interface {
 type thumbnailProviderImpl struct {
 	Hasher Hasher
 
-	thumbnails map[Key]Thumbnail
+	thumbnails     map[Key]Thumbnail
+	thumbnailsLock sync.RWMutex
 
 	// directory to store thumbnails in, absolute path
 	thumbnaildir string
@@ -60,6 +62,8 @@ func (tp *thumbnailProviderImpl) loadExistingThumbnails() error {
 	// TODO: replace with WalkDir
 
 	// walk through thumbnail directory and load thumbnails
+	tp.thumbnailsLock.Lock()
+	defer tp.thumbnailsLock.Unlock()
 	err := filepath.Walk(tp.thumbnaildir, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -124,7 +128,9 @@ func (tp *thumbnailProviderImpl) generateAndSaveThumbnail(request IdWithPath) (T
 	}
 
 	// store thumbnail in map
+	tp.thumbnailsLock.Lock()
 	tp.thumbnails[request.ID] = thumbnail
+	tp.thumbnailsLock.Unlock()
 
 	// save thumbnail to disk
 	thumbnailFilePath := filepath.Join(tp.thumbnaildir, request.ID.String()+".jpg")
@@ -150,11 +156,13 @@ func (tp *thumbnailProviderImpl) GenerateMissingThumbnails(requests []IdWithPath
 
 	// calculate which thumbnails are missing for progress logging
 	missingCount := 0
+	tp.thumbnailsLock.RLock()
 	for _, request := range requests {
 		if _, ok := tp.thumbnails[request.ID]; !ok {
 			missingCount++
 		}
 	}
+	tp.thumbnailsLock.RUnlock()
 
 	logProgress := func(done, total int) {
 		msg := fmt.Sprintf("Generating missing thumbnails, progress: %d / %d",
@@ -166,7 +174,10 @@ func (tp *thumbnailProviderImpl) GenerateMissingThumbnails(requests []IdWithPath
 	generatedCount := 0
 	logProgress(0, missingCount)
 	for _, request := range requests {
-		if _, ok := tp.thumbnails[request.ID]; !ok {
+		tp.thumbnailsLock.RLock()
+		_, ok := tp.thumbnails[request.ID]
+		tp.thumbnailsLock.RUnlock()
+		if !ok {
 			_, err := tp.generateAndSaveThumbnail(request)
 			if err == nil {
 				generatedCount++
@@ -188,7 +199,9 @@ func (tp *thumbnailProviderImpl) GenerateMissingThumbnails(requests []IdWithPath
 }
 
 func (tp *thumbnailProviderImpl) GetThumbnailByID(request IdWithPath) (Thumbnail, error) {
+	tp.thumbnailsLock.RLock()
 	thumbnail, ok := tp.thumbnails[request.ID]
+	tp.thumbnailsLock.RUnlock()
 	if ok {
 		return thumbnail, nil
 	}
@@ -230,7 +243,9 @@ func (tp *thumbnailProviderImpl) GetThumbnailByID(request IdWithPath) (Thumbnail
 		Content: thumbnailContent,
 	}
 
+	tp.thumbnailsLock.Lock()
 	tp.thumbnails[request.ID] = thumbnail
+	tp.thumbnailsLock.Unlock()
 
 	return thumbnail, nil
 }

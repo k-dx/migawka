@@ -72,8 +72,10 @@ type Hasher interface {
 type mediaStoreImpl struct {
 	Hasher            Hasher
 	thumbnailProvider ThumbnailProvider
-	items             map[Key]MediaItemMetadata
-	mediadir          string
+
+	// only read after initialization, so no lock needed
+	items    map[Key]MediaItemMetadata
+	mediadir string
 }
 
 func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
