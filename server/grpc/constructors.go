@@ -27,3 +27,10 @@ func NewGetFileListPageResponse(entries []*DirectoryEntry, status *Status) *GetF
 		Entries: entries,
 	}
 }
+
+func NewTimelineEntriesResponse(entries []*TimelineEntry, status *Status) *TimelineEntriesResponse {
+	return &TimelineEntriesResponse{
+		Entries: entries,
+		Status:  status,
+	}
+}

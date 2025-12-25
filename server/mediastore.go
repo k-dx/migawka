@@ -26,6 +26,11 @@ type MediaItem struct {
 
 type MediaStore interface {
 	GetHasher() Hasher
+
+	// Returns at most* 'count' thumbnails created before the given timestamp,
+	// sorted by creation time descending (newest first).
+	// *will return more if there are multiple items with the same timestamp as
+	// the last one
 	GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error)
 	GetOptimizedMediaItem(id Hash) (MediaItem, error)
 	GetFullMediaItem(id Hash) (MediaItem, error)
@@ -100,9 +105,13 @@ func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 	return item.CreationTime, nil
 }
 
-// Returns at most 'count' thumbnails created before the given timestamp
-// Will return more if there are multiple items with the same timestamp as the last one
 func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error) {
+	// for safety, cap count to number of items. If we have more items in memory
+	// than uint can represent, something is very wrong anyway.
+	if count > uint(len(ms.items)) {
+		count = uint(len(ms.items))
+	}
+
 	type idDatePair struct {
 		id   Key
 		path string
@@ -127,7 +136,7 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 		return idsByDate[i].date.After(idsByDate[j].date)
 	})
 	// take first 'count' ids, plus any with the same date as the last one
-	ids := make([]IdWithPath, 0, count)
+	ids := make([]IdWithPath, 0)
 	i := 0
 	for ; i < int(count) && i < len(idsByDate); i++ {
 		ids = append(ids, IdWithPath{ID: idsByDate[i].id, Path: idsByDate[i].path})
@@ -135,6 +144,7 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 	for ; i > 0 && i < len(idsByDate) && idsByDate[i].date.Equal(idsByDate[i-1].date); i++ {
 		ids = append(ids, IdWithPath{ID: idsByDate[i].id, Path: idsByDate[i].path})
 	}
+
 	return ms.thumbnailProvider.GetThumbnailsByIDs(ids)
 }
 

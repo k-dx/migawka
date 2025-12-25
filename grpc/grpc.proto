@@ -14,10 +14,13 @@ service Migawka {
   rpc UploadFile(FileUploadRequest) returns (FileUploadReply);
   rpc DownloadFile(FileDownloadRequest) returns (FileDownloadReply);
   rpc GetThumbnailsBeforeTimestamp(ThumbnailsTimestampRequest) returns (ThumbnailsTimestampResponse);
+  rpc GetTimelineEntries(TimelineEntriesRequest) returns (TimelineEntriesResponse);
   rpc GetOptimizedMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFullMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFileListPage(GetFileListPageRequest) returns (GetFileListPageResponse);
 }
+
+
 
 message Status {
   int32 code = 1;
@@ -118,4 +121,20 @@ message DirectoryEntry {
 
   // for image files
   Thumbnail thumbnail = 3;
+}
+
+message TimelineEntry {
+  // hash
+  string id = 1;
+
+  // ISO 8601
+  string creationTime = 2;
+}
+
+message TimelineEntriesRequest {
+}
+
+message TimelineEntriesResponse {
+  Status status = 1;
+  repeated TimelineEntry entries = 2;
 }

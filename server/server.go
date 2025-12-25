@@ -288,3 +288,44 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 
 	return pb.NewGetFileListPageResponse(entries, pb.NewStatus(200, "")), nil
 }
+
+func (s *server) GetTimelineEntries(_ context.Context, in *pb.TimelineEntriesRequest) (*pb.TimelineEntriesResponse, error) {
+	log.Info().Msg("GetTimelineEntries")
+
+	// retrieve thumbnails from media store
+	largestUint := ^uint(0)
+	dateInfinity := time.Date(1000000, time.January, 1, 0, 0, 0, 0, time.UTC)
+	thumbnails, err := s.mediaStore.GetThumbnailsBeforeTimestamp(dateInfinity, largestUint)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get entries from media store")
+		status := pb.NewStatus(500, "Failed to get entries from media store")
+		return pb.NewTimelineEntriesResponse(nil, status), nil
+	}
+
+	log.Debug().Int("count", len(thumbnails)).Msg("Retrieved thumbnails for timeline")
+
+	// convert to gRPC TimelineEntry type
+	var pbTimelineEntries []*pb.TimelineEntry
+	for _, thumbnail := range thumbnails {
+		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(thumbnail.ID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get creation time of media item")
+			continue
+		}
+
+		pbTimelineEntries = append(pbTimelineEntries, toPbTimelineEntry(thumbnail.ID, creationTime))
+	}
+
+	return pb.NewTimelineEntriesResponse(
+		pbTimelineEntries,
+		pb.NewStatus(200, ""),
+	), nil
+
+}
+
+func toPbTimelineEntry(id Hash, creationTime time.Time) *pb.TimelineEntry {
+	return &pb.TimelineEntry{
+		Id:           id.String(),
+		CreationTime: creationTime.UTC().Format(time.RFC3339),
+	}
+}

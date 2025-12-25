@@ -918,6 +918,148 @@ func (x *DirectoryEntry) GetThumbnail() *Thumbnail {
 	return nil
 }
 
+type TimelineEntry struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// hash
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// ISO 8601
+	CreationTime  string `protobuf:"bytes,2,opt,name=creationTime,proto3" json:"creationTime,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TimelineEntry) Reset() {
+	*x = TimelineEntry{}
+	mi := &file_grpc_grpc_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TimelineEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TimelineEntry) ProtoMessage() {}
+
+func (x *TimelineEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TimelineEntry.ProtoReflect.Descriptor instead.
+func (*TimelineEntry) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *TimelineEntry) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *TimelineEntry) GetCreationTime() string {
+	if x != nil {
+		return x.CreationTime
+	}
+	return ""
+}
+
+type TimelineEntriesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TimelineEntriesRequest) Reset() {
+	*x = TimelineEntriesRequest{}
+	mi := &file_grpc_grpc_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TimelineEntriesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TimelineEntriesRequest) ProtoMessage() {}
+
+func (x *TimelineEntriesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TimelineEntriesRequest.ProtoReflect.Descriptor instead.
+func (*TimelineEntriesRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{17}
+}
+
+type TimelineEntriesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        *Status                `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Entries       []*TimelineEntry       `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TimelineEntriesResponse) Reset() {
+	*x = TimelineEntriesResponse{}
+	mi := &file_grpc_grpc_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TimelineEntriesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TimelineEntriesResponse) ProtoMessage() {}
+
+func (x *TimelineEntriesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TimelineEntriesResponse.ProtoReflect.Descriptor instead.
+func (*TimelineEntriesResponse) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *TimelineEntriesResponse) GetStatus() *Status {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *TimelineEntriesResponse) GetEntries() []*TimelineEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
 var File_grpc_grpc_proto protoreflect.FileDescriptor
 
 const file_grpc_grpc_proto_rawDesc = "" +
@@ -983,13 +1125,21 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\bFileType\x12\r\n" +
 	"\tDIRECTORY\x10\x00\x12\t\n" +
 	"\x05MEDIA\x10\x01\x12\t\n" +
-	"\x05OTHER\x10\x022\xc9\x03\n" +
+	"\x05OTHER\x10\x02\"C\n" +
+	"\rTimelineEntry\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
+	"\fcreationTime\x18\x02 \x01(\tR\fcreationTime\"\x18\n" +
+	"\x16TimelineEntriesRequest\"d\n" +
+	"\x17TimelineEntriesResponse\x12\x1f\n" +
+	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12(\n" +
+	"\aentries\x18\x02 \x03(\v2\x0e.TimelineEntryR\aentries2\x92\x04\n" +
 	"\aMigawka\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
 	"UploadFile\x12\x12.FileUploadRequest\x1a\x10.FileUploadReply\x128\n" +
 	"\fDownloadFile\x12\x14.FileDownloadRequest\x1a\x12.FileDownloadReply\x12Y\n" +
-	"\x1cGetThumbnailsBeforeTimestamp\x12\x1b.ThumbnailsTimestampRequest\x1a\x1c.ThumbnailsTimestampResponse\x12D\n" +
+	"\x1cGetThumbnailsBeforeTimestamp\x12\x1b.ThumbnailsTimestampRequest\x1a\x1c.ThumbnailsTimestampResponse\x12G\n" +
+	"\x12GetTimelineEntries\x12\x17.TimelineEntriesRequest\x1a\x18.TimelineEntriesResponse\x12D\n" +
 	"\x15GetOptimizedMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12?\n" +
 	"\x10GetFullMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12D\n" +
 	"\x0fGetFileListPage\x12\x17.GetFileListPageRequest\x1a\x18.GetFileListPageResponseB,\n" +
@@ -1008,7 +1158,7 @@ func file_grpc_grpc_proto_rawDescGZIP() []byte {
 }
 
 var file_grpc_grpc_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_grpc_grpc_proto_goTypes = []any{
 	(DirectoryEntry_FileType)(0),        // 0: DirectoryEntry.FileType
 	(*Status)(nil),                      // 1: Status
@@ -1027,6 +1177,9 @@ var file_grpc_grpc_proto_goTypes = []any{
 	(*GetFileListPageRequest)(nil),      // 14: GetFileListPageRequest
 	(*GetFileListPageResponse)(nil),     // 15: GetFileListPageResponse
 	(*DirectoryEntry)(nil),              // 16: DirectoryEntry
+	(*TimelineEntry)(nil),               // 17: TimelineEntry
+	(*TimelineEntriesRequest)(nil),      // 18: TimelineEntriesRequest
+	(*TimelineEntriesResponse)(nil),     // 19: TimelineEntriesResponse
 }
 var file_grpc_grpc_proto_depIdxs = []int32{
 	1,  // 0: ThumbnailsTimestampResponse.status:type_name -> Status
@@ -1037,25 +1190,29 @@ var file_grpc_grpc_proto_depIdxs = []int32{
 	16, // 5: GetFileListPageResponse.entries:type_name -> DirectoryEntry
 	0,  // 6: DirectoryEntry.type:type_name -> DirectoryEntry.FileType
 	8,  // 7: DirectoryEntry.thumbnail:type_name -> Thumbnail
-	2,  // 8: Migawka.SayHello:input_type -> HelloRequest
-	4,  // 9: Migawka.UploadFile:input_type -> FileUploadRequest
-	6,  // 10: Migawka.DownloadFile:input_type -> FileDownloadRequest
-	9,  // 11: Migawka.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
-	11, // 12: Migawka.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
-	11, // 13: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
-	14, // 14: Migawka.GetFileListPage:input_type -> GetFileListPageRequest
-	3,  // 15: Migawka.SayHello:output_type -> HelloReply
-	5,  // 16: Migawka.UploadFile:output_type -> FileUploadReply
-	7,  // 17: Migawka.DownloadFile:output_type -> FileDownloadReply
-	10, // 18: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
-	13, // 19: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
-	13, // 20: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
-	15, // 21: Migawka.GetFileListPage:output_type -> GetFileListPageResponse
-	15, // [15:22] is the sub-list for method output_type
-	8,  // [8:15] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	1,  // 8: TimelineEntriesResponse.status:type_name -> Status
+	17, // 9: TimelineEntriesResponse.entries:type_name -> TimelineEntry
+	2,  // 10: Migawka.SayHello:input_type -> HelloRequest
+	4,  // 11: Migawka.UploadFile:input_type -> FileUploadRequest
+	6,  // 12: Migawka.DownloadFile:input_type -> FileDownloadRequest
+	9,  // 13: Migawka.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
+	18, // 14: Migawka.GetTimelineEntries:input_type -> TimelineEntriesRequest
+	11, // 15: Migawka.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
+	11, // 16: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
+	14, // 17: Migawka.GetFileListPage:input_type -> GetFileListPageRequest
+	3,  // 18: Migawka.SayHello:output_type -> HelloReply
+	5,  // 19: Migawka.UploadFile:output_type -> FileUploadReply
+	7,  // 20: Migawka.DownloadFile:output_type -> FileDownloadReply
+	10, // 21: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
+	19, // 22: Migawka.GetTimelineEntries:output_type -> TimelineEntriesResponse
+	13, // 23: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
+	13, // 24: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
+	15, // 25: Migawka.GetFileListPage:output_type -> GetFileListPageResponse
+	18, // [18:26] is the sub-list for method output_type
+	10, // [10:18] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_grpc_grpc_proto_init() }
@@ -1069,7 +1226,7 @@ func file_grpc_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_grpc_grpc_proto_rawDesc), len(file_grpc_grpc_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   16,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
