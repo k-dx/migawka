@@ -13,6 +13,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type TimelineEntry struct {
+	ID        Hash
+	Timestamp time.Time
+}
+
 type MediaItemMetadata struct {
 	ID           Hash
 	Path         string
@@ -433,6 +438,19 @@ func (ms *mediaStoreImpl) GetThumbnailByID(id Hash) (Thumbnail, error) {
 
 	request := IdWithPath{ID: ms.Hasher.HashToKey(id), Path: item.Path}
 	return ms.thumbnailProvider.GetThumbnailByID(request)
+}
+
+func (ms *mediaStoreImpl) GetTimelineEntries() ([]TimelineEntry, error) {
+	entries := make([]TimelineEntry, 0, len(ms.items))
+
+	for id, item := range ms.items {
+		entries = append(entries, TimelineEntry{
+			ID:        ms.Hasher.HashFromKey(id),
+			Timestamp: item.CreationTime,
+		})
+	}
+
+	return entries, nil
 }
 
 // In mediastore_test.go or mediastore.go

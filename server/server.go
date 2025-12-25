@@ -293,27 +293,25 @@ func (s *server) GetTimelineEntries(_ context.Context, in *pb.TimelineEntriesReq
 	log.Info().Msg("GetTimelineEntries")
 
 	// retrieve thumbnails from media store
-	largestUint := ^uint(0)
-	dateInfinity := time.Date(1000000, time.January, 1, 0, 0, 0, 0, time.UTC)
-	thumbnails, err := s.mediaStore.GetThumbnailsBeforeTimestamp(dateInfinity, largestUint)
+	entries, err := s.mediaStore.GetTimelineEntries()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get entries from media store")
 		status := pb.NewStatus(500, "Failed to get entries from media store")
 		return pb.NewTimelineEntriesResponse(nil, status), nil
 	}
 
-	log.Debug().Int("count", len(thumbnails)).Msg("Retrieved thumbnails for timeline")
+	log.Debug().Int("count", len(entries)).Msg("Retrieved entries for timeline")
 
 	// convert to gRPC TimelineEntry type
 	var pbTimelineEntries []*pb.TimelineEntry
-	for _, thumbnail := range thumbnails {
-		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(thumbnail.ID)
+	for _, entry := range entries {
+		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(entry.ID)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get creation time of media item")
 			continue
 		}
 
-		pbTimelineEntries = append(pbTimelineEntries, toPbTimelineEntry(thumbnail.ID, creationTime))
+		pbTimelineEntries = append(pbTimelineEntries, toPbTimelineEntry(entry.ID, creationTime))
 	}
 
 	return pb.NewTimelineEntriesResponse(
