@@ -3,15 +3,18 @@ package xyz.jdubiel.migawka.ui.imageGallery
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +30,8 @@ import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
@@ -52,6 +57,8 @@ fun ImageGrid(
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val gridState = rememberLazyGridState()
+
     if (entries.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -62,17 +69,19 @@ fun ImageGrid(
         }
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 120.dp),
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(4.dp)
-    ) {
-        items(
-            count = entries.size,
-            // TODO: use hash as key but make sure they are unique first
-            // also having hash collision should be handled gracefully
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 120.dp),
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(4.dp),
+            state = gridState
+        ) {
+            items(
+                count = entries.size,
+                // TODO: use hash as key but make sure they are unique first
+                // also having hash collision should be handled gracefully
 //                    key = { index ->
 //                        when (val item = images.peek(index)) {
 //                            is ImageGalleryTimelineEntry.ImageItem -> {
@@ -85,52 +94,77 @@ fun ImageGrid(
 //                            null -> "placeholder_$index"
 //                        }
 //                    },
-            span = { index ->
-                when (entries[index]) {
-                    is ImageGalleryTimelineEntry.Header -> GridItemSpan(maxLineSpan)
-                    else -> GridItemSpan(1)
-                }
-            }
-        ) { index ->
-            val uiModel = entries[index]
-            if (uiModel != null) {
-                when (uiModel) {
-                    is ImageGalleryTimelineEntry.Header -> {
-                        Text(
-                            text = uiModel.monthYear,
-                            modifier = Modifier
-                                .padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
-                        )
+                span = { index ->
+                    when (entries[index]) {
+                        is ImageGalleryTimelineEntry.Header -> GridItemSpan(maxLineSpan)
+                        else -> GridItemSpan(1)
                     }
-                    is ImageGalleryTimelineEntry.ImageItem -> {
-                        when (val item = uiModel.entry) {
-                            is TimelineEntryK.Local -> {
-                                AsyncImage(
-                                    model = item.contentUri,
-                                    contentDescription = "Gallery Image",
-                                    modifier = Modifier
-                                        .aspectRatio(1f)
-                                        .fillMaxWidth()
-                                        .clickable { onImageClick(item.id.toHex()) },
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            is TimelineEntryK.Remote -> {
-                                AsyncImage(
-                                    model = GrpcThumbnail(item.id),
-                                    contentDescription = "Gallery Image",
-                                    modifier = Modifier
-                                        .aspectRatio(1f)
-                                        .fillMaxWidth()
-                                        .clickable { onImageClick(item.id.toHex()) },
-                                    contentScale = ContentScale.Crop
-                                )
+                }
+            ) { index ->
+                val uiModel = entries[index]
+                if (uiModel != null) {
+                    when (uiModel) {
+                        is ImageGalleryTimelineEntry.Header -> {
+                            Text(
+                                text = uiModel.monthYear,
+                                modifier = Modifier
+                                    .padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+                            )
+                        }
+
+                        is ImageGalleryTimelineEntry.ImageItem -> {
+                            when (val item = uiModel.entry) {
+                                is TimelineEntryK.Local -> {
+                                    AsyncImage(
+                                        model = item.contentUri,
+                                        contentDescription = "Gallery Image",
+                                        modifier = Modifier
+                                            .aspectRatio(1f)
+                                            .fillMaxWidth()
+                                            .clickable { onImageClick(item.id.toHex()) },
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+
+                                is TimelineEntryK.Remote -> {
+                                    AsyncImage(
+                                        model = GrpcThumbnail(item.id),
+                                        contentDescription = "Gallery Image",
+                                        modifier = Modifier
+                                            .aspectRatio(1f)
+                                            .fillMaxWidth()
+                                            .clickable { onImageClick(item.id.toHex()) },
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        FastScroller(
+            gridState = gridState,
+            label = { index ->
+                val locale = Locale.getDefault()
+                val zone = java.time.ZoneId.systemDefault()
+                val formatter = DateTimeFormatter
+                    .ofPattern("d MMM uuuu")
+                    .withLocale(locale)
+                    .withZone(zone)
+
+                val date = when (entries[index]) {
+                    is ImageGalleryTimelineEntry.Header -> (entries[index] as ImageGalleryTimelineEntry.Header).date
+                    is ImageGalleryTimelineEntry.ImageItem -> (entries[index] as ImageGalleryTimelineEntry.ImageItem).entry.date
+                }
+                formatter.format(date)
+            },
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth()
+                .align(Alignment.CenterEnd)
+                .padding(end = 4.dp)
+        )
     }
 }
 

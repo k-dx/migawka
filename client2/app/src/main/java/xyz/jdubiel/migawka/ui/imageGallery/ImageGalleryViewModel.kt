@@ -18,7 +18,10 @@ import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelForTimelineI
+import java.time.Instant
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 
@@ -58,7 +61,12 @@ class ImageGalleryViewModel(
                 for (entry in sorted) {
                     val monthYear = monthYearFormatter.format(entry.date)
                     if (monthYear != lastMonthYear) {
-                        result.add(ImageGalleryTimelineEntry.Header(monthYear))
+                        result.add(
+                            ImageGalleryTimelineEntry.Header(
+                                monthYear = monthYear,
+                                date = getStartOfMonth(entry.date)
+                            )
+                        )
                         lastMonthYear = monthYear
                     }
                     result.add(ImageGalleryTimelineEntry.ImageItem(entry))
@@ -99,4 +107,11 @@ class ImageGalleryViewModelFactory(
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
+}
+
+fun getStartOfMonth(x: Instant): Instant {
+    return x.atOffset(ZoneOffset.UTC)
+        .withDayOfMonth(1)
+        .truncatedTo(ChronoUnit.DAYS) // Sets time to 00:00:00.000
+        .toInstant()
 }
