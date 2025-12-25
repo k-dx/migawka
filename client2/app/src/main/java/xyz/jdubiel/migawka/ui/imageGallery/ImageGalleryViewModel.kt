@@ -47,7 +47,9 @@ class ImageGalleryViewModel(
 
         viewModelScope.launch {
             val timeline = withContext(Dispatchers.IO) {
+                Log.d("ImageGalleryViewModel", "loading entries")
                 val raw = imageRepository.getEntries()
+                Log.d("ImageGalleryViewModel", "entries loaded")
 
                 // ensure desired order: newest first
                 val sorted = raw.sortedByDescending { it.date }
@@ -74,6 +76,8 @@ class ImageGalleryViewModel(
                 result
             }
             _entriesWithHeaders.value = timeline
+
+            Log.d("ImageGalleryViewModel", "loaded ${timeline.size} entries")
         }
     }
 
