@@ -10,17 +10,15 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.TAG
 import java.io.File
 
 
 class ImageRepository(
     private val contentResolver: ContentResolver,
-    grpcStub: MigawkaGrpcKt.MigawkaCoroutineStub,
+    private val remoteImageProvider: RemoteImageProvider,
     private val localImageProvider: LocalImageProvider,
 ) {
-    private val remoteImageProvider = RemoteImageProvider(grpcStub)
 
     suspend fun getImage(id: Hash): LocalImage {
         Log.d(TAG, "imageRepository, getImage")

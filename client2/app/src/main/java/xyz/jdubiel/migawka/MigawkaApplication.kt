@@ -6,6 +6,10 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,8 +21,11 @@ import xyz.jdubiel.migawka.data.LocalImageProvider
 import xyz.jdubiel.migawka.data.MediaStoreImageProvider
 import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
+import xyz.jdubiel.migawka.data.RemoteImageProvider
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.Xx64Hasher
+import xyz.jdubiel.migawka.data.coil3.GrpcFetcher
+import xyz.jdubiel.migawka.data.coil3.GrpcKeyer
 import xyz.jdubiel.migawka.data.database.ILocalMediaRepository
 import xyz.jdubiel.migawka.data.database.LocalMediaDatabase
 import xyz.jdubiel.migawka.data.database.LocalMediaRepository
@@ -37,12 +44,13 @@ private val Context.localImageProviderDataStore: DataStore<Preferences> by prefe
 
 val hasher: Hasher = Xx64Hasher()
 
-class MigawkaApplication : Application() {
+class MigawkaApplication : Application(), SingletonImageLoader.Factory {
     lateinit var userSettingsRepository: UserSettingsRepository
     lateinit var imageRepository: ImageRepository
     lateinit var remoteFileExplorer: RemoteFileExplorer
     lateinit var grpcProvider: GrpcProvider
     lateinit var localImageProvider: LocalImageProvider
+    lateinit var remoteImageProvider: RemoteImageProvider
 
     // SupervisorJob ensures a failure in one task doesn't cancel the whole scope
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -77,9 +85,11 @@ class MigawkaApplication : Application() {
             localImageProviderDataStore
         )
 
+        remoteImageProvider = RemoteImageProvider(grpcProvider.getMigawkaServiceStub())
+
         imageRepository = ImageRepository(
             this.contentResolver,
-            grpcProvider.getMigawkaServiceStub(),
+            remoteImageProvider,
             localImageProvider
         )
 
@@ -90,5 +100,17 @@ class MigawkaApplication : Application() {
         super.onTerminate()
 
         grpcProvider.shutdown()
+    }
+
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                // Register the Keyer first so Coil knows how to cache the model
+                add(GrpcKeyer())
+                // Register the Fetcher Factory
+                add(GrpcFetcher.Factory(remoteImageProvider))
+            }
+            .crossfade(true)
+            .build()
     }
 }

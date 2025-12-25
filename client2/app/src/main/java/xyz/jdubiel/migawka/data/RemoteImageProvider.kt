@@ -59,6 +59,29 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
         return remoteImages
     }
 
+    suspend fun getThumbnailImage(id: Hash): RemoteImage {
+        val request = GetMediaItemRequest.newBuilder()
+            .setId(id.toHex())
+            .build()
+
+        val response = stub.getThumbnail(request)
+
+        if (response.status.code != 200) {
+            Log.e("gRPC", "Error: `${response.status.message}`")
+            throw Exception("Error: `${response.status.message}`")
+        }
+
+        if (response.mediaItem.id != id.toHex()) {
+            Log.e("gRPC", "getThumbnailImage: returned MediaItemID is different from requested!")
+        }
+
+        return RemoteImage(
+            hash = id,
+            bytes = response.mediaItem.content.toByteArray(),
+            date = Instant.parse(response.mediaItem.creationTime)
+        )
+    }
+
     suspend fun getOptimizedImage(id: Hash): RemoteImage {
         val request = GetMediaItemRequest.newBuilder()
             .setId(id.toHex())
