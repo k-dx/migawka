@@ -41,6 +41,7 @@ type MediaStore interface {
 	GetFullMediaItem(id Hash) (MediaItem, error)
 	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 	GetThumbnailByID(id Hash) (Thumbnail, error)
+	GetTimelineEntries() ([]TimelineEntry, error)
 
 	// Path does not start with a slash, is relative to mediadir. The ordering
 	// of the results is arbitrary. Returns thumbnails of media items in the
@@ -322,6 +323,10 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			filePath,
 			creatationDatetime,
 		)
+
+		if len(ms.items)%500 == 0 {
+			log.Info().Int("count", len(ms.items)).Msg("Loaded media items so far")
+		}
 
 		return nil
 	})
