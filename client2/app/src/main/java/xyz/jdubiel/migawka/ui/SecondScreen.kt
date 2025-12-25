@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -69,7 +70,7 @@ fun SecondScreen(modifier: Modifier = Modifier) {
             gridState = gridState,
             modifier = Modifier
                 .fillMaxHeight()
-                .width(16.dp)
+                .fillMaxWidth()
                 .align(Alignment.CenterEnd)
                 .padding(end = 4.dp)
         )
@@ -89,7 +90,7 @@ private fun FastScroller(
 
     BoxWithConstraints(modifier = modifier) {
         val maxHeight = constraints.maxHeight.toFloat()
-        val thumbHeight = with (density) { 48.dp.toPx() }
+        val thumbHeight = with(density) { 48.dp.toPx() }
         val scrollbarHeight = maxHeight - thumbHeight
 
         val totalItemsCount = gridState.layoutInfo.totalItemsCount
@@ -113,17 +114,37 @@ private fun FastScroller(
         }
         if (!isVisible) return@BoxWithConstraints
 
-//        Box(
-//            Modifier
-//                .align(Alignment.TopEnd)
-//                .width(8.dp)
-//                .fillMaxHeight()
-//                .background(
-//                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-//                    shape = RoundedCornerShape(4.dp)
-//                )
-//        )
+        // --- THE LABEL ---
+        if (isDragging) {
+            val currentItem = gridState.firstVisibleItemIndex
 
+            Text(
+                text = "Item $currentItem",
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset { IntOffset((-60).dp.roundToPx(), offsetY.roundToInt()) }
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+
+        // --- THE TRACK ---
+        Box(
+            Modifier
+                .align(Alignment.TopEnd)
+                .width(8.dp)
+                .fillMaxHeight()
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(4.dp)
+                )
+        )
+
+        // --- THE THUMB ---
         Box(
             Modifier
                 .align(Alignment.TopEnd)
