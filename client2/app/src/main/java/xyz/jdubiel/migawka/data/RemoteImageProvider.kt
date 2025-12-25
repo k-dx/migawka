@@ -4,6 +4,7 @@ import android.util.Log
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.ThumbnailsTimestampRequest
+import xyz.jdubiel.migawka.TimelineEntriesRequest
 import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 
@@ -103,5 +104,38 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
             date = Instant.parse(response.mediaItem.creationTime),
             path = response.mediaItem.path
         )
+    }
+
+    suspend fun getEntries(): List<TimelineEntry> {
+        val results = mutableListOf<TimelineEntry.Remote>()
+
+        try {
+            val request = TimelineEntriesRequest.newBuilder()
+                .build()
+
+            val response = stub.getTimelineEntries(request)
+
+            // Update the UI with the response on the main thread
+            Log.i(
+                "gRPC",
+                "Response: ${response.status}"
+            )
+            response.entriesList.forEach {
+                val date = Instant.parse(it.creationTime)
+                Log.i("gRPC", "TimelineEntry: ${it.creationTime} $date ${it.id}")
+
+                results.add(
+                    TimelineEntry.Remote(
+                        id = hasher.fromHex(it.id),
+                        date = date
+                    )
+                )
+            }
+
+        } catch (e: Exception) {
+            Log.e("gRPC", "Error: ${e.message}", e)
+            // TODO: this probably should throw
+        }
+        return results
     }
 }

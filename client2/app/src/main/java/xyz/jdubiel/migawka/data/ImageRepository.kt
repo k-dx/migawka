@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.TAG
@@ -33,21 +35,44 @@ class ImageRepository(
         pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
     ).flow
 
-    suspend fun getEntries(): List<TimelineEntry> {
-        val localEntries = localImageProvider.getEntries()
-        // val remoteEntries = remoteImageProvider.getEntries()
+    /**
+     * @return entries that are both local and remote, unique by hash.
+     */
+    suspend fun getEntries(): List<TimelineEntry> = coroutineScope {
+        val localDeferred = async { localImageProvider.getEntries() }
+        val remoteDeferred = async { remoteImageProvider.getEntries() }
 
-        var results: MutableList<TimelineEntry> = mutableListOf();
+        val localImages = localDeferred.await()
+        val remoteEntries = remoteDeferred.await()
 
-        // TODO: remove remote entries that we have locally
-
-        // TODO: combine local and remote results chronologically
-
-        for (entry in localEntries) {
-            results.add(TimelineEntry.Local(entry.contentUri, entry.hash, entry.date))
+        val localEntries = localImages.map {
+            TimelineEntry.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
         }
 
-        return results;
+        val results: MutableList<TimelineEntry> = mutableListOf();
+
+        // remove remote entries that we have locally
+        val localIds: Set<Hash> = localEntries.map { it.id }.toSet()
+        val remoteOnlyEntries = remoteEntries.filter { !localIds.contains(it.id) }
+
+        // combine local and remote results chronologically
+        var localEntriesIndex = 0
+        var remoteOnlyEntriesIndex = 0
+        while (localEntriesIndex < localEntries.size || remoteOnlyEntriesIndex < remoteOnlyEntries.size) {
+            if (localEntriesIndex < localEntries.size && remoteOnlyEntriesIndex < remoteOnlyEntries.size) {
+                if (localEntries[localEntriesIndex].date > remoteOnlyEntries[remoteOnlyEntriesIndex].date) {
+                    results.add(localEntries[localEntriesIndex++])
+                } else {
+                    results.add(remoteOnlyEntries[remoteOnlyEntriesIndex++])
+                }
+            } else if (localEntriesIndex < localEntries.size) {
+                results.add(localEntries[localEntriesIndex++])
+            } else if (remoteOnlyEntriesIndex < remoteOnlyEntries.size) {
+                results.add(remoteOnlyEntries[remoteOnlyEntriesIndex++])
+            }
+        }
+
+        return@coroutineScope results;
     }
 
     suspend fun getRemoteOptimizedImage(id: Hash): RemoteImage {

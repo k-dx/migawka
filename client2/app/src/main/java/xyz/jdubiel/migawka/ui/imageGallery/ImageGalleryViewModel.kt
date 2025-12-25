@@ -22,6 +22,10 @@ import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.TimelineEntry
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+
 
 class ImageGalleryViewModel(
     application: Application,
@@ -36,15 +40,37 @@ class ImageGalleryViewModel(
     override val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
         .cachedIn(viewModelScope)
 
-    private val _entries = MutableStateFlow<List<TimelineEntry>>(emptyList())
-    val entries: StateFlow<List<TimelineEntry>> = _entries.asStateFlow()
+    private val _entries = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
+    val entries: StateFlow<List<ImageGalleryTimelineEntry>> = _entries.asStateFlow()
 
     init {
+        val locale = Locale.getDefault()
+        val zone = java.time.ZoneId.systemDefault()
+        val monthYearFormatter = DateTimeFormatter
+            .ofPattern("LLLL uuuu") // LLLL gives non-conjugated month name 'listopad' instead of 'listopada'
+            .withLocale(locale)
+            .withZone(zone)
+
         viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                imageRepository.getEntries()
+            val timeline = withContext(Dispatchers.IO) {
+                val raw = imageRepository.getEntries()
+
+                // ensure desired order: newest first
+                val sorted = raw.sortedByDescending { it.date }
+
+                val result = mutableListOf<ImageGalleryTimelineEntry>()
+                var lastMonthYear: String? = null
+                for (entry in sorted) {
+                    val monthYear = monthYearFormatter.format(entry.date)
+                    if (monthYear != lastMonthYear) {
+                        result.add(ImageGalleryTimelineEntry.Header(monthYear))
+                        lastMonthYear = monthYear
+                    }
+                    result.add(ImageGalleryTimelineEntry.ImageItem(entry))
+                }
+                result
             }
-            _entries.value = result
+            _entries.value = timeline
         }
     }
 

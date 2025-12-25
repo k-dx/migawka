@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,9 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -24,47 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.TAG
-import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.TimelineEntry
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
-sealed interface ImageGalleryTimelineEntry {
-    data class ImageItem(val entry: TimelineEntry) : ImageGalleryTimelineEntry
-    data class MonthHeader(val monthYear: String) : ImageGalleryTimelineEntry
-}
-
-private fun getMonthYearHeaderIfNeeded(
-    before: PagedImage?,
-    after: PagedImage?
-): ImageGalleryTimelineEntry.MonthHeader? {
-    val locale = Locale.getDefault()
-    val zone = java.time.ZoneId.systemDefault()
-    val monthYearFormatter = DateTimeFormatter
-        .ofPattern("LLLL uuuu") // LLLL gives non-conjugated month name 'listopad' instead of 'listopada'
-        .withLocale(locale)
-        .withZone(zone)
-
-    if (after == null) {
-        // No item after, so no header needed
-        return null
-    }
-    if (before == null) {
-        // First item in the list, always show a header
-        val header = monthYearFormatter.format(after.date)
-        return ImageGalleryTimelineEntry.MonthHeader(header)
-
-    }
-
-    val beforeMonthYear = monthYearFormatter.format(before.date)
-    val afterMonthYear = monthYearFormatter.format(after.date)
-
-    if (beforeMonthYear != afterMonthYear) {
-        return ImageGalleryTimelineEntry.MonthHeader(afterMonthYear)
-    }
-
-    return null
-}
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
 @Composable
@@ -73,12 +37,7 @@ fun ImageGalleryScreen(
     modifier: Modifier = Modifier,
     viewModel: ImageGalleryViewModel = viewModel()
 ) {
-    // TODO: insert month-year headers (separators)
-//    val entries = remember(viewModel.timelineEntries) {
-//        viewModel.timelineEntries.map { ImageGalleryTimelineEntry.ImageItem(it) }
-//    }
-
-    val entries = viewModel.entries.collectAsState().value.map { ImageGalleryTimelineEntry.ImageItem(it) }
+    val entries by viewModel.entries.collectAsState()
 
     Log.d(TAG, "entries.size = ${entries.size}")
 
@@ -95,6 +54,16 @@ fun ImageGrid(
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (entries.isEmpty()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 120.dp),
         modifier = modifier.fillMaxSize(),
@@ -120,7 +89,7 @@ fun ImageGrid(
 //                    },
             span = { index ->
                 when (entries[index]) {
-                    is ImageGalleryTimelineEntry.MonthHeader -> GridItemSpan(maxLineSpan)
+                    is ImageGalleryTimelineEntry.Header -> GridItemSpan(maxLineSpan)
                     else -> GridItemSpan(1)
                 }
             }
@@ -128,7 +97,7 @@ fun ImageGrid(
             val uiModel = entries[index]
             if (uiModel != null) {
                 when (uiModel) {
-                    is ImageGalleryTimelineEntry.MonthHeader -> {
+                    is ImageGalleryTimelineEntry.Header -> {
                         Text(
                             text = uiModel.monthYear,
                             modifier = Modifier
