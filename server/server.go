@@ -329,3 +329,43 @@ func toPbTimelineEntry(id Hash, creationTime time.Time) *pb.TimelineEntry {
 		CreationTime: creationTime.UTC().Format(time.RFC3339),
 	}
 }
+
+func (s *server) GetThumbnail(_ context.Context, in *pb.GetMediaItemRequest) (*pb.GetMediaItemResponse, error) {
+	log.Info().Str("id", in.GetId()).Msg("GetThumbnail")
+
+	// parse id
+	id, err := s.mediaStore.GetHasher().HashFromString(in.GetId())
+	if err != nil {
+		log.Error().Err(err).Str("id", in.GetId()).Msg("Invalid ID format")
+		status := pb.NewStatus(400, "Invalid ID format")
+		return pb.NewGetMediaItemResponse(nil, status), nil
+	}
+
+	// get media item from media store
+	thumbnail, err := s.mediaStore.GetThumbnailByID(id)
+	if err != nil {
+		log.Error().Err(err).
+			Str("id", in.GetId()).
+			Msg("Failed to get media item from media store")
+		status := pb.NewStatus(500, "Failed to get media item from media store")
+		return pb.NewGetMediaItemResponse(nil, status), nil
+	}
+
+	creationDate, err := s.mediaStore.GetCreationTimeOfMediaItem(thumbnail.ID)
+	if err != nil {
+		log.Error().Err(err).Str("id", in.GetId()).Msg("Failed to get creation time of media item")
+		status := pb.NewStatus(500, "Failed to get creation time of media item")
+		return pb.NewGetMediaItemResponse(nil, status), nil
+	}
+
+	// convert to gRPC media item type
+	pbMediaItem := &pb.MediaItem{
+		Id:           thumbnail.ID.String(),
+		CreationTime: creationDate.UTC().Format(time.RFC3339),
+		Content:      thumbnail.Content,
+	}
+
+	status := pb.NewStatus(200, "")
+
+	return pb.NewGetMediaItemResponse(pbMediaItem, status), nil
+}

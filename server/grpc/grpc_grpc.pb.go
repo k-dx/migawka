@@ -25,6 +25,7 @@ const (
 	Migawka_GetThumbnailsBeforeTimestamp_FullMethodName = "/Migawka/GetThumbnailsBeforeTimestamp"
 	Migawka_GetTimelineEntries_FullMethodName           = "/Migawka/GetTimelineEntries"
 	Migawka_GetOptimizedMediaItem_FullMethodName        = "/Migawka/GetOptimizedMediaItem"
+	Migawka_GetThumbnail_FullMethodName                 = "/Migawka/GetThumbnail"
 	Migawka_GetFullMediaItem_FullMethodName             = "/Migawka/GetFullMediaItem"
 	Migawka_GetFileListPage_FullMethodName              = "/Migawka/GetFileListPage"
 )
@@ -42,6 +43,7 @@ type MigawkaClient interface {
 	GetThumbnailsBeforeTimestamp(ctx context.Context, in *ThumbnailsTimestampRequest, opts ...grpc.CallOption) (*ThumbnailsTimestampResponse, error)
 	GetTimelineEntries(ctx context.Context, in *TimelineEntriesRequest, opts ...grpc.CallOption) (*TimelineEntriesResponse, error)
 	GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
+	GetThumbnail(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFileListPage(ctx context.Context, in *GetFileListPageRequest, opts ...grpc.CallOption) (*GetFileListPageResponse, error)
 }
@@ -114,6 +116,16 @@ func (c *migawkaClient) GetOptimizedMediaItem(ctx context.Context, in *GetMediaI
 	return out, nil
 }
 
+func (c *migawkaClient) GetThumbnail(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMediaItemResponse)
+	err := c.cc.Invoke(ctx, Migawka_GetThumbnail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *migawkaClient) GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetMediaItemResponse)
@@ -147,6 +159,7 @@ type MigawkaServer interface {
 	GetThumbnailsBeforeTimestamp(context.Context, *ThumbnailsTimestampRequest) (*ThumbnailsTimestampResponse, error)
 	GetTimelineEntries(context.Context, *TimelineEntriesRequest) (*TimelineEntriesResponse, error)
 	GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
+	GetThumbnail(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFileListPage(context.Context, *GetFileListPageRequest) (*GetFileListPageResponse, error)
 	mustEmbedUnimplementedMigawkaServer()
@@ -176,6 +189,9 @@ func (UnimplementedMigawkaServer) GetTimelineEntries(context.Context, *TimelineE
 }
 func (UnimplementedMigawkaServer) GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOptimizedMediaItem not implemented")
+}
+func (UnimplementedMigawkaServer) GetThumbnail(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetThumbnail not implemented")
 }
 func (UnimplementedMigawkaServer) GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFullMediaItem not implemented")
@@ -312,6 +328,24 @@ func _Migawka_GetOptimizedMediaItem_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Migawka_GetThumbnail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMediaItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MigawkaServer).GetThumbnail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Migawka_GetThumbnail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MigawkaServer).GetThumbnail(ctx, req.(*GetMediaItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Migawka_GetFullMediaItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMediaItemRequest)
 	if err := dec(in); err != nil {
@@ -378,6 +412,10 @@ var Migawka_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOptimizedMediaItem",
 			Handler:    _Migawka_GetOptimizedMediaItem_Handler,
+		},
+		{
+			MethodName: "GetThumbnail",
+			Handler:    _Migawka_GetThumbnail_Handler,
 		},
 		{
 			MethodName: "GetFullMediaItem",

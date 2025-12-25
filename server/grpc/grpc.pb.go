@@ -1132,7 +1132,7 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x16TimelineEntriesRequest\"d\n" +
 	"\x17TimelineEntriesResponse\x12\x1f\n" +
 	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\x12(\n" +
-	"\aentries\x18\x02 \x03(\v2\x0e.TimelineEntryR\aentries2\x92\x04\n" +
+	"\aentries\x18\x02 \x03(\v2\x0e.TimelineEntryR\aentries2\xcf\x04\n" +
 	"\aMigawka\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
@@ -1140,7 +1140,8 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\fDownloadFile\x12\x14.FileDownloadRequest\x1a\x12.FileDownloadReply\x12Y\n" +
 	"\x1cGetThumbnailsBeforeTimestamp\x12\x1b.ThumbnailsTimestampRequest\x1a\x1c.ThumbnailsTimestampResponse\x12G\n" +
 	"\x12GetTimelineEntries\x12\x17.TimelineEntriesRequest\x1a\x18.TimelineEntriesResponse\x12D\n" +
-	"\x15GetOptimizedMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12?\n" +
+	"\x15GetOptimizedMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12;\n" +
+	"\fGetThumbnail\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12?\n" +
 	"\x10GetFullMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12D\n" +
 	"\x0fGetFileListPage\x12\x17.GetFileListPageRequest\x1a\x18.GetFileListPageResponseB,\n" +
 	"\x13xyz.jdubiel.migawkaP\x01Z\x13migawka-server/grpcb\x06proto3"
@@ -1198,18 +1199,20 @@ var file_grpc_grpc_proto_depIdxs = []int32{
 	9,  // 13: Migawka.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
 	18, // 14: Migawka.GetTimelineEntries:input_type -> TimelineEntriesRequest
 	11, // 15: Migawka.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
-	11, // 16: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
-	14, // 17: Migawka.GetFileListPage:input_type -> GetFileListPageRequest
-	3,  // 18: Migawka.SayHello:output_type -> HelloReply
-	5,  // 19: Migawka.UploadFile:output_type -> FileUploadReply
-	7,  // 20: Migawka.DownloadFile:output_type -> FileDownloadReply
-	10, // 21: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
-	19, // 22: Migawka.GetTimelineEntries:output_type -> TimelineEntriesResponse
-	13, // 23: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
-	13, // 24: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
-	15, // 25: Migawka.GetFileListPage:output_type -> GetFileListPageResponse
-	18, // [18:26] is the sub-list for method output_type
-	10, // [10:18] is the sub-list for method input_type
+	11, // 16: Migawka.GetThumbnail:input_type -> GetMediaItemRequest
+	11, // 17: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
+	14, // 18: Migawka.GetFileListPage:input_type -> GetFileListPageRequest
+	3,  // 19: Migawka.SayHello:output_type -> HelloReply
+	5,  // 20: Migawka.UploadFile:output_type -> FileUploadReply
+	7,  // 21: Migawka.DownloadFile:output_type -> FileDownloadReply
+	10, // 22: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
+	19, // 23: Migawka.GetTimelineEntries:output_type -> TimelineEntriesResponse
+	13, // 24: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
+	13, // 25: Migawka.GetThumbnail:output_type -> GetMediaItemResponse
+	13, // 26: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
+	15, // 27: Migawka.GetFileListPage:output_type -> GetFileListPageResponse
+	19, // [19:28] is the sub-list for method output_type
+	10, // [10:19] is the sub-list for method input_type
 	10, // [10:10] is the sub-list for extension type_name
 	10, // [10:10] is the sub-list for extension extendee
 	0,  // [0:10] is the sub-list for field type_name

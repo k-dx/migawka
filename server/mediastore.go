@@ -35,6 +35,7 @@ type MediaStore interface {
 	GetOptimizedMediaItem(id Hash) (MediaItem, error)
 	GetFullMediaItem(id Hash) (MediaItem, error)
 	GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
+	GetThumbnailByID(id Hash) (Thumbnail, error)
 
 	// Path does not start with a slash, is relative to mediadir. The ordering
 	// of the results is arbitrary. Returns thumbnails of media items in the
@@ -422,6 +423,16 @@ func (ms *mediaStoreImpl) GenerateMissingThumbnails() {
 	if err != nil {
 		log.Error().Err(err).Msg("Error generating missing thumbnails")
 	}
+}
+
+func (ms *mediaStoreImpl) GetThumbnailByID(id Hash) (Thumbnail, error) {
+	item, ok := ms.items[ms.Hasher.HashToKey(id)]
+	if !ok {
+		return Thumbnail{}, fmt.Errorf("media item with given id not found")
+	}
+
+	request := IdWithPath{ID: ms.Hasher.HashToKey(id), Path: item.Path}
+	return ms.thumbnailProvider.GetThumbnailByID(request)
 }
 
 // In mediastore_test.go or mediastore.go
