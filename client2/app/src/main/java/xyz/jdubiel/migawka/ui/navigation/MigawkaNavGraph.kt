@@ -139,10 +139,7 @@ fun MigawkaNavHost(
             }
 
             composable(route = MigawkaScreen.Second.name) {
-                SecondScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    content = "Second screen! Yay!"
-                )
+                SecondScreen(modifier = Modifier.padding(innerPadding))
             }
 
             composable(route = MigawkaScreen.Settings.name) {
