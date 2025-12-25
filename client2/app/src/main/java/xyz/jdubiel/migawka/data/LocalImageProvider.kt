@@ -24,5 +24,10 @@ interface LocalImageProvider {
 
     suspend fun getImage(id: Hash): LocalImage
 
+    /**
+     * Fetches a list of local images from the MediaStore.
+     */
+    suspend fun getEntries(): List<LocalImage>
+
     // TODO: add getThumbnailsBeforeTimestamp, use Android's thumbnails for this?
 }

@@ -10,6 +10,9 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
@@ -17,6 +20,7 @@ import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
+import xyz.jdubiel.migawka.data.TimelineEntry
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
 
 class ImageGalleryViewModel(
@@ -31,6 +35,19 @@ class ImageGalleryViewModel(
     // pages.
     override val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
         .cachedIn(viewModelScope)
+
+    private val _entries = MutableStateFlow<List<TimelineEntry>>(emptyList())
+    val entries: StateFlow<List<TimelineEntry>> = _entries.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                imageRepository.getEntries()
+            }
+            _entries.value = result
+        }
+    }
+
 
     override suspend fun getRemoteOptimizedImage(id: Hash) = withContext(Dispatchers.IO) {
         imageRepository.getRemoteOptimizedImage(id)

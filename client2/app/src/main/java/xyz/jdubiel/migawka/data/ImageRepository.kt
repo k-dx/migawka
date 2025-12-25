@@ -12,6 +12,7 @@ import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.TAG
 import java.io.File
 
+
 class ImageRepository(
     private val contentResolver: ContentResolver,
     grpcStub: MigawkaGrpcKt.MigawkaCoroutineStub,
@@ -31,6 +32,23 @@ class ImageRepository(
         ),
         pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
     ).flow
+
+    suspend fun getEntries(): List<TimelineEntry> {
+        val localEntries = localImageProvider.getEntries()
+        // val remoteEntries = remoteImageProvider.getEntries()
+
+        var results: MutableList<TimelineEntry> = mutableListOf();
+
+        // TODO: remove remote entries that we have locally
+
+        // TODO: combine local and remote results chronologically
+
+        for (entry in localEntries) {
+            results.add(TimelineEntry.Local(entry.contentUri, entry.hash, entry.date))
+        }
+
+        return results;
+    }
 
     suspend fun getRemoteOptimizedImage(id: Hash): RemoteImage {
         Log.d(TAG, "imageRepository, getRemoteImage")

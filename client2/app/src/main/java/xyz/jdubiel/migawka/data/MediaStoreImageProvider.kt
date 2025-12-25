@@ -125,6 +125,8 @@ class MediaStoreImageProvider(
         }
     }
 
+    override suspend fun getEntries(): List<LocalImage> = getImages(Int.MAX_VALUE, Instant.now())
+
     private fun getEntriesFromMediaStore(uriList: List<Uri>): Set<Uri> {
         val contentResolver = context.contentResolver
         val results = mutableSetOf<Uri>()
