@@ -6,10 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,28 +16,23 @@ import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
-import xyz.jdubiel.migawka.data.PagedImage
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
+import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelForTimelineI
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
 
 
 class ImageGalleryViewModel(
     application: Application,
     private val imageRepository: ImageRepository
 ) :
-    AndroidViewModel(application), SingleMediaViewModelI {
+    AndroidViewModel(application), SingleMediaViewModelForTimelineI {
 
-    // This is a Flow of PagingData<Uri>> provided by ImageGalleryViewModel. The
-    // Paging library is responsible for creating this stream, fetching data
-    // from data source (like the device's local storage) in small chunks called
-    // pages.
-    override val imageStream: Flow<PagingData<PagedImage>> = imageRepository.getImageStream()
-        .cachedIn(viewModelScope)
+    private val _entriesWithHeaders = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
+    val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = _entriesWithHeaders.asStateFlow()
 
-    private val _entries = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
-    val entries: StateFlow<List<ImageGalleryTimelineEntry>> = _entries.asStateFlow()
+    private val _entries = MutableStateFlow<List<TimelineEntryK>>(emptyList())
+    override val entries: StateFlow<List<TimelineEntryK>> = _entries.asStateFlow()
 
     init {
         val locale = Locale.getDefault()
@@ -57,6 +49,10 @@ class ImageGalleryViewModel(
                 // ensure desired order: newest first
                 val sorted = raw.sortedByDescending { it.date }
 
+                // set entries
+                _entries.value = sorted
+
+                // set entriesWithHeaders
                 val result = mutableListOf<ImageGalleryTimelineEntry>()
                 var lastMonthYear: String? = null
                 for (entry in sorted) {
@@ -69,7 +65,7 @@ class ImageGalleryViewModel(
                 }
                 result
             }
-            _entries.value = timeline
+            _entriesWithHeaders.value = timeline
         }
     }
 

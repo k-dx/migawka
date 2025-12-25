@@ -35,7 +35,7 @@ fun ImageGalleryScreen(
     modifier: Modifier = Modifier,
     viewModel: ImageGalleryViewModel = viewModel()
 ) {
-    val entries by viewModel.entries.collectAsState()
+    val entries by viewModel.entriesWithHeaders.collectAsState()
 
     Log.d(TAG, "entries.size = ${entries.size}")
 
@@ -123,7 +123,7 @@ fun ImageGrid(
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()
-                                        .clickable { },
+                                        .clickable { onImageClick(item.id.toHex()) },
                                     contentScale = ContentScale.Crop
                                 )
                             }

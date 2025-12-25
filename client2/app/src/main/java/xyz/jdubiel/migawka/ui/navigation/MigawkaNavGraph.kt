@@ -31,6 +31,7 @@ import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
 import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimeline
 
 enum class MigawkaScreen {
     Second,
@@ -38,6 +39,7 @@ enum class MigawkaScreen {
     FolderView,
     Menu,
     SingleMediaView,
+    SingleMediaViewForTimeline,
     Settings
 }
 
@@ -84,7 +86,7 @@ fun MigawkaNavHost(
                     viewModel = imageGalleryViewModel,
                     onImageClick = { imageId: String ->
                         Log.d(TAG, "onImageClick, imageId = $imageId")
-                        navController.navigate("${MigawkaScreen.SingleMediaView.name}/$imageId")
+                        navController.navigate("${MigawkaScreen.SingleMediaViewForTimeline.name}/$imageId")
                     },
                     modifier = Modifier.padding(innerPadding)
                 )
@@ -155,13 +157,30 @@ fun MigawkaNavHost(
                 if (initialImageId != null) {
                     Log.d("SingleMediaViewScreen", "initialImageId = $initialImageId, using folderScreenViewModel = ${topFolderScreenViewModel != null}")
                     SingleMediaViewScreen(
-                        viewModel = if (topFolderScreenViewModel != null)
-                            topFolderScreenViewModel!!
-                            else imageGalleryViewModel,
+                        viewModel = topFolderScreenViewModel!!,
                         initialImageId = hasher.fromHex(initialImageId)
                     )
                 } else {
                     Log.e("SingleMediaViewScreen", "initialImageId is null")
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        Text("Error: initialImageId is null. The image could not be displayed.")
+                    }
+                }
+            }
+
+            composable(
+                route = "${MigawkaScreen.SingleMediaViewForTimeline.name}/{$initialImageIdArg}",
+                arguments = listOf(navArgument(initialImageIdArg) { type = NavType.StringType })
+            ) { backStackEntry ->
+                val initialImageId = backStackEntry.arguments?.getString(initialImageIdArg)
+                if (initialImageId != null) {
+                    Log.d("SingleMediaViewScreenForTimeline", "initialImageId = $initialImageId")
+                    SingleMediaViewScreenForTimeline(
+                        viewModel = imageGalleryViewModel,
+                        initialImageId = hasher.fromHex(initialImageId)
+                    )
+                } else {
+                    Log.e("SingleMediaViewScreenForTimeline", "initialImageId is null")
                     Box(modifier = Modifier.padding(innerPadding)) {
                         Text("Error: initialImageId is null. The image could not be displayed.")
                     }
