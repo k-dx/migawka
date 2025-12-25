@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.TAG
-import xyz.jdubiel.migawka.data.TimelineEntry
+import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 
 // Displays a gallery grid with images. Assumes the permission is already granted.
@@ -104,7 +104,7 @@ fun ImageGrid(
                     }
                     is ImageGalleryTimelineEntry.ImageItem -> {
                         when (val item = uiModel.entry) {
-                            is TimelineEntry.Local -> {
+                            is TimelineEntryK.Local -> {
                                 AsyncImage(
                                     model = item.contentUri,
                                     contentDescription = "Gallery Image",
@@ -115,7 +115,7 @@ fun ImageGrid(
                                     contentScale = ContentScale.Crop
                                 )
                             }
-                            is TimelineEntry.Remote -> {
+                            is TimelineEntryK.Remote -> {
                                 // TODO: download the image and show it
                                 AsyncImage(
                                     model = GrpcThumbnail(item.id.toHex()),

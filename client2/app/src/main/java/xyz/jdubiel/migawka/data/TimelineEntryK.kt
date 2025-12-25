@@ -3,7 +3,7 @@ package xyz.jdubiel.migawka.data
 import android.net.Uri
 import java.time.Instant
 
-sealed class TimelineEntry {
+sealed class TimelineEntryK {
     abstract val date: Instant
     abstract val id: Hash
 
@@ -11,12 +11,12 @@ sealed class TimelineEntry {
         val contentUri: Uri,
         override val id: Hash,
         override val date: Instant
-    ) : TimelineEntry()
+    ) : TimelineEntryK()
 
     data class Remote(
         override val id: Hash,
         override val date: Instant
-    ) : TimelineEntry() {
+    ) : TimelineEntryK() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Remote) return false

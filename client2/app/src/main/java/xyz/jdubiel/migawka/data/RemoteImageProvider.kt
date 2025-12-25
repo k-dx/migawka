@@ -129,8 +129,8 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
         )
     }
 
-    suspend fun getEntries(): List<TimelineEntry> {
-        val results = mutableListOf<TimelineEntry.Remote>()
+    suspend fun getEntries(): List<TimelineEntryK> {
+        val results = mutableListOf<TimelineEntryK.Remote>()
 
         try {
             val request = TimelineEntriesRequest.newBuilder()
@@ -148,7 +148,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
                 Log.i("gRPC", "TimelineEntry: ${it.creationTime} $date ${it.id}")
 
                 results.add(
-                    TimelineEntry.Remote(
+                    TimelineEntryK.Remote(
                         id = hasher.fromHex(it.id),
                         date = date
                     )

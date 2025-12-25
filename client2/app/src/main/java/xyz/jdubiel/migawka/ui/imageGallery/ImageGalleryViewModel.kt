@@ -20,7 +20,6 @@ import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.PagedImage
-import xyz.jdubiel.migawka.data.TimelineEntry
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
 import java.time.format.DateTimeFormatter
 import java.util.Locale

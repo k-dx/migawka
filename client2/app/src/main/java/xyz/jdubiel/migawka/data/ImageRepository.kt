@@ -36,7 +36,7 @@ class ImageRepository(
     /**
      * @return entries that are both local and remote, unique by hash.
      */
-    suspend fun getEntries(): List<TimelineEntry> = coroutineScope {
+    suspend fun getEntries(): List<TimelineEntryK> = coroutineScope {
         val localDeferred = async { localImageProvider.getEntries() }
         val remoteDeferred = async { remoteImageProvider.getEntries() }
 
@@ -44,10 +44,10 @@ class ImageRepository(
         val remoteEntries = remoteDeferred.await()
 
         val localEntries = localImages.map {
-            TimelineEntry.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
+            TimelineEntryK.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
         }
 
-        val results: MutableList<TimelineEntry> = mutableListOf();
+        val results: MutableList<TimelineEntryK> = mutableListOf();
 
         // remove remote entries that we have locally
         val localIds: Set<Hash> = localEntries.map { it.id }.toSet()
