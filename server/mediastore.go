@@ -237,6 +237,21 @@ func (ms *mediaStoreImpl) GetOptimizedMediaItem(id Hash) (MediaItem, error) {
 	), nil
 }
 
+func supportedMimeType(fileContent []byte) bool {
+	mimeType := bimg.DetermineImageType(fileContent)
+
+	supportedMimeTypes := []bimg.ImageType{
+		bimg.JPEG,
+	}
+
+	for _, mt := range supportedMimeTypes {
+		if mimeType == mt {
+			return true
+		}
+	}
+	return false
+}
+
 func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string) error {
 	log.Debug().Str("mediaPath", mediaPath).
 		Str("thumbnailPath", thumbnailPath).
@@ -279,7 +294,6 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		ext := strings.ToLower(filepath.Ext(filePath))
 
 		// TODO: support more file types
-		// TODO: consider using a library for better file type detection
 		// TODO: save type in MediaItem
 		// validExts := []string{".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov", ".avi", ".mkv"}
 		validExts := []string{".jpg", ".jpeg"}
@@ -294,13 +308,17 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			return nil
 		}
 
-		// if we already have the file in the database and its modification time
-		// is unchanged, skip it
+		// TODO: if we already have the file in the database and its
+		// modification time is unchanged, skip it
 
 		// Read file content
 		content, err := os.ReadFile(filePath)
 		if err != nil {
 			return fmt.Errorf("failed to read file %s: %w", filePath, err)
+		}
+
+		if !supportedMimeType(content) {
+			return nil
 		}
 
 		hash := ms.Hasher.CalculateHash(content)
