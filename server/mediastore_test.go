@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/h2non/bimg"
 )
 
 func TestMediaStore_loadMediaItems_shouldCreateThumbnailDirectory(t *testing.T) {
@@ -287,5 +289,69 @@ func TestMediaStore_SymlinkedFiles(t *testing.T) {
 	got := mediaStore.GetMediaItemsCountForTest()
 	if got != expectedMediaItemsCount {
 		t.Fatalf("Expected %d media items, got %d", expectedMediaItemsCount, got)
+	}
+}
+
+func TestMediaStore_GetOptimizedMediaItem_ShouldCorrectlyHandleRotation(t *testing.T) {
+	copyDir(t, "./tests/test2", "./test")
+	t.Cleanup(func() {
+		os.RemoveAll("./test")
+	})
+
+	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	if err != nil {
+		t.Fatalf("Failed to create media store: %v", err)
+	}
+
+	hasher := Sha256Hasher{}
+	id, err := hasher.HashFromString("f5b51a0ec5a930003cc423711357911115c0991c81b2dcf2eaafe82256f97c38")
+	if err != nil {
+		t.Fatalf("Failed to create sha256Hash from string: %v", err)
+	}
+
+	mediaItem, err := mediaStore.GetOptimizedMediaItem(id)
+
+	img := bimg.NewImage(mediaItem.Content)
+	size, err := img.Size()
+	if err != nil {
+		t.Fatalf("Failed to get image size: %v", err)
+	}
+
+	expectedWidth := 1024
+	expectedHeight := 768
+	if size.Width != expectedWidth || size.Height != expectedHeight {
+		t.Fatalf("Expected image size %dx%d, got %dx%d", expectedWidth, expectedHeight, size.Width, size.Height)
+	}
+}
+
+func TestMediaStore_GetOptimizedMediaItem_ShouldCorrectlyHandleNoRotation(t *testing.T) {
+	copyDir(t, "./tests/test2", "./test")
+	t.Cleanup(func() {
+		os.RemoveAll("./test")
+	})
+
+	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	if err != nil {
+		t.Fatalf("Failed to create media store: %v", err)
+	}
+
+	hasher := Sha256Hasher{}
+	id, err := hasher.HashFromString("0bce366acd5c95aaf3d6c97b0b79645dec870870624ada0f74af1c871d7bef8b")
+	if err != nil {
+		t.Fatalf("Failed to create sha256Hash from string: %v", err)
+	}
+
+	mediaItem, err := mediaStore.GetOptimizedMediaItem(id)
+
+	img := bimg.NewImage(mediaItem.Content)
+	size, err := img.Size()
+	if err != nil {
+		t.Fatalf("Failed to get image size: %v", err)
+	}
+
+	expectedWidth := 1024
+	expectedHeight := 768
+	if size.Width != expectedWidth || size.Height != expectedHeight {
+		t.Fatalf("Expected image size %dx%d, got %dx%d", expectedWidth, expectedHeight, size.Width, size.Height)
 	}
 }

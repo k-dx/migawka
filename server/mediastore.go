@@ -389,6 +389,10 @@ func optimizeJpg(in []byte) ([]byte, error) {
 		Quality:       80,
 		Interlace:     true,
 		StripMetadata: false, // keep EXIF metadata
+
+		// bimg respects EXIF Orientation tag by default,
+		// but we are not stripping metadata, so disable it
+		NoAutoRotate: true,
 	}
 
 	newImage, err := img.Process(options)
