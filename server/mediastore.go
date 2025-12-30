@@ -47,7 +47,7 @@ type MediaStore interface {
 	// of the results is arbitrary. Returns thumbnails of media items in the
 	// given path (without subdirectories) and corresponding filenames. Ignores
 	// thumbnaildir.
-	GetThumbnailsByPath(path string) ([]Thumbnail, []string, error)
+	GetTimelineEntriesByPath(path string) ([]TimelineEntry, []string, error)
 	GenerateMissingThumbnails()
 
 	GetMediaDirectory() string
@@ -421,8 +421,8 @@ func optimizeJpg(in []byte) ([]byte, error) {
 	return newImage, nil
 }
 
-func (ms *mediaStoreImpl) GetThumbnailsByPath(pathRelativeToMediadir string) ([]Thumbnail, []string, error) {
-	results := make([]Thumbnail, 0)
+func (ms *mediaStoreImpl) GetTimelineEntriesByPath(pathRelativeToMediadir string) ([]TimelineEntry, []string, error) {
+	results := make([]TimelineEntry, 0)
 	filenames := make([]string, 0)
 
 	absPath := filepath.Join(ms.mediadir, pathRelativeToMediadir)
@@ -430,15 +430,10 @@ func (ms *mediaStoreImpl) GetThumbnailsByPath(pathRelativeToMediadir string) ([]
 		dirOfItem := filepath.Dir(item.Path)
 
 		if dirOfItem == absPath {
-			thumbnail, err := ms.thumbnailProvider.GetThumbnailByID(IdWithPath{ID: key, Path: item.Path})
-			if err != nil {
-				log.Error().Str("ID", key.String()).
-					Err(err).
-					Msg("Failed to get thumbnail by ID")
-				continue
-			}
-
-			results = append(results, thumbnail)
+			results = append(results, TimelineEntry{
+				ID:        ms.Hasher.HashFromKey(key),
+				Timestamp: item.CreationTime,
+			})
 			filename := filepath.Base(item.Path)
 			filenames = append(filenames, filename)
 		}

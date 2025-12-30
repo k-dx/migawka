@@ -27,7 +27,7 @@ const (
 	Migawka_GetOptimizedMediaItem_FullMethodName        = "/Migawka/GetOptimizedMediaItem"
 	Migawka_GetThumbnail_FullMethodName                 = "/Migawka/GetThumbnail"
 	Migawka_GetFullMediaItem_FullMethodName             = "/Migawka/GetFullMediaItem"
-	Migawka_GetFileListPage_FullMethodName              = "/Migawka/GetFileListPage"
+	Migawka_GetFileList_FullMethodName                  = "/Migawka/GetFileList"
 )
 
 // MigawkaClient is the client API for Migawka service.
@@ -45,7 +45,7 @@ type MigawkaClient interface {
 	GetOptimizedMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetThumbnail(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
-	GetFileListPage(ctx context.Context, in *GetFileListPageRequest, opts ...grpc.CallOption) (*GetFileListPageResponse, error)
+	GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error)
 }
 
 type migawkaClient struct {
@@ -136,10 +136,10 @@ func (c *migawkaClient) GetFullMediaItem(ctx context.Context, in *GetMediaItemRe
 	return out, nil
 }
 
-func (c *migawkaClient) GetFileListPage(ctx context.Context, in *GetFileListPageRequest, opts ...grpc.CallOption) (*GetFileListPageResponse, error) {
+func (c *migawkaClient) GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetFileListPageResponse)
-	err := c.cc.Invoke(ctx, Migawka_GetFileListPage_FullMethodName, in, out, cOpts...)
+	out := new(GetFileListResponse)
+	err := c.cc.Invoke(ctx, Migawka_GetFileList_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ type MigawkaServer interface {
 	GetOptimizedMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetThumbnail(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
-	GetFileListPage(context.Context, *GetFileListPageRequest) (*GetFileListPageResponse, error)
+	GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error)
 	mustEmbedUnimplementedMigawkaServer()
 }
 
@@ -196,8 +196,8 @@ func (UnimplementedMigawkaServer) GetThumbnail(context.Context, *GetMediaItemReq
 func (UnimplementedMigawkaServer) GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFullMediaItem not implemented")
 }
-func (UnimplementedMigawkaServer) GetFileListPage(context.Context, *GetFileListPageRequest) (*GetFileListPageResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFileListPage not implemented")
+func (UnimplementedMigawkaServer) GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFileList not implemented")
 }
 func (UnimplementedMigawkaServer) mustEmbedUnimplementedMigawkaServer() {}
 func (UnimplementedMigawkaServer) testEmbeddedByValue()                 {}
@@ -364,20 +364,20 @@ func _Migawka_GetFullMediaItem_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Migawka_GetFileListPage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFileListPageRequest)
+func _Migawka_GetFileList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFileListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MigawkaServer).GetFileListPage(ctx, in)
+		return srv.(MigawkaServer).GetFileList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Migawka_GetFileListPage_FullMethodName,
+		FullMethod: Migawka_GetFileList_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MigawkaServer).GetFileListPage(ctx, req.(*GetFileListPageRequest))
+		return srv.(MigawkaServer).GetFileList(ctx, req.(*GetFileListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -422,8 +422,8 @@ var Migawka_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Migawka_GetFullMediaItem_Handler,
 		},
 		{
-			MethodName: "GetFileListPage",
-			Handler:    _Migawka_GetFileListPage_Handler,
+			MethodName: "GetFileList",
+			Handler:    _Migawka_GetFileList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

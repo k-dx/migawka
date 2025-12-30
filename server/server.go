@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -183,16 +182,12 @@ func IsPathInsideBase(basePath, targetPath string) (bool, error) {
 	return !strings.HasPrefix(relPath, ".."), nil
 }
 
-func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageRequest) (*pb.GetFileListPageResponse, error) {
+func (s *server) GetFileList(_ context.Context, in *pb.GetFileListRequest) (*pb.GetFileListResponse, error) {
 	log.Info().
 		Str("path", in.GetPath()).
-		Uint32("page_number", in.GetPageNumber()).
-		Uint32("page_size", in.GetPageSize()).
-		Msg("GetFileListPage")
+		Msg("GetFileList")
 
 	requestedRelativePath := in.GetPath()
-	pageNumber := in.GetPageNumber()
-	pageSize := in.GetPageSize()
 
 	mediaDir := s.mediaStore.GetMediaDirectory()
 	thumbnailDir := s.mediaStore.GetThumbnailDirectory()
@@ -205,7 +200,7 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 			Str("path", requestedRelativePath).
 			Msg("Requested path is outside media directory")
 		status := pb.NewStatus(400, "Requested path is outside media directory")
-		return pb.NewGetFileListPageResponse(nil, status), nil
+		return pb.NewGetFileListResponse(nil, status), nil
 	}
 
 	dirs, err := GetDirsInDir(mediaDir, thumbnailDir, requestedRelativePath)
@@ -215,41 +210,18 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 			Str("path", requestedRelativePath).
 			Msg("Failed to get directories in path")
 		status := pb.NewStatus(500, "Failed to get directories in path")
-		return pb.NewGetFileListPageResponse(nil, status), nil
+		return pb.NewGetFileListResponse(nil, status), nil
 	}
 
-	sort.Slice(dirs, func(i, j int) bool {
-		return dirs[i].Name < dirs[j].Name
-	})
-
-	thumbnails, thumbnailFilenames, err := s.mediaStore.GetThumbnailsByPath(requestedRelativePath)
+	mediaEntries, mediaEntriesFilenames, err := s.mediaStore.GetTimelineEntriesByPath(requestedRelativePath)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("path", requestedRelativePath).
-			Msg("Failed to get thumbnails in path")
-		status := pb.NewStatus(500, "Failed to get thumbnails in path")
-		return pb.NewGetFileListPageResponse(nil, status), nil
+			Msg("Failed to get media entries for path")
+		status := pb.NewStatus(500, "Failed to get media entries for path")
+		return pb.NewGetFileListResponse(nil, status), nil
 	}
-
-	// sort thumbnails and thumbnailsFilenames by filename
-	// so that they correspond to each other
-	// (assuming thumbnailFilenames are unique)
-	type thumbWithName struct {
-		thumb    Thumbnail
-		filename string
-	}
-	var thumbsWithNames []thumbWithName
-	for i, thumb := range thumbnails {
-		thumbsWithNames = append(thumbsWithNames, thumbWithName{
-			thumb:    thumb,
-			filename: thumbnailFilenames[i],
-		})
-	}
-	// sort by filename
-	sort.Slice(thumbsWithNames, func(i, j int) bool {
-		return thumbsWithNames[i].filename < thumbsWithNames[j].filename
-	})
 
 	var entries []*pb.DirectoryEntry
 	for _, dir := range dirs {
@@ -259,34 +231,22 @@ func (s *server) GetFileListPage(_ context.Context, in *pb.GetFileListPageReques
 		})
 	}
 
-	// convert to gRPC thumbnails type
-	for _, thumb := range thumbsWithNames {
-		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(thumb.thumb.ID)
+	// convert to gRPC TimelineEntry type
+	for i, mediaEntry := range mediaEntries {
+		creationTime, err := s.mediaStore.GetCreationTimeOfMediaItem(mediaEntry.ID)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get creation time of media item")
-			status := pb.NewStatus(500, "Failed to get creation time of media item")
-			return pb.NewGetFileListPageResponse(nil, status), nil
+			continue
 		}
 
 		entries = append(entries, &pb.DirectoryEntry{
-			Name:      thumb.filename,
-			Type:      pb.DirectoryEntry_MEDIA,
-			Thumbnail: toPbThumbnail(thumb.thumb, creationTime),
+			Name:  mediaEntriesFilenames[i],
+			Type:  pb.DirectoryEntry_MEDIA,
+			Media: toPbTimelineEntry(mediaEntry.ID, creationTime),
 		})
 	}
 
-	// pagination
-	startIndex := int(pageNumber * pageSize)
-	endIndex := startIndex + int(pageSize)
-	if startIndex > len(entries) {
-		startIndex = len(entries)
-	}
-	if endIndex > len(entries) {
-		endIndex = len(entries)
-	}
-	entries = entries[startIndex:endIndex]
-
-	return pb.NewGetFileListPageResponse(entries, pb.NewStatus(200, "")), nil
+	return pb.NewGetFileListResponse(entries, pb.NewStatus(200, "")), nil
 }
 
 func (s *server) GetTimelineEntries(_ context.Context, in *pb.TimelineEntriesRequest) (*pb.TimelineEntriesResponse, error) {

@@ -18,7 +18,7 @@ service Migawka {
   rpc GetOptimizedMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetThumbnail(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFullMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
-  rpc GetFileListPage(GetFileListPageRequest) returns (GetFileListPageResponse);
+  rpc GetFileList(GetFileListRequest) returns (GetFileListResponse);
 }
 
 
@@ -99,13 +99,11 @@ message GetMediaItemResponse {
   MediaItem mediaItem = 2;
 }
 
-message GetFileListPageRequest {
+message GetFileListRequest {
   string path = 1;
-  uint32 pageNumber = 2;
-  uint32 pageSize = 3;
 }
 
-message GetFileListPageResponse {
+message GetFileListResponse {
   Status status = 1;
   repeated DirectoryEntry entries = 2;
 }
@@ -120,8 +118,8 @@ message DirectoryEntry {
   FileType type = 1;
   string name = 2;
 
-  // for image files
-  Thumbnail thumbnail = 3;
+  // for media files, currently only images
+  TimelineEntry media = 3;
 }
 
 message TimelineEntry {

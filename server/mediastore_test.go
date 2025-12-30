@@ -197,7 +197,7 @@ func TestMediaStore_GetMediaItem(t *testing.T) {
 	}
 }
 
-func TestMediaStore_GetThumbnailsByPath(t *testing.T) {
+func TestMediaStore_GetTimelineEntriesByPath(t *testing.T) {
 	copyDir(t, "./tests/test2", "./test")
 	t.Cleanup(func() {
 		os.RemoveAll("./test")
@@ -208,15 +208,15 @@ func TestMediaStore_GetThumbnailsByPath(t *testing.T) {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
 
-	thumbnails, filenames, err := mediaStore.GetThumbnailsByPath("")
+	entries, filenames, err := mediaStore.GetTimelineEntriesByPath("")
 	if err != nil {
-		t.Fatalf("Failed to get thumbnails by path: %v", err)
+		t.Fatalf("Failed to get entries by path: %v", err)
 	}
 
-	expectedThumbnailsCount := 2
-	got := len(thumbnails)
-	if got != expectedThumbnailsCount {
-		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	expectedEntriesCount := 2
+	got := len(entries)
+	if got != expectedEntriesCount {
+		t.Fatalf("Expected %d entries, got %d", expectedEntriesCount, got)
 	}
 
 	expectedFilenamesCount := 2
@@ -235,7 +235,7 @@ func TestMediaStore_GetThumbnailsByPath(t *testing.T) {
 	}
 }
 
-func TestMediaStore_GetThumbnailsByPath2(t *testing.T) {
+func TestMediaStore_GetTimelineEntriesByPath2(t *testing.T) {
 	copyDir(t, "./tests/test4", "./test")
 	t.Cleanup(func() {
 		os.RemoveAll("./test")
@@ -246,15 +246,15 @@ func TestMediaStore_GetThumbnailsByPath2(t *testing.T) {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
 
-	thumbnails, filenames, err := mediaStore.GetThumbnailsByPath("dir/sub")
+	entries, filenames, err := mediaStore.GetTimelineEntriesByPath("dir/sub")
 	if err != nil {
-		t.Fatalf("Failed to get thumbnails by path: %v", err)
+		t.Fatalf("Failed to get entries by path: %v", err)
 	}
 
-	expectedThumbnailsCount := 1
-	got := len(thumbnails)
-	if got != expectedThumbnailsCount {
-		t.Fatalf("Expected %d thumbnails, got %d", expectedThumbnailsCount, got)
+	expectedEntriesCount := 1
+	got := len(entries)
+	if got != expectedEntriesCount {
+		t.Fatalf("Expected %d entries, got %d", expectedEntriesCount, got)
 	}
 
 	expectedFilenamesCount := 1
