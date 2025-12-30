@@ -13,11 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
-import xyz.jdubiel.migawka.TAG
-import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.TimelineEntryK
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelForTimelineI
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -29,13 +26,13 @@ class ImageGalleryViewModel(
     application: Application,
     private val imageRepository: ImageRepository
 ) :
-    AndroidViewModel(application), SingleMediaViewModelForTimelineI {
+    AndroidViewModel(application) {
 
     private val _entriesWithHeaders = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
     val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = _entriesWithHeaders.asStateFlow()
 
     private val _entries = MutableStateFlow<List<TimelineEntryK>>(emptyList())
-    override val entries: StateFlow<List<TimelineEntryK>> = _entries.asStateFlow()
+    val entries: StateFlow<List<TimelineEntryK>> = _entries.asStateFlow()
 
     init {
         val locale = Locale.getDefault()
@@ -78,23 +75,6 @@ class ImageGalleryViewModel(
             _entriesWithHeaders.value = timeline
 
             Log.d("ImageGalleryViewModel", "loaded ${timeline.size} entries")
-        }
-    }
-
-
-    override suspend fun getRemoteOptimizedImage(id: Hash) = withContext(Dispatchers.IO) {
-        imageRepository.getRemoteOptimizedImage(id)
-    }
-
-    override fun downloadImage(id: Hash) {
-        viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
-            try {
-                val img = imageRepository.getRemoteFullImage(id)
-                imageRepository.saveImageToGallery(img)
-            } catch (e: Exception) {
-                Log.d(TAG, "error when downloading image: ${e.message}")
-                // TODO: Display info about the error to the user
-            }
         }
     }
 }

@@ -187,10 +187,7 @@ fun MigawkaNavHost(
                         )
                     )
 
-                    SingleMediaViewScreenForTimeline(
-                        galleryViewModel = imageGalleryViewModel,
-                        viewModel = vm,
-                    )
+                    SingleMediaViewScreenForTimeline(viewModel = vm)
                 } else {
                     Log.e("SingleMediaViewScreenForTimeline", "initialImageId is null")
                     Box(modifier = Modifier.padding(innerPadding)) {

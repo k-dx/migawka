@@ -96,6 +96,18 @@ class SingleMediaViewScreenForTimelineViewModel(
         _currentPage.intValue = page
     }
 
+    fun downloadImage(id: Hash) {
+        viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
+            try {
+                val img = imageRepository.getRemoteFullImage(id)
+                imageRepository.saveImageToGallery(img)
+            } catch (e: Exception) {
+                Log.d(xyz.jdubiel.migawka.TAG, "error when downloading image: ${e.message}")
+                // TODO: Display info about the error to the user
+            }
+        }
+    }
+
     companion object {
         private const val TAG = "SingleMediaViewScreenForTimelineViewModel"
     }

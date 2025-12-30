@@ -39,7 +39,6 @@ import java.io.File
 
 @Composable
 fun SingleMediaViewScreenForTimeline(
-    galleryViewModel: SingleMediaViewModelForTimelineI,
     viewModel: SingleMediaViewScreenForTimelineViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -94,7 +93,7 @@ fun SingleMediaViewScreenForTimeline(
                     onClick = {
                         Toast.makeText(context, "Download started", Toast.LENGTH_SHORT)
                             .show()
-                        galleryViewModel.downloadImage(entry.id)
+                        viewModel.downloadImage(entry.id)
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
