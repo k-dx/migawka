@@ -26,7 +26,7 @@ sealed interface FullImageUiState {
     data object Empty : FullImageUiState
 }
 
-class SingleMediaViewScreenForTimelineViewModel(
+class SingleMediaViewScreenViewModel(
     private val imageRepository: ImageRepository,
     val entries: List<TimelineEntryK>,
     initialImageId: Hash
@@ -121,9 +121,9 @@ class SingleMediaViewScreenForTimelineViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SingleMediaViewScreenForTimelineViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(SingleMediaViewScreenViewModel::class.java)) {
             val imageRepository = (application as MigawkaApplication).imageRepository
-            return SingleMediaViewScreenForTimelineViewModel(
+            return SingleMediaViewScreenViewModel(
                 imageRepository,
                 entries,
                 initialImageId

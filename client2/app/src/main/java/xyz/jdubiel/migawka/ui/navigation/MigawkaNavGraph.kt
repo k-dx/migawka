@@ -31,8 +31,8 @@ import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
 import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimeline
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModel
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenViewModel
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModelFactory
 
 enum class MigawkaScreen {
@@ -160,7 +160,7 @@ fun MigawkaNavHost(
                         }
                     }
 
-                    val vm: SingleMediaViewScreenForTimelineViewModel = viewModel(
+                    val vm: SingleMediaViewScreenViewModel = viewModel(
                         factory = SingleMediaViewScreenForTimelineViewModelFactory(
                             LocalContext.current.applicationContext as Application,
                             topFolderScreenViewModel!!.mediaEntries.collectAsState().value, // TODO: remove !!
@@ -168,7 +168,7 @@ fun MigawkaNavHost(
                         )
                     )
 
-                    SingleMediaViewScreenForTimeline(viewModel = vm)
+                    SingleMediaViewScreen(viewModel = vm)
                 } else {
                     Log.e("SingleMediaViewScreen", "initialImageId is null")
                     Box(modifier = Modifier.padding(innerPadding)) {
@@ -185,7 +185,7 @@ fun MigawkaNavHost(
                 if (initialImageId != null) {
                     Log.d("SingleMediaViewScreenForTimeline", "initialImageId = $initialImageId")
 
-                    val vm: SingleMediaViewScreenForTimelineViewModel = viewModel(
+                    val vm: SingleMediaViewScreenViewModel = viewModel(
                         factory = SingleMediaViewScreenForTimelineViewModelFactory(
                             LocalContext.current.applicationContext as Application,
                             imageGalleryViewModel.entries.collectAsState().value,
@@ -193,7 +193,7 @@ fun MigawkaNavHost(
                         )
                     )
 
-                    SingleMediaViewScreenForTimeline(viewModel = vm)
+                    SingleMediaViewScreen(viewModel = vm)
                 } else {
                     Log.e("SingleMediaViewScreenForTimeline", "initialImageId is null")
                     Box(modifier = Modifier.padding(innerPadding)) {

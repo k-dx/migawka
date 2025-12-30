@@ -52,8 +52,8 @@ val timeFormatter: DateTimeFormatter = DateTimeFormatter
     .withZone(zone)
 
 @Composable
-fun SingleMediaViewScreenForTimeline(
-    viewModel: SingleMediaViewScreenForTimelineViewModel,
+fun SingleMediaViewScreen(
+    viewModel: SingleMediaViewScreenViewModel,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
