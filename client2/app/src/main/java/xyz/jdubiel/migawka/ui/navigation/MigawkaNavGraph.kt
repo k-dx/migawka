@@ -45,11 +45,6 @@ enum class MigawkaScreen {
     Settings
 }
 
-val navigateToFolderView = { navController: NavHostController ->
-    val rawPath = "/"
-    val encoded = Uri.encode(rawPath)
-    navController.navigate("${MigawkaScreen.FolderView.name}/$encoded") }
-
 @Composable
 fun MigawkaNavHost(
     navController: NavHostController,

@@ -102,41 +102,39 @@ fun ImageGrid(
                 }
             ) { index ->
                 val uiModel = entries[index]
-                if (uiModel != null) {
-                    when (uiModel) {
-                        is ImageGalleryTimelineEntry.Header -> {
-                            Text(
-                                text = uiModel.monthYear,
-                                modifier = Modifier
-                                    .padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
-                            )
-                        }
+                when (uiModel) {
+                    is ImageGalleryTimelineEntry.Header -> {
+                        Text(
+                            text = uiModel.monthYear,
+                            modifier = Modifier
+                                .padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+                        )
+                    }
 
-                        is ImageGalleryTimelineEntry.ImageItem -> {
-                            when (val item = uiModel.entry) {
-                                is TimelineEntryK.Local -> {
-                                    AsyncImage(
-                                        model = item.contentUri,
-                                        contentDescription = "Gallery Image",
-                                        modifier = Modifier
-                                            .aspectRatio(1f)
-                                            .fillMaxWidth()
-                                            .clickable { onImageClick(item.id.toHex()) },
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
+                    is ImageGalleryTimelineEntry.ImageItem -> {
+                        when (val item = uiModel.entry) {
+                            is TimelineEntryK.Local -> {
+                                AsyncImage(
+                                    model = item.contentUri,
+                                    contentDescription = "Gallery Image",
+                                    modifier = Modifier
+                                        .aspectRatio(1f)
+                                        .fillMaxWidth()
+                                        .clickable { onImageClick(item.id.toHex()) },
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
 
-                                is TimelineEntryK.Remote -> {
-                                    AsyncImage(
-                                        model = GrpcThumbnail(item.id),
-                                        contentDescription = "Gallery Image",
-                                        modifier = Modifier
-                                            .aspectRatio(1f)
-                                            .fillMaxWidth()
-                                            .clickable { onImageClick(item.id.toHex()) },
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
+                            is TimelineEntryK.Remote -> {
+                                AsyncImage(
+                                    model = GrpcThumbnail(item.id),
+                                    contentDescription = "Gallery Image",
+                                    modifier = Modifier
+                                        .aspectRatio(1f)
+                                        .fillMaxWidth()
+                                        .clickable { onImageClick(item.id.toHex()) },
+                                    contentScale = ContentScale.Crop
+                                )
                             }
                         }
                     }

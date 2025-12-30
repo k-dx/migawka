@@ -79,7 +79,7 @@ class SingleMediaViewScreenForTimelineViewModel(
                     _fullImageState.value =
                         FullImageUiState.Success(image = downloaded, page = page)
                 }
-            } catch (e: CancellationException) {
+            } catch (_: CancellationException) {
                 // This is expected when a job is cancelled.
                 Log.d(TAG, "Image fetch cancelled for page $page")
             } catch (e: Exception) {

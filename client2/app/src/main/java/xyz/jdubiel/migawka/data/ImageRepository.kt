@@ -29,7 +29,7 @@ class ImageRepository(
             TimelineEntryK.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
         }
 
-        val results: MutableList<TimelineEntryK> = mutableListOf();
+        val results: MutableList<TimelineEntryK> = mutableListOf()
 
         // remove remote entries that we have locally
         val localIds: Set<Hash> = localEntries.map { it.id }.toSet()
@@ -52,7 +52,7 @@ class ImageRepository(
             }
         }
 
-        return@coroutineScope results;
+        return@coroutineScope results
     }
 
     suspend fun getRemoteOptimizedImage(id: Hash): RemoteImage {

@@ -146,27 +146,25 @@ fun FolderScreenGrid(
             key = { index -> entries[index].name }
         ) { index ->
             val item = entries[index]
-            if (item != null) {
-                when (item) {
-                    is DirectoryEntryK.Directory -> {
-                        Box(modifier = Modifier
-                            .aspectRatio(1f)
-                            .clickable { onDirClick(item.name) }
-                            .background(color = Color(0xFFA89B32))) {
-                            Box(modifier = Modifier.padding(2.dp)) {
-                                Text("${item.name}")
-                            }
+            when (item) {
+                is DirectoryEntryK.Directory -> {
+                    Box(modifier = Modifier
+                        .aspectRatio(1f)
+                        .clickable { onDirClick(item.name) }
+                        .background(color = Color(0xFFA89B32))) {
+                        Box(modifier = Modifier.padding(2.dp)) {
+                            Text(item.name)
                         }
                     }
-                    is DirectoryEntryK.Image -> {
-                        AsyncImage(
-                            model = GrpcThumbnail(item.id),
-                            contentDescription = "Gallery Image",
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .clickable { onImageClick(item.id.toHex()) },
-                            contentScale = ContentScale.Crop)
-                    }
+                }
+                is DirectoryEntryK.Image -> {
+                    AsyncImage(
+                        model = GrpcThumbnail(item.id),
+                        contentDescription = "Gallery Image",
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .clickable { onImageClick(item.id.toHex()) },
+                        contentScale = ContentScale.Crop)
                 }
             }
         }
