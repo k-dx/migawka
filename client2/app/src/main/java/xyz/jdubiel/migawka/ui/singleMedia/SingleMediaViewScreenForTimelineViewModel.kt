@@ -7,7 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
@@ -15,80 +17,59 @@ import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.RemoteImage
 
-
-enum class LoadingState {
-    OK, ERROR, LOADING
+sealed interface FullImageUiState {
+    data object Loading : FullImageUiState
+    data class Success(val image: RemoteImage, val page: Int) : FullImageUiState
+    data class Error(val message: String?) : FullImageUiState
+    data object Empty : FullImageUiState
 }
-
-data class ImageRequestResult(
-    val image: RemoteImage?,
-    val page: Int?,
-    val error: String?
-)
 
 class SingleMediaViewScreenForTimelineViewModel(private val imageRepository: ImageRepository) :
     ViewModel() {
 
     // single full-image slot and metadata about which page it belongs to
-    private val _fullImageRequestResult =
-        mutableStateOf(ImageRequestResult(null, null, null))
-    val fullImageRequestResult: State<ImageRequestResult> = _fullImageRequestResult
-    var lastRequestId = 0
+    private val _fullImageState =
+        mutableStateOf<FullImageUiState>(FullImageUiState.Empty)
+    val fullImageState: State<FullImageUiState> = _fullImageState
+    private var fetchJob: Job? = null
 
     /**
      * Fetches the "full" (higher resolution) image for the given page.
      * If the image is already fetched for this page, it is not fetched again.
      */
     fun fetchFullImage(id: Hash, page: Int) {
-        // increment request id so earlier downloads don't override newer ones
-        val requestId = ++lastRequestId
-
         Log.d(TAG, "fetchFullImage: id ${id.toHex()} page $page")
 
-        val currentResult = _fullImageRequestResult.value
-        if (currentResult.page == page && currentResult.image?.hash == id) {
-            Log.d(TAG, "fetchFullImage: page $page + id $id already present")
+        val currentState = _fullImageState.value
+        if (currentState is FullImageUiState.Success && currentState.page == page && currentState.image.hash == id) {
+            Log.d(TAG, "fetchFullImage: Image for page $page already present.")
             return
         }
 
+        // cancel previous fetch job
+        fetchJob?.cancel()
+
+        // set loading state
+
+        _fullImageState.value = FullImageUiState.Loading
+
         // launch download on IO dispatcher
-        viewModelScope.launch(Dispatchers.IO) {
+        fetchJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 val downloaded = imageRepository.getRemoteOptimizedImage(id)
                 withContext(Dispatchers.Main) {
-                    // only set if this is the latest request
-                    if (requestId == lastRequestId) {
-                        _fullImageRequestResult.value = ImageRequestResult(
-                            image = downloaded,
-                            page = page,
-                            error = null
-                        )
-                    }
+                    _fullImageState.value =
+                        FullImageUiState.Success(image = downloaded, page = page)
                 }
+            } catch (e: CancellationException) {
+                // This is expected when a job is cancelled.
+                Log.d(TAG, "Image fetch cancelled for page $page")
             } catch (e: Exception) {
                 // keep thumbnail on failure; optionally set an error image
                 withContext(Dispatchers.Main) {
-                    if (requestId == lastRequestId) {
-                        _fullImageRequestResult.value = ImageRequestResult(
-                            image = null,
-                            page = null,
-                            error = e.message
-                        )
-                    }
+                    _fullImageState.value = FullImageUiState.Error(e.message)
                 }
             }
-        }
-    }
-
-    fun getLoadingState(pageIndex: Int): LoadingState {
-        val image = _fullImageRequestResult.value.image
-        val page = _fullImageRequestResult.value.page
-        val error = _fullImageRequestResult.value.error
-
-        return when {
-            image != null && page == pageIndex -> LoadingState.OK
-            error != null -> LoadingState.ERROR
-            else -> LoadingState.LOADING
         }
     }
 

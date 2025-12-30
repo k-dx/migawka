@@ -144,30 +144,33 @@ fun SingleMediaViewScreenForTimeline(
                             )
                         }
                         is TimelineEntryK.Remote -> {
-                            if (viewModel.getLoadingState(pagerState.currentPage) == LoadingState.OK) {
-                                val fullImage = viewModel.fullImageRequestResult.value.image
-                                val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
-                                val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
-                                    outputStream().use { it.write(fullImage!!.bytes) }
+                            when (val state = viewModel.fullImageState.value) {
+                                is FullImageUiState.Success -> {
+                                    val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
+                                    val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
+                                        outputStream().use { it.write(state.image.bytes) }
+                                    }
+                                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cacheFile)
+
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "image/*"
+                                        putExtra(Intent.EXTRA_STREAM, uri)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+
+                                    context.startActivity(
+                                        Intent.createChooser(shareIntent, "Share image via")
+                                    )
+
+                                    // TODO: remove the file after sharing
                                 }
-                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cacheFile)
 
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "image/*"
-                                    putExtra(Intent.EXTRA_STREAM, uri)
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                else -> {
+                                    Toast.makeText(context, "Cannot share thumbnail. Please wait for the image to load.", Toast.LENGTH_LONG).show()
+
                                 }
-
-                                context.startActivity(
-                                    Intent.createChooser(shareIntent, "Share image via")
-                                )
-
-                                // TODO: remove the file after sharing
-                            } else {
-                                Toast.makeText(context, "Cannot share thumbnail. Please wait for the image to load.", Toast.LENGTH_LONG).show()
                             }
                         }
-                        else -> null
                     }
                 },
                 modifier = Modifier.size(48.dp)
@@ -213,10 +216,6 @@ fun SingleMediaViewScreenForTimeline(
 
                         is TimelineEntryK.Remote -> {
                             Box() {
-                                // getLoadingState() call triggers a read of fullImageRequestResult
-                                // State, so should be recomposed when it changes
-                                val loadingState = viewModel.getLoadingState(pageIndex)
-
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
                                     verticalArrangement = Arrangement.Center,
@@ -231,27 +230,34 @@ fun SingleMediaViewScreenForTimeline(
                                                 .align(Alignment.Center),
                                             contentScale = ContentScale.Fit
                                         )
-                                        if (loadingState == LoadingState.ERROR) {
-                                            val fullImageError =
-                                                viewModel.fullImageRequestResult.value.error
-                                            Text("Fetching error: $fullImageError")
-                                        } else if (loadingState == LoadingState.LOADING) {
-                                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+
+                                        when (val state = viewModel.fullImageState.value) {
+                                            is FullImageUiState.Error -> {
+                                                Text("Fetching error: ${state.message}")
+                                            }
+
+                                            is FullImageUiState.Loading, is FullImageUiState.Empty -> {
+                                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                            }
+
+                                            else -> {}
                                         }
                                     }
                                 }
 
-                                if (loadingState == LoadingState.OK) {
-                                    val fullImageBytes =
-                                        viewModel.fullImageRequestResult.value.image!!.bytes
-                                    AsyncImage(
-                                        model = fullImageBytes,
-                                        contentDescription = "Full screen image",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .align(Alignment.Center),
-                                        contentScale = ContentScale.Fit
-                                    )
+                                when (val state = viewModel.fullImageState.value) {
+                                    is FullImageUiState.Success -> {
+                                        AsyncImage(
+                                            model = state.image.bytes,
+                                            contentDescription = "Full screen image",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .align(Alignment.Center),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    }
+
+                                    else -> {}
                                 }
                             }
                         }
