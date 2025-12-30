@@ -31,7 +31,6 @@ import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
 import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimeline
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModel
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModelFactory
@@ -105,7 +104,6 @@ fun MigawkaNavHost(
                     val folderScreenViewModel: FolderScreenViewModel = viewModel(
                         factory = FolderScreenViewModelFactory(
                             path,
-                            30,
                             LocalContext.current.applicationContext as Application
                         )
                     )
@@ -159,10 +157,23 @@ fun MigawkaNavHost(
                     ?.getString(initialImageIdArg)
                 if (initialImageId != null) {
                     Log.d("SingleMediaViewScreen", "initialImageId = $initialImageId, using folderScreenViewModel = ${topFolderScreenViewModel != null}")
-                    SingleMediaViewScreen(
-                        viewModel = topFolderScreenViewModel!!,
-                        initialImageId = hasher.fromHex(initialImageId)
+
+                    if (topFolderScreenViewModel == null) {
+                        Log.e("SingleMediaViewScreen", "topFolderScreenViewModel is null")
+                        Box(modifier = Modifier.padding(innerPadding)) {
+                            Text("Error: topFolderScreenViewModel is null")
+                        }
+                    }
+
+                    val vm: SingleMediaViewScreenForTimelineViewModel = viewModel(
+                        factory = SingleMediaViewScreenForTimelineViewModelFactory(
+                            LocalContext.current.applicationContext as Application,
+                            topFolderScreenViewModel!!.mediaEntries.collectAsState().value, // TODO: remove !!
+                            initialImageId = hasher.fromHex(initialImageId)
+                        )
                     )
+
+                    SingleMediaViewScreenForTimeline(viewModel = vm)
                 } else {
                     Log.e("SingleMediaViewScreen", "initialImageId is null")
                     Box(modifier = Modifier.padding(innerPadding)) {

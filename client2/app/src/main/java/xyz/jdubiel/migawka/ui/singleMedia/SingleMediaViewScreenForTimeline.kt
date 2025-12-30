@@ -35,7 +35,21 @@ import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 import xyz.jdubiel.migawka.findActivity
 import java.io.File
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
+val locale: Locale = Locale.getDefault()
+val zone: ZoneId = ZoneId.systemDefault()
+val dateFormatter: DateTimeFormatter = DateTimeFormatter
+    .ofLocalizedDate(FormatStyle.MEDIUM)
+    .withLocale(locale)
+    .withZone(zone)
+val timeFormatter: DateTimeFormatter = DateTimeFormatter
+    .ofLocalizedTime(FormatStyle.MEDIUM)
+    .withLocale(locale)
+    .withZone(zone)
 
 @Composable
 fun SingleMediaViewScreenForTimeline(

@@ -4,12 +4,8 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.provider.MediaStore
 import android.util.Log
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
 import xyz.jdubiel.migawka.TAG
 import java.io.File
 
@@ -19,20 +15,6 @@ class ImageRepository(
     private val remoteImageProvider: RemoteImageProvider,
     private val localImageProvider: LocalImageProvider,
 ) {
-
-    suspend fun getImage(id: Hash): LocalImage {
-        Log.d(TAG, "imageRepository, getImage")
-        return localImageProvider.getImage(id)
-    }
-
-    fun getImageStream(): Flow<PagingData<PagedImage>> = Pager(
-        config = PagingConfig(
-            pageSize = 30,
-            enablePlaceholders = false
-        ),
-        pagingSourceFactory = { ImagePagingSource(localImageProvider, remoteImageProvider) }
-    ).flow
-
     /**
      * @return entries that are both local and remote, unique by hash.
      */

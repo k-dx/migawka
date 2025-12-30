@@ -5,83 +5,62 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
-import androidx.paging.filter
-import androidx.paging.map
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
-import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.DirectoryEntryK
-import xyz.jdubiel.migawka.data.FolderEntriesPagingSource
-import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
-import xyz.jdubiel.migawka.data.PagedImage
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewModelI
+import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.data.sortedDirectoriesThenImagesByDateDesc
 
 class FolderScreenViewModel(
     private val path: String,
-    private val pageSize: Int = 30,
     private val imageRepository: ImageRepository,
     private val remoteFileExplorer: RemoteFileExplorer
-) : ViewModel(), SingleMediaViewModelI {
+) : ViewModel() {
 
-    private val baseDirEntriesStream: Flow<PagingData<DirectoryEntryK>> =
-        Pager(
-            config = PagingConfig(
-                pageSize = pageSize,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = { FolderEntriesPagingSource(path, pageSize, remoteFileExplorer) }
-        ).flow
-        .cachedIn(viewModelScope)
+    private val _entries = MutableStateFlow<List<DirectoryEntryK>>(emptyList())
+    val entries: StateFlow<List<DirectoryEntryK>> = _entries.asStateFlow()
 
-    val dirEntriesStream: Flow<PagingData<DirectoryEntryK>> = baseDirEntriesStream
+    private val _mediaEntries = MutableStateFlow<List<TimelineEntryK>>(emptyList())
+    val mediaEntries: StateFlow<List<TimelineEntryK>> = _mediaEntries.asStateFlow()
 
-    override val imageStream: Flow<PagingData<PagedImage>> = baseDirEntriesStream
-        .map { pagingData ->
-            pagingData.filter { it is DirectoryEntryK.ThumbnailK }
-        }
-        .map { pagingData ->
-            pagingData.map<DirectoryEntryK, PagedImage> {
-                when (it) {
-                    is DirectoryEntryK.ThumbnailK -> PagedImage.FromBytes(
-                        id = it.id,
-                        bytes = it.content,
-                        date = it.creationTime
-                    )
-                    else -> throw Exception("This should never happen after filtering")
-                }
+    init {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                Log.d(TAG, "loading entries")
+                val raw = remoteFileExplorer.getDirectoryEntries(path)
+                Log.d(TAG, "entries loaded")
+
+                // ensure desired order: directories first, then thumbnails
+                val sorted = raw.sortedDirectoriesThenImagesByDateDesc()
+
+                // set entries
+                _entries.value = sorted
+
+                // set media entries
+                val mediaEntries = sorted
+                    .filterIsInstance<DirectoryEntryK.Image>()
+                    .map { TimelineEntryK.Remote(it.id, it.date) }
+                _mediaEntries.value = mediaEntries
             }
-        }
 
-    override fun downloadImage(id: Hash) {
-        viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
-            try {
-                val img = imageRepository.getRemoteFullImage(id)
-                imageRepository.saveImageToGallery(img)
-            } catch (e: Exception) {
-                Log.d(TAG, "error when downloading image: ${e.message}")
-                // TODO: Display info about the error to the user
-            }
+            Log.d(TAG, "loaded ${entries.value.size} directory entries, including ${mediaEntries.value.size} media items")
         }
     }
 
-    override suspend fun getRemoteOptimizedImage(id: Hash) = withContext(Dispatchers.IO) {
-        imageRepository.getRemoteOptimizedImage(id)
+    companion object {
+        const val TAG = "FolderScreenViewModel"
     }
 }
 
 class FolderScreenViewModelFactory(
     private val path: String,
-    private val pageSize: Int,
     private val application: Application
 ) : ViewModelProvider.Factory {
 
@@ -90,7 +69,7 @@ class FolderScreenViewModelFactory(
         val imageRepository = (application as MigawkaApplication).imageRepository
         val remoteFileExplorer = (application as MigawkaApplication).remoteFileExplorer
         if (modelClass.isAssignableFrom(FolderScreenViewModel::class.java)) {
-            return FolderScreenViewModel(path, pageSize, imageRepository, remoteFileExplorer) as T
+            return FolderScreenViewModel(path, imageRepository, remoteFileExplorer) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

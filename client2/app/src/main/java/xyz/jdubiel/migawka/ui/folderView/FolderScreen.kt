@@ -20,6 +20,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,14 +30,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
-import androidx.paging.PagingData
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import xyz.jdubiel.migawka.data.DirectoryEntryK
+import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 
 @Composable
 fun FolderScreen(
@@ -45,43 +42,40 @@ fun FolderScreen(
     modifier: Modifier = Modifier,
     viewModel: FolderScreenViewModel
 ) {
-    val entries = viewModel.dirEntriesStream.collectAsLazyPagingItems()
+    val entries by viewModel.entries.collectAsState()
     Column(modifier = modifier.padding(4.dp)) {
         PathBar(path = path, navigateToPath = navigateToPath)
 
-        when (entries.loadState.refresh) {
-            is LoadState.Loading -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            is LoadState.Error -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text("Error loading directory.", modifier = modifier.padding(16.dp))
-                }
-            }
-
-            else -> {
-                FolderScreenGrid(
-                    entries,
-                    onDirClick = { dirName ->
-                        val newPath =
-                            if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
-                        navigateToPath(newPath)
-                    },
-                    onImageClick = onImageClick
-                )
+        if (entries.isEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
+
+        // TODO: display message if error?
+//        if (error) {
+//            Column(
+//                modifier = Modifier.fillMaxSize(),
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//                verticalArrangement = Arrangement.Center
+//            ) {
+//                Text("Error loading directory.", modifier = modifier.padding(16.dp))
+//            }
+//        }
+
+        FolderScreenGrid(
+            entries,
+            onDirClick = { dirName ->
+                val newPath =
+                    if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
+                navigateToPath(newPath)
+            },
+            onImageClick = onImageClick
+        )
     }
 }
 
@@ -136,7 +130,7 @@ fun PathBarPreview() {
 
 @Composable
 fun FolderScreenGrid(
-    entries: LazyPagingItems<DirectoryEntryK>,
+    entries: List<DirectoryEntryK>,
     onDirClick: (String) -> Unit = {},
     onImageClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
@@ -148,17 +142,13 @@ fun FolderScreenGrid(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items(
-            count = entries.itemCount,
-            key = { index ->
-                val item = entries.peek(index)
-                item?.name
-                "placeholder_$index"
-            },
+            count = entries.size,
+            key = { index -> entries[index].name }
         ) { index ->
             val item = entries[index]
             if (item != null) {
                 when (item) {
-                    is DirectoryEntryK.DirectoryK -> {
+                    is DirectoryEntryK.Directory -> {
                         Box(modifier = Modifier
                             .aspectRatio(1f)
                             .clickable { onDirClick(item.name) }
@@ -168,9 +158,9 @@ fun FolderScreenGrid(
                             }
                         }
                     }
-                    is DirectoryEntryK.ThumbnailK -> {
+                    is DirectoryEntryK.Image -> {
                         AsyncImage(
-                            model = item.content,
+                            model = GrpcThumbnail(item.id),
                             contentDescription = "Gallery Image",
                             modifier = Modifier
                                 .aspectRatio(1f)
@@ -186,26 +176,16 @@ fun FolderScreenGrid(
 @Preview(showBackground = true)
 @Composable
 fun FolderScreenGridPreview() {
-    // 1. Create your static list of data for the preview
     val fakeEntries = listOf(
-        DirectoryEntryK.DirectoryK("Folder 1"),
-        DirectoryEntryK.DirectoryK("Photos"),
+        DirectoryEntryK.Directory("Folder 1"),
+        DirectoryEntryK.Directory("Photos"),
         // For ThumbnailK, you can't easily fake the byte array, so just use more directories
         // or a placeholder if you have one.
-        DirectoryEntryK.DirectoryK("Another Folder with a very long name that might not fit in the constrained size of the box; Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ut diam vitae tellus semper aliquam eget eget libero. Maecenas consectetur blandit vestibulum. Etiam at tortor pharetra, vulputate neque eu, malesuada arcu."),
-        DirectoryEntryK.DirectoryK("Vacation Pics"),
-        DirectoryEntryK.DirectoryK("2024"),
-        DirectoryEntryK.DirectoryK("2025"),
+        DirectoryEntryK.Directory("Another Folder with a very long name that might not fit in the constrained size of the box; Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ut diam vitae tellus semper aliquam eget eget libero. Maecenas consectetur blandit vestibulum. Etiam at tortor pharetra, vulputate neque eu, malesuada arcu."),
+        DirectoryEntryK.Directory("Vacation Pics"),
+        DirectoryEntryK.Directory("2024"),
+        DirectoryEntryK.Directory("2025"),
     )
 
-    // 2. Create a Flow that emits PagingData from your static list
-    val fakePagingDataFlow: Flow<PagingData<DirectoryEntryK>> = remember {
-        flowOf(PagingData.from(fakeEntries))
-    }
-
-    // 3. Use collectAsLazyPagingItems on that flow
-    val fakeLazyPagingItems = fakePagingDataFlow.collectAsLazyPagingItems()
-
-    // 4. Pass the result to your composable
-    FolderScreenGrid(entries = fakeLazyPagingItems, onDirClick = {})
+    FolderScreenGrid(entries = fakeEntries, onDirClick = {})
 }
