@@ -1,5 +1,6 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.app.Application
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
@@ -24,11 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -36,13 +32,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.data.Hash
-import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 import xyz.jdubiel.migawka.findActivity
@@ -51,19 +44,20 @@ import java.io.File
 
 @Composable
 fun SingleMediaViewScreenForTimeline(
-    viewModel: SingleMediaViewModelForTimelineI,
+    galleryViewModel: SingleMediaViewModelForTimelineI,
+    viewModel: SingleMediaViewScreenForTimelineViewModel = viewModel(
+        factory = SingleMediaViewScreenForTimelineViewModelFactory(
+            LocalContext.current.applicationContext as Application
+        )
+    ),
     initialImageId: Hash,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val view = LocalView.current
     val activity = view.context.findActivity()
-    val scope = rememberCoroutineScope()
-    // TODO: fix a bug where going back after browsing photos left/right changes the scroll
-    // position in the gallery
 
-    val entries by viewModel.entries.collectAsState()
-
+    val entries by galleryViewModel.entries.collectAsState()
     val initialPage = entries.indexOfFirst{ it.id == initialImageId }
 
     if (initialPage == -1) {
@@ -92,45 +86,12 @@ fun SingleMediaViewScreenForTimeline(
     }
 
     val entry = entries[pagerState.currentPage]
-
-    // single full-image slot and metadata about which page it belongs to
-    var fullImage by remember { mutableStateOf<RemoteImage?>(null) }
-    var fullImagePage by remember { mutableStateOf<Int?>(null) }
-    var fullImageError by remember { mutableStateOf<String?>(null) }
-    var lastRequestId by remember { mutableIntStateOf(0) } // to cancel/stale-guard
-
-    // When page changes, (re)download the full image for that page.
+    // When page changes, check if the new page is a remote image.
+    // If it is, download the full image for that page.
     LaunchedEffect(pagerState.currentPage) {
         val index = pagerState.currentPage
-        // clear or keep previous full image while loading — here we clear to show thumbnail immediately
-        fullImage = null
-        fullImagePage = null
-        fullImageError = null
-
         if (entries[index] is TimelineEntryK.Remote) {
-            // increment request id so earlier downloads don't override newer ones
-            val requestId = ++lastRequestId
-
-            // launch download on IO dispatcher
-            scope.launch(Dispatchers.IO) {
-                try {
-                    val downloaded = viewModel.getRemoteOptimizedImage(entry.id)
-                    withContext(Dispatchers.Main) {
-                        // only set if this is the latest request
-                        if (requestId == lastRequestId) {
-                            fullImage = downloaded
-                            fullImagePage = index
-                        }
-                    }
-                } catch (e: Exception) {
-                    // keep thumbnail on failure; optionally set an error image
-                    withContext(Dispatchers.Main) {
-                        if (requestId == lastRequestId) {
-                            fullImageError = e.message
-                        }
-                    }
-                }
-            }
+            viewModel.fetchFullImage(entry.id, index)
         }
     }
 
@@ -158,7 +119,7 @@ fun SingleMediaViewScreenForTimeline(
                     onClick = {
                         Toast.makeText(context, "Download started", Toast.LENGTH_SHORT)
                             .show()
-                        viewModel.downloadImage(entry.id)
+                        galleryViewModel.downloadImage(entry.id)
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
@@ -183,7 +144,8 @@ fun SingleMediaViewScreenForTimeline(
                             )
                         }
                         is TimelineEntryK.Remote -> {
-                            if (fullImage != null) {
+                            if (viewModel.getLoadingState(pagerState.currentPage) == LoadingState.OK) {
+                                val fullImage = viewModel.fullImageRequestResult.value.image
                                 val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
                                 val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
                                     outputStream().use { it.write(fullImage!!.bytes) }
@@ -251,11 +213,9 @@ fun SingleMediaViewScreenForTimeline(
 
                         is TimelineEntryK.Remote -> {
                             Box() {
-                                val loadingState = when {
-                                    fullImage != null && fullImagePage == pageIndex -> "ok"
-                                    fullImageError != null -> "error"
-                                    else -> "loading"
-                                }
+                                // getLoadingState() call triggers a read of fullImageRequestResult
+                                // State, so should be recomposed when it changes
+                                val loadingState = viewModel.getLoadingState(pageIndex)
 
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
@@ -271,17 +231,21 @@ fun SingleMediaViewScreenForTimeline(
                                                 .align(Alignment.Center),
                                             contentScale = ContentScale.Fit
                                         )
-                                        if (loadingState == "error") {
+                                        if (loadingState == LoadingState.ERROR) {
+                                            val fullImageError =
+                                                viewModel.fullImageRequestResult.value.error
                                             Text("Fetching error: $fullImageError")
-                                        } else if (loadingState == "loading") {
+                                        } else if (loadingState == LoadingState.LOADING) {
                                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                                         }
                                     }
                                 }
 
-                                if (loadingState == "ok") {
+                                if (loadingState == LoadingState.OK) {
+                                    val fullImageBytes =
+                                        viewModel.fullImageRequestResult.value.image!!.bytes
                                     AsyncImage(
-                                        model = fullImage!!.bytes,
+                                        model = fullImageBytes,
                                         contentDescription = "Full screen image",
                                         modifier = Modifier
                                             .fillMaxWidth()

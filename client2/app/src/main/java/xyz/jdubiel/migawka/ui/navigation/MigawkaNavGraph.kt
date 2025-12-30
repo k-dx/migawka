@@ -176,7 +176,7 @@ fun MigawkaNavHost(
                 if (initialImageId != null) {
                     Log.d("SingleMediaViewScreenForTimeline", "initialImageId = $initialImageId")
                     SingleMediaViewScreenForTimeline(
-                        viewModel = imageGalleryViewModel,
+                        galleryViewModel = imageGalleryViewModel,
                         initialImageId = hasher.fromHex(initialImageId)
                     )
                 } else {
