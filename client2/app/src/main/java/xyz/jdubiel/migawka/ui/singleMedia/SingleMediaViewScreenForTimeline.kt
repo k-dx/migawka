@@ -147,7 +147,10 @@ fun SingleMediaViewScreenForTimeline(
                             when (val state = viewModel.fullImageState.value) {
                                 is FullImageUiState.Success -> {
                                     val imagesDir = File(context.filesDir, "share").apply { if (!exists()) mkdirs() }
-                                    val cacheFile = File(imagesDir, "share_${System.currentTimeMillis()}.jpg").apply {
+                                    val cacheFile = File(
+                                        imagesDir,
+                                        "share_${System.currentTimeMillis()}.jpg"
+                                    ).apply {
                                         outputStream().use { it.write(state.image.bytes) }
                                     }
                                     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cacheFile)
