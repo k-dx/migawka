@@ -42,7 +42,7 @@ fun ImageGalleryScreen(
 ) {
     val entries by viewModel.entriesWithHeaders.collectAsState()
 
-    Log.d(TAG, "entries.size = ${entries.size}")
+    Log.d(TAG, "entries.size = ${entries.size} (including headers)")
 
     ImageGrid(
         entries = entries,

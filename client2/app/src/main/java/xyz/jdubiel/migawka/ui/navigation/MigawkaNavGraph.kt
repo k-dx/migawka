@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +33,8 @@ import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimeline
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModel
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModelFactory
 
 enum class MigawkaScreen {
     Second,
@@ -175,9 +178,18 @@ fun MigawkaNavHost(
                 val initialImageId = backStackEntry.arguments?.getString(initialImageIdArg)
                 if (initialImageId != null) {
                     Log.d("SingleMediaViewScreenForTimeline", "initialImageId = $initialImageId")
+
+                    val vm: SingleMediaViewScreenForTimelineViewModel = viewModel(
+                        factory = SingleMediaViewScreenForTimelineViewModelFactory(
+                            LocalContext.current.applicationContext as Application,
+                            imageGalleryViewModel.entries.collectAsState().value,
+                            initialImageId = hasher.fromHex(initialImageId)
+                        )
+                    )
+
                     SingleMediaViewScreenForTimeline(
                         galleryViewModel = imageGalleryViewModel,
-                        initialImageId = hasher.fromHex(initialImageId)
+                        viewModel = vm,
                     )
                 } else {
                     Log.e("SingleMediaViewScreenForTimeline", "initialImageId is null")

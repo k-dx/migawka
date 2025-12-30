@@ -1,6 +1,5 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
-import android.app.Application
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
@@ -23,8 +22,6 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -32,10 +29,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.Utils
-import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 import xyz.jdubiel.migawka.findActivity
@@ -45,44 +40,23 @@ import java.io.File
 @Composable
 fun SingleMediaViewScreenForTimeline(
     galleryViewModel: SingleMediaViewModelForTimelineI,
-    viewModel: SingleMediaViewScreenForTimelineViewModel = viewModel(
-        factory = SingleMediaViewScreenForTimelineViewModelFactory(
-            LocalContext.current.applicationContext as Application
-        )
-    ),
-    initialImageId: Hash,
+    viewModel: SingleMediaViewScreenForTimelineViewModel,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val view = LocalView.current
     val activity = view.context.findActivity()
 
-    val entries by galleryViewModel.entries.collectAsState()
-    val initialPage = entries.indexOfFirst{ it.id == initialImageId }
+    val entries = viewModel.entries
 
-    if (initialPage == -1) {
-        // This accounts for the fact that initialPage might not be found during the first (few)
-        // compositions since collecting from flow is done asynchronously. Since we know that the
-        // photo should be found eventually, we just display loading screen if data is not yet
-        // there.
-
-        Column(
-            modifier = modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-
+    // we want pagerState to survive configuration changes, so it also is stored in viewModel
     val pagerState = rememberPagerState(
-        initialPage = initialPage,
+        initialPage = viewModel.currentPage.value,
         pageCount = { entries.size }
     )
-
-    LaunchedEffect(initialPage) {
-        pagerState.scrollToPage(initialPage)
+    // Sync changes back to ViewModel
+    LaunchedEffect(pagerState) {
+        viewModel.setCurrentPage(pagerState.currentPage)
     }
 
     val entry = entries[pagerState.currentPage]
@@ -90,6 +64,7 @@ fun SingleMediaViewScreenForTimeline(
     // If it is, download the full image for that page.
     LaunchedEffect(pagerState.currentPage) {
         val index = pagerState.currentPage
+        Log.d("SMS", "page changed to $index")
         if (entries[index] is TimelineEntryK.Remote) {
             viewModel.fetchFullImage(entry.id, index)
         }

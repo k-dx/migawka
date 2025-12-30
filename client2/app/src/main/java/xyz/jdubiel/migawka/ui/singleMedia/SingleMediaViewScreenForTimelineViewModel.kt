@@ -3,6 +3,7 @@ package xyz.jdubiel.migawka.ui.singleMedia
 import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -16,6 +17,7 @@ import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.RemoteImage
+import xyz.jdubiel.migawka.data.TimelineEntryK
 
 sealed interface FullImageUiState {
     data object Loading : FullImageUiState
@@ -24,14 +26,30 @@ sealed interface FullImageUiState {
     data object Empty : FullImageUiState
 }
 
-class SingleMediaViewScreenForTimelineViewModel(private val imageRepository: ImageRepository) :
+class SingleMediaViewScreenForTimelineViewModel(
+    private val imageRepository: ImageRepository,
+    val entries: List<TimelineEntryK>,
+    initialImageId: Hash
+) :
     ViewModel() {
+
+    // pager state should survive config changes with viewModel
+    private val _currentPage = mutableIntStateOf(let {
+        val index = entries.indexOfFirst { it.id == initialImageId }
+        if (index == -1) 0 else index
+    })
+    val currentPage: State<Int> = _currentPage
 
     // single full-image slot and metadata about which page it belongs to
     private val _fullImageState =
         mutableStateOf<FullImageUiState>(FullImageUiState.Empty)
     val fullImageState: State<FullImageUiState> = _fullImageState
     private var fetchJob: Job? = null
+
+    init {
+        Log.d(TAG, "entries size = ${entries.size}")
+        Log.d(TAG, "initialImageId = ${initialImageId.toHex()}")
+    }
 
     /**
      * Fetches the "full" (higher resolution) image for the given page.
@@ -73,20 +91,31 @@ class SingleMediaViewScreenForTimelineViewModel(private val imageRepository: Ima
         }
     }
 
+    fun setCurrentPage(page: Int) {
+        Log.d(TAG, "onPageChange: $page")
+        _currentPage.intValue = page
+    }
+
     companion object {
         private const val TAG = "SingleMediaViewScreenForTimelineViewModel"
     }
 }
 
 class SingleMediaViewScreenForTimelineViewModelFactory(
-    private val application: Application
+    private val application: Application,
+    private val entries: List<TimelineEntryK>,
+    private val initialImageId: Hash,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SingleMediaViewScreenForTimelineViewModel::class.java)) {
             val imageRepository = (application as MigawkaApplication).imageRepository
-            return SingleMediaViewScreenForTimelineViewModel(imageRepository) as T
+            return SingleMediaViewScreenForTimelineViewModel(
+                imageRepository,
+                entries,
+                initialImageId
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
