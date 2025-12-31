@@ -68,6 +68,7 @@ fun FolderScreen(
 //        }
 
         FolderScreenGrid(
+            modifier = Modifier,
             entries,
             onDirClick = { dirName ->
                 val newPath =
@@ -130,10 +131,10 @@ fun PathBarPreview() {
 
 @Composable
 fun FolderScreenGrid(
+    modifier: Modifier = Modifier,
     entries: List<DirectoryEntryK>,
     onDirClick: (String) -> Unit = {},
     onImageClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 120.dp),
