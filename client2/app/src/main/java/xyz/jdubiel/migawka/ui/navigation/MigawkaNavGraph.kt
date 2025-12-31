@@ -1,25 +1,24 @@
 package xyz.jdubiel.migawka.ui.navigation
 
 import android.app.Application
-import android.net.Uri
 import android.util.Log
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
+import kotlinx.serialization.Serializable
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
@@ -34,15 +33,46 @@ import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModelFactory
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenViewModel
+import kotlin.reflect.KClass
 
-enum class MigawkaScreen {
-    Second,
-    Gallery,
-    FolderView,
-    Menu,
-    SingleMediaViewForFolder,
-    SingleMediaViewForTimeline,
-    Settings
+sealed interface MigawkaScreen {
+    @Serializable
+    data object Second : MigawkaScreen
+
+    @Serializable
+    data object Gallery : MigawkaScreen
+
+    @Serializable
+    data object Menu : MigawkaScreen
+
+    @Serializable
+    data object Settings : MigawkaScreen
+
+    @Serializable
+    data class FolderView(val path: String) : MigawkaScreen
+
+    @Serializable
+    data class SingleMediaViewForTimeline(val initialMediaId: String) : MigawkaScreen
+
+    @Serializable
+    data class SingleMediaViewForFolder(val path: String, val initialMediaId: String) :
+        MigawkaScreen
+}
+
+fun shouldShowBottomNavBar(destination: NavDestination): Boolean {
+    val destinationsWithNavBar: List<KClass<*>> =
+        listOf(
+            MigawkaScreen.Gallery::class,
+            MigawkaScreen.FolderView::class,
+            MigawkaScreen.Menu::class
+        )
+
+    for (dest in destinationsWithNavBar) {
+        if (destination.hasRoute(dest)) {
+            return true
+        }
+    }
+    return false
 }
 
 @Composable
@@ -55,119 +85,101 @@ fun MigawkaNavHost(
     ),
     modifier: Modifier
 ) {
-    val initialImageIdArg = "initialImageId"
-    val initialFolderPath = "/"
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            // possibly TODO: use the navigation graph objects instead of operating on strings
-            if (getRouteNameForBottomBar(currentRoute) in bottomBarRoutes) {
+            if (currentDestination != null && shouldShowBottomNavBar(currentDestination)) {
                 MigawkaNavigationBar(navController)
             }
         }
     ) { innerPadding -> // TODO: this is a bit ugly
         NavHost(
             navController = navController,
-            startDestination = MigawkaScreen.Gallery.name,
+            startDestination = MigawkaScreen.Gallery,
         ) {
-            composable(route = MigawkaScreen.Gallery.name) {
+            composable<MigawkaScreen.Gallery> {
                 Gallery(
                     viewModel = imageGalleryViewModel,
                     onImageClick = { imageId: String ->
                         Log.d(TAG, "onImageClick, imageId = $imageId")
-                        navController.navigate("${MigawkaScreen.SingleMediaViewForTimeline.name}/$imageId")
+                        navController.navigate(MigawkaScreen.SingleMediaViewForTimeline(imageId))
                     },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
 
-            composable(
-                route = "${MigawkaScreen.FolderView.name}/{$initialFolderPath}",
-                arguments = listOf(navArgument(initialFolderPath) { type = NavType.StringType })
-            ) { backStackEntry ->
-                val path = backStackEntry.arguments?.getString(initialFolderPath)
-                if (path != null) {
-                    val decoded = Uri.decode(path)
-                    val folderScreenViewModel: FolderScreenViewModel = viewModel(
-                        viewModelStoreOwner = backStackEntry,
-                        factory = FolderScreenViewModelFactory(
-                            path,
-                            LocalContext.current.applicationContext as Application
+            composable<MigawkaScreen.FolderView> { backStackEntry ->
+                val folderView: MigawkaScreen.FolderView = backStackEntry.toRoute()
+                val path = folderView.path
+
+                val folderScreenViewModel: FolderScreenViewModel = viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = FolderScreenViewModelFactory(
+                        path,
+                        LocalContext.current.applicationContext as Application
+                    )
+                )
+
+                FolderScreen(
+                    path = path,
+                    navigateToPath = { path ->
+                        val targetRoute = MigawkaScreen.FolderView(path)
+
+                        // Try to pop back to target first
+                        val popped = navController.popBackStack(
+                            route = targetRoute,
+                            inclusive = false
                         )
-                    )
 
-                    FolderScreen(
-                        path = decoded,
-                        navigateToPath = { path ->
-                            val encoded = Uri.encode(path)
-                            val targetRoute = "${MigawkaScreen.FolderView.name}/$encoded"
-
-                            // Try to pop back to target first
-                            val popped = navController.popBackStack(
-                                route = targetRoute,
-                                inclusive = false
+                        if (!popped) {
+                            // Target not in back stack, navigate to it
+                            navController.navigate(targetRoute)
+                        }
+                    },
+                    onImageClick = { imageId: String ->
+                        Log.d("FolderScreen", "clicked on image with id $imageId")
+                        navController.navigate(
+                            MigawkaScreen.SingleMediaViewForFolder(
+                                path,
+                                imageId
                             )
-
-                            if (!popped) {
-                                // Target not in back stack, navigate to it
-                                navController.navigate(targetRoute)
-                            }
-                        },
-                        onImageClick = { imageId: String ->
-                            val encoded = Uri.encode(path)
-                            Log.d("FolderScreen", "clicked on image with id $imageId")
-                            navController.navigate("${MigawkaScreen.SingleMediaViewForFolder.name}/$encoded/$imageId")
-                        },
-                        viewModel = folderScreenViewModel,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                } else {
-                    Log.e("FolderView", "path is null")
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        Text("Error: path is null. The folder could not be displayed.")
-                    }
-                }
+                        )
+                    },
+                    viewModel = folderScreenViewModel,
+                    modifier = Modifier.padding(innerPadding)
+                )
             }
 
-            composable(route = MigawkaScreen.Second.name) {
+
+            composable<MigawkaScreen.Second> {
                 SecondScreen(modifier = Modifier.padding(innerPadding))
             }
 
-            composable(route = MigawkaScreen.Settings.name) {
+            composable<MigawkaScreen.Settings> {
                 SettingsScreen(modifier = Modifier.padding(innerPadding))
             }
 
-            composable(
-                route = "${MigawkaScreen.SingleMediaViewForFolder.name}/{$initialFolderPath}/{$initialImageIdArg}",
-                arguments = listOf(
-                    navArgument(initialFolderPath) { type = NavType.StringType },
-                    navArgument(initialImageIdArg) { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val path = backStackEntry.arguments?.getString(initialFolderPath)
-                val initialImageId = backStackEntry.arguments?.getString(initialImageIdArg)
+            composable<MigawkaScreen.SingleMediaViewForFolder> { backStackEntry ->
+                val args: MigawkaScreen.SingleMediaViewForFolder = backStackEntry.toRoute()
+                val path = args.path
+                val initialMediaId = args.initialMediaId
 
                 // traverse nav stack and find the topmost one with FolderScreenViewModel
                 val previousEntry = navController.previousBackStackEntry
 
-                if (initialImageId == null) {
-                    Log.e(MigawkaScreen.SingleMediaViewForFolder.name, "initialImageId is null")
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        Text("Error: initialImageId is null. The image could not be displayed.")
-                    }
-                } else if (previousEntry == null) {
-                    Log.e(MigawkaScreen.SingleMediaViewForFolder.name, "previousEntry is null")
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        Text("Error: previousEntry is null")
-                    }
-                } else if (path == null) {
-                    Log.e(MigawkaScreen.SingleMediaViewForFolder.name, "path is null")
+                if (previousEntry == null || !previousEntry.destination.hasRoute(MigawkaScreen.FolderView::class)) {
+                    Log.e(
+                        MigawkaScreen.SingleMediaViewForFolder::class.simpleName,
+                        "previousEntry is null"
+                    )
                 } else {
-                    Log.d(MigawkaScreen.SingleMediaViewForFolder.name, "path = $path, initialImageId = $initialImageId")
+                    Log.d(
+                        MigawkaScreen.SingleMediaViewForFolder::class.simpleName,
+                        "path = $path, initialMediaId = $initialMediaId"
+                    )
 
                     // Access the existing FolderScreenViewModel
                     val topFolderScreenViewModel: FolderScreenViewModel =
@@ -183,7 +195,7 @@ fun MigawkaNavHost(
                         factory = SingleMediaViewScreenForTimelineViewModelFactory(
                             LocalContext.current.applicationContext as Application,
                             topFolderScreenViewModel.mediaEntries.collectAsState().value,
-                            initialImageId = hasher.fromHex(initialImageId)
+                            initialImageId = hasher.fromHex(initialMediaId)
                         )
                     )
 
@@ -191,36 +203,32 @@ fun MigawkaNavHost(
                 }
             }
 
-            composable(
-                route = "${MigawkaScreen.SingleMediaViewForTimeline.name}/{$initialImageIdArg}",
-                arguments = listOf(navArgument(initialImageIdArg) { type = NavType.StringType })
-            ) { backStackEntry ->
-                val initialImageId = backStackEntry.arguments?.getString(initialImageIdArg)
-                if (initialImageId != null) {
-                    Log.d(MigawkaScreen.SingleMediaViewForTimeline.name, "initialImageId = $initialImageId")
+            composable<MigawkaScreen.SingleMediaViewForTimeline> { backStackEntry ->
+                val initialMediaId: String = backStackEntry
+                    .toRoute<MigawkaScreen.SingleMediaViewForTimeline>()
+                    .initialMediaId
 
-                    val vm: SingleMediaViewScreenViewModel = viewModel(
-                        factory = SingleMediaViewScreenForTimelineViewModelFactory(
-                            LocalContext.current.applicationContext as Application,
-                            imageGalleryViewModel.entries.collectAsState().value,
-                            initialImageId = hasher.fromHex(initialImageId)
-                        )
+                Log.d(
+                    MigawkaScreen.SingleMediaViewForTimeline::class.simpleName,
+                    "initialMediaId = $initialMediaId"
+                )
+
+                val vm: SingleMediaViewScreenViewModel = viewModel(
+                    factory = SingleMediaViewScreenForTimelineViewModelFactory(
+                        LocalContext.current.applicationContext as Application,
+                        imageGalleryViewModel.entries.collectAsState().value,
+                        initialImageId = hasher.fromHex(initialMediaId)
                     )
+                )
 
-                    SingleMediaViewScreen(viewModel = vm)
-                } else {
-                    Log.e(MigawkaScreen.SingleMediaViewForTimeline.name, "initialImageId is null")
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        Text("Error: initialImageId is null. The image could not be displayed.")
-                    }
-                }
+                SingleMediaViewScreen(viewModel = vm)
             }
 
-            composable(route = MigawkaScreen.Menu.name) {
+            composable<MigawkaScreen.Menu> {
                 MenuScreen(
                     modifier = Modifier.padding(innerPadding),
-                    onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second.name) },
-                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings.name) }
+                    onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second) },
+                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings) }
                 )
             }
         }

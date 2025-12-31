@@ -1,6 +1,5 @@
 package xyz.jdubiel.migawka.ui.navigation
 
-import android.net.Uri
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
@@ -11,18 +10,16 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
-
-fun getRouteNameForBottomBar(route: String?): String? = route?.substringBefore('/')
-
-fun saveStateAndNavigate(navController: NavHostController, destination: String) {
+fun saveStateAndNavigate(navController: NavHostController, destination: MigawkaScreen) {
     navController.navigate(destination) {
         // Pop up to start destination to avoid large back stack
         popUpTo(navController.graph.findStartDestination().id) {
-            saveState = true  // Save state of popped destinations
+            saveState = true
         }
         // Prevent duplicate copies of the same destination
         launchSingleTop = true
@@ -31,59 +28,45 @@ fun saveStateAndNavigate(navController: NavHostController, destination: String) 
     }
 }
 
-// TODO: it would be better to have one source of truth for bottomBarRoutes
-// and content of MigawkaNavigationBar
-val bottomBarRoutes = setOf(
-    MigawkaScreen.Gallery.name,
-    MigawkaScreen.FolderView.name,
-    MigawkaScreen.Menu.name
-)
-
 @Composable
 fun MigawkaNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val currentRouteWithoutArgs = getRouteNameForBottomBar(currentRoute)
+    val currentDestination = navBackStackEntry?.destination
 
-    val gallerySelected = currentRouteWithoutArgs == MigawkaScreen.Gallery.name
-    val folderViewSelected = currentRouteWithoutArgs == MigawkaScreen.FolderView.name
-    val menuSelected = currentRouteWithoutArgs == MigawkaScreen.Menu.name
+    val gallerySelected = currentDestination?.hasRoute<MigawkaScreen.Gallery>() ?: false
+    val folderViewSelected = currentDestination?.hasRoute<MigawkaScreen.FolderView>() ?: false
+    val menuSelected = currentDestination?.hasRoute<MigawkaScreen.Menu>() ?: false
 
-    NavigationBar() {
+    NavigationBar {
         NavigationBarItem(
             selected = gallerySelected,
-            icon = { Icon(Icons.Filled.Home, contentDescription = "Gallery") },
+            icon = { Icon(Icons.Filled.Home, "Gallery") },
             label = { Text("Gallery") },
             onClick = {
                 if (!gallerySelected) {
-                    saveStateAndNavigate(navController,MigawkaScreen.Gallery.name)
+                    saveStateAndNavigate(navController, MigawkaScreen.Gallery)
                 }
             }
         )
         NavigationBarItem(
             selected = folderViewSelected,
-            icon = { Icon(Icons.Filled.Folder, contentDescription = "Folders") },
+            icon = { Icon(Icons.Filled.Folder, "Folders") },
             label = { Text("Folders") },
             onClick = {
                 if (!folderViewSelected) {
-                    val rawPath = "/"
-                    val encoded = Uri.encode(rawPath)
-
-                    saveStateAndNavigate(navController, "${MigawkaScreen.FolderView.name}/$encoded")
+                    saveStateAndNavigate(navController, MigawkaScreen.FolderView(path = "/"))
                 }
             }
         )
         NavigationBarItem(
             selected = menuSelected,
-            icon = { Icon(Icons.Filled.Menu, contentDescription = "Menu") },
+            icon = { Icon(Icons.Filled.Menu, "Menu") },
             label = { Text("Menu") },
             onClick = {
                 if (!menuSelected) {
-                    saveStateAndNavigate(navController, MigawkaScreen.Menu.name)
+                    saveStateAndNavigate(navController, MigawkaScreen.Menu)
                 }
             }
         )
     }
 }
-
-
