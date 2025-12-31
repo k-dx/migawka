@@ -32,15 +32,15 @@ import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
 import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
-import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenViewModel
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModelFactory
+import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenViewModel
 
 enum class MigawkaScreen {
     Second,
     Gallery,
     FolderView,
     Menu,
-    SingleMediaView,
+    SingleMediaViewForFolder,
     SingleMediaViewForTimeline,
     Settings
 }
@@ -57,10 +57,6 @@ fun MigawkaNavHost(
 ) {
     val initialImageIdArg = "initialImageId"
     val initialFolderPath = "/"
-
-    // This is a way of passing the FolderScreenViewModel that is on the top of the navigation
-    // stack to the SingleMediaViewScreen. Might not be the best solution, but it works.
-    var topFolderScreenViewModel: FolderScreenViewModel? = null
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -97,12 +93,12 @@ fun MigawkaNavHost(
                 if (path != null) {
                     val decoded = Uri.decode(path)
                     val folderScreenViewModel: FolderScreenViewModel = viewModel(
+                        viewModelStoreOwner = backStackEntry,
                         factory = FolderScreenViewModelFactory(
                             path,
                             LocalContext.current.applicationContext as Application
                         )
                     )
-                    topFolderScreenViewModel = folderScreenViewModel
 
                     FolderScreen(
                         path = decoded,
@@ -122,8 +118,9 @@ fun MigawkaNavHost(
                             }
                         },
                         onImageClick = { imageId: String ->
+                            val encoded = Uri.encode(path)
                             Log.d("FolderScreen", "clicked on image with id $imageId")
-                            navController.navigate("${MigawkaScreen.SingleMediaView.name}/$imageId")
+                            navController.navigate("${MigawkaScreen.SingleMediaViewForFolder.name}/$encoded/$imageId")
                         },
                         viewModel = folderScreenViewModel,
                         modifier = Modifier.padding(innerPadding)
@@ -145,35 +142,52 @@ fun MigawkaNavHost(
             }
 
             composable(
-                route = "${MigawkaScreen.SingleMediaView.name}/{$initialImageIdArg}",
-                arguments = listOf(navArgument(initialImageIdArg) { type = NavType.StringType })
+                route = "${MigawkaScreen.SingleMediaViewForFolder.name}/{$initialFolderPath}/{$initialImageIdArg}",
+                arguments = listOf(
+                    navArgument(initialFolderPath) { type = NavType.StringType },
+                    navArgument(initialImageIdArg) { type = NavType.StringType }
+                )
             ) { backStackEntry ->
-                val initialImageId = backStackEntry.arguments
-                    ?.getString(initialImageIdArg)
-                if (initialImageId != null) {
-                    Log.d("SingleMediaViewScreen", "initialImageId = $initialImageId, using folderScreenViewModel = ${topFolderScreenViewModel != null}")
+                val path = backStackEntry.arguments?.getString(initialFolderPath)
+                val initialImageId = backStackEntry.arguments?.getString(initialImageIdArg)
 
-                    if (topFolderScreenViewModel == null) {
-                        Log.e("SingleMediaViewScreen", "topFolderScreenViewModel is null")
-                        Box(modifier = Modifier.padding(innerPadding)) {
-                            Text("Error: topFolderScreenViewModel is null")
-                        }
+                // traverse nav stack and find the topmost one with FolderScreenViewModel
+                val previousEntry = navController.previousBackStackEntry
+
+                if (initialImageId == null) {
+                    Log.e(MigawkaScreen.SingleMediaViewForFolder.name, "initialImageId is null")
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        Text("Error: initialImageId is null. The image could not be displayed.")
                     }
+                } else if (previousEntry == null) {
+                    Log.e(MigawkaScreen.SingleMediaViewForFolder.name, "previousEntry is null")
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        Text("Error: previousEntry is null")
+                    }
+                } else if (path == null) {
+                    Log.e(MigawkaScreen.SingleMediaViewForFolder.name, "path is null")
+                } else {
+                    Log.d(MigawkaScreen.SingleMediaViewForFolder.name, "path = $path, initialImageId = $initialImageId")
+
+                    // Access the existing FolderScreenViewModel
+                    val topFolderScreenViewModel: FolderScreenViewModel =
+                        viewModel(
+                            viewModelStoreOwner = previousEntry,
+                            factory = FolderScreenViewModelFactory(
+                                path,
+                                LocalContext.current.applicationContext as Application
+                            )
+                        )
 
                     val vm: SingleMediaViewScreenViewModel = viewModel(
                         factory = SingleMediaViewScreenForTimelineViewModelFactory(
                             LocalContext.current.applicationContext as Application,
-                            topFolderScreenViewModel!!.mediaEntries.collectAsState().value, // TODO: remove !!
+                            topFolderScreenViewModel.mediaEntries.collectAsState().value,
                             initialImageId = hasher.fromHex(initialImageId)
                         )
                     )
 
                     SingleMediaViewScreen(viewModel = vm)
-                } else {
-                    Log.e("SingleMediaViewScreen", "initialImageId is null")
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        Text("Error: initialImageId is null. The image could not be displayed.")
-                    }
                 }
             }
 
@@ -183,7 +197,7 @@ fun MigawkaNavHost(
             ) { backStackEntry ->
                 val initialImageId = backStackEntry.arguments?.getString(initialImageIdArg)
                 if (initialImageId != null) {
-                    Log.d("SingleMediaViewScreenForTimeline", "initialImageId = $initialImageId")
+                    Log.d(MigawkaScreen.SingleMediaViewForTimeline.name, "initialImageId = $initialImageId")
 
                     val vm: SingleMediaViewScreenViewModel = viewModel(
                         factory = SingleMediaViewScreenForTimelineViewModelFactory(
@@ -195,7 +209,7 @@ fun MigawkaNavHost(
 
                     SingleMediaViewScreen(viewModel = vm)
                 } else {
-                    Log.e("SingleMediaViewScreenForTimeline", "initialImageId is null")
+                    Log.e(MigawkaScreen.SingleMediaViewForTimeline.name, "initialImageId is null")
                     Box(modifier = Modifier.padding(innerPadding)) {
                         Text("Error: initialImageId is null. The image could not be displayed.")
                     }
