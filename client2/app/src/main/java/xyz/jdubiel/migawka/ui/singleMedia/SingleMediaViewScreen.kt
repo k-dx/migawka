@@ -1,8 +1,11 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +25,12 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -29,7 +38,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
@@ -56,6 +69,7 @@ fun SingleMediaViewScreen(
     viewModel: SingleMediaViewScreenViewModel,
     modifier: Modifier = Modifier
 ) {
+    Log.d("back", "composition")
     val context = LocalContext.current
     val view = LocalView.current
     val activity = view.context.findActivity()
@@ -83,6 +97,43 @@ fun SingleMediaViewScreen(
         }
     }
 
+    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    var backPressHandled by rememberSaveable { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val windowInsetsController = remember(view) {
+        val window = (view.context as? Activity)?.window
+        window?.let { WindowCompat.getInsetsController(it, view) }
+    }
+    var rotationChangedByButton by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = !backPressHandled) {
+        Log.d("back", "back pressed")
+
+        // make system bars visible again
+        windowInsetsController?.show(WindowInsetsCompat.Type.systemBars())
+
+        // if rotation was changed manually using the button, restore the previous one
+        if (rotationChangedByButton && activity != null) {
+            Utils.toggleDeviceOrientation(activity)
+            // rotationChangedByButton = false
+        }
+        viewModel.scheduleBackAction()
+        backPressHandled = true // to disable this BackHandler and have the default
+    }
+
+    // Check if we have a pending back action from the PREVIOUS instance
+    LaunchedEffect(viewModel.pendingBackAction) {
+        if (viewModel.pendingBackAction) {
+            // The screen has rotated and recreated. Now it's safe to go back.
+            coroutineScope.launch {
+                awaitFrame()
+                Log.d("back", "onBackPressed()")
+                onBackPressedDispatcher?.onBackPressed()
+                backPressHandled = false
+            }
+            viewModel.onBackActionConsumed() // Reset the flag
+        }
+    }
+
     val autoRotateEnabled = Utils.isAutoRotateEnabled(context)
     val buttons: List<@Composable () -> Unit> = buildList {
         if (!autoRotateEnabled) {
@@ -91,6 +142,7 @@ fun SingleMediaViewScreen(
                     onClick = {
                         if (activity != null) {
                             Utils.toggleDeviceOrientation(activity)
+                            rotationChangedByButton = !rotationChangedByButton
                         } else {
                             Log.e("SingleMediaViewScreen", "activity is null, cannot rotate")
                         }

@@ -3,8 +3,10 @@ package xyz.jdubiel.migawka.ui.singleMedia
 import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -46,9 +48,20 @@ class SingleMediaViewScreenViewModel(
     val fullImageState: State<FullImageUiState> = _fullImageState
     private var fetchJob: Job? = null
 
+    var pendingBackAction by mutableStateOf(false)
+        private set
+
     init {
         Log.d(TAG, "entries size = ${entries.size}")
         Log.d(TAG, "initialImageId = ${initialImageId.toHex()}")
+    }
+
+    fun scheduleBackAction() {
+        pendingBackAction = true
+    }
+
+    fun onBackActionConsumed() {
+        pendingBackAction = false
     }
 
     /**
