@@ -16,20 +16,25 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
+import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -52,6 +57,22 @@ fun ImageGalleryScreen(
 }
 
 @Composable
+fun ImageGridHeader(date: Instant, modifier: Modifier = Modifier) {
+    val locale = Locale.getDefault()
+    val zone = java.time.ZoneId.systemDefault()
+    val formatter = DateTimeFormatter
+        // LLLL gives non-conjugated month name 'listopad' instead of 'listopada'
+        .ofPattern("LLLL uuuu")
+        .withLocale(locale)
+        .withZone(zone)
+
+    Text(
+        text = formatter.format(date),
+        modifier = modifier
+    )
+}
+
+@Composable
 fun ImageGrid(
     entries: List<ImageGalleryTimelineEntry>,
     onImageClick: (String) -> Unit,
@@ -66,6 +87,20 @@ fun ImageGrid(
             verticalArrangement = Arrangement.Center
         ) {
             CircularProgressIndicator()
+        }
+        return
+    }
+
+    val stickyHeader by remember {
+        derivedStateOf {
+            // Logic to determine which header should be sticky
+            // based on first visible item
+
+            val firstVisibleIndex = gridState.firstVisibleItemIndex
+            when (val entry = entries[firstVisibleIndex]) {
+                is ImageGalleryTimelineEntry.Header -> entry.date
+                is ImageGalleryTimelineEntry.ImageItem -> entry.entry.date
+            }
         }
     }
 
@@ -82,7 +117,7 @@ fun ImageGrid(
                 count = entries.size,
                 key = { index ->
                     when (val item = entries[index]) {
-                        is ImageGalleryTimelineEntry.Header -> item.monthYear
+                        is ImageGalleryTimelineEntry.Header -> item.date.toString()
                         is ImageGalleryTimelineEntry.ImageItem -> item.entry.id.toHex()
                     }
                 },
@@ -96,10 +131,9 @@ fun ImageGrid(
                 val uiModel = entries[index]
                 when (uiModel) {
                     is ImageGalleryTimelineEntry.Header -> {
-                        Text(
-                            text = uiModel.monthYear,
-                            modifier = Modifier
-                                .padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+                        ImageGridHeader(
+                            date = uiModel.date,
+                            modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
                         )
                     }
 
@@ -133,6 +167,25 @@ fun ImageGrid(
                 }
             }
         }
+
+        // Sticky header overlay
+        stickyHeader.let { date ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .zIndex(1f),
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Box(modifier = Modifier.padding(4.dp)) {
+                    ImageGridHeader(
+                        date = date,
+                        modifier = Modifier.padding(start = 8.dp, top = 0.dp, bottom = 8.dp)
+                    )
+                }
+            }
+        }
+
         FastScroller(
             gridState = gridState,
             label = { index ->
@@ -156,12 +209,4 @@ fun ImageGrid(
                 .padding(end = 4.dp)
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ImageGallery() {
-    // This preview will be empty as it doesn't have access to a real ViewModel
-    // You can create a fake ViewModel for preview purposes if needed.
-    ImageGalleryScreen(onImageClick = {})
 }

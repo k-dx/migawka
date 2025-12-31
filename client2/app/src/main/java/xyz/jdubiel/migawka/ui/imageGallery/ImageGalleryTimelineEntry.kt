@@ -5,5 +5,5 @@ import java.time.Instant
 
 sealed interface ImageGalleryTimelineEntry {
     data class ImageItem(val entry: TimelineEntryK) : ImageGalleryTimelineEntry
-    data class Header(val monthYear: String, val date: Instant) : ImageGalleryTimelineEntry
+    data class Header(val date: Instant) : ImageGalleryTimelineEntry
 }

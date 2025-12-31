@@ -17,9 +17,7 @@ import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import java.time.Instant
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 
 class ImageGalleryViewModel(
@@ -35,13 +33,6 @@ class ImageGalleryViewModel(
     val entries: StateFlow<List<TimelineEntryK>> = _entries.asStateFlow()
 
     init {
-        val locale = Locale.getDefault()
-        val zone = java.time.ZoneId.systemDefault()
-        val monthYearFormatter = DateTimeFormatter
-            .ofPattern("LLLL uuuu") // LLLL gives non-conjugated month name 'listopad' instead of 'listopada'
-            .withLocale(locale)
-            .withZone(zone)
-
         viewModelScope.launch {
             val timeline = withContext(Dispatchers.IO) {
                 Log.d("ImageGalleryViewModel", "loading entries")
@@ -56,16 +47,11 @@ class ImageGalleryViewModel(
 
                 // set entriesWithHeaders
                 val result = mutableListOf<ImageGalleryTimelineEntry>()
-                var lastMonthYear: String? = null
+                var lastMonthYear: Instant? = null
                 for (entry in sorted) {
-                    val monthYear = monthYearFormatter.format(entry.date)
+                    val monthYear = getStartOfMonth(entry.date)
                     if (monthYear != lastMonthYear) {
-                        result.add(
-                            ImageGalleryTimelineEntry.Header(
-                                monthYear = monthYear,
-                                date = getStartOfMonth(entry.date)
-                            )
-                        )
+                        result.add(ImageGalleryTimelineEntry.Header(date = monthYear))
                         lastMonthYear = monthYear
                     }
                     result.add(ImageGalleryTimelineEntry.ImageItem(entry))
