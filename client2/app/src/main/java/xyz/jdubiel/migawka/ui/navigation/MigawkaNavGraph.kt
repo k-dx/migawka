@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -33,7 +32,6 @@ import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenForTimelineViewModelFactory
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreenViewModel
-import kotlin.reflect.KClass
 
 sealed interface MigawkaScreen {
     @Serializable
@@ -57,22 +55,6 @@ sealed interface MigawkaScreen {
     @Serializable
     data class SingleMediaViewForFolder(val path: String, val initialMediaId: String) :
         MigawkaScreen
-}
-
-fun shouldShowBottomNavBar(destination: NavDestination): Boolean {
-    val destinationsWithNavBar: List<KClass<*>> =
-        listOf(
-            MigawkaScreen.Gallery::class,
-            MigawkaScreen.FolderView::class,
-            MigawkaScreen.Menu::class
-        )
-
-    for (dest in destinationsWithNavBar) {
-        if (destination.hasRoute(dest)) {
-            return true
-        }
-    }
-    return false
 }
 
 @Composable

@@ -10,10 +10,58 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import kotlin.reflect.KClass
+
+data class NavBarEntry(
+    val destination: MigawkaScreen,
+    val icon: @Composable () -> Unit,
+    val label: String,
+    val onClick: (NavHostController) -> Unit
+)
+
+val navigationBarEntries = listOf(
+    NavBarEntry(
+        destination = MigawkaScreen.Gallery,
+        icon = { Icon(Icons.Filled.Home, "Gallery") },
+        label = "Gallery",
+        onClick = { navController ->
+            saveStateAndNavigate(navController, MigawkaScreen.Gallery) }
+    ),
+    NavBarEntry(
+        destination = MigawkaScreen.FolderView(path = "/"),
+        icon = { Icon(Icons.Filled.Folder, "Folders") },
+        label = "Folders",
+        onClick = { navController ->
+            saveStateAndNavigate(navController, MigawkaScreen.FolderView(path = "/"))
+        }
+    ),
+    NavBarEntry(
+        destination = MigawkaScreen.Menu,
+        icon = { Icon(Icons.Filled.Menu, "Menu") },
+        label = "Menu",
+        onClick = { navController ->
+            saveStateAndNavigate(navController, MigawkaScreen.Menu)
+        }
+    )
+)
+
+fun shouldShowBottomNavBar(destination: NavDestination): Boolean {
+    val destinationsWithNavBar: List<KClass<*>> = navigationBarEntries.map {
+        it.destination::class
+    }
+
+    for (dest in destinationsWithNavBar) {
+        if (destination.hasRoute(dest)) {
+            return true
+        }
+    }
+    return false
+}
 
 fun saveStateAndNavigate(navController: NavHostController, destination: MigawkaScreen) {
     navController.navigate(destination) {
@@ -33,40 +81,14 @@ fun MigawkaNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val gallerySelected = currentDestination?.hasRoute<MigawkaScreen.Gallery>() ?: false
-    val folderViewSelected = currentDestination?.hasRoute<MigawkaScreen.FolderView>() ?: false
-    val menuSelected = currentDestination?.hasRoute<MigawkaScreen.Menu>() ?: false
-
     NavigationBar {
-        NavigationBarItem(
-            selected = gallerySelected,
-            icon = { Icon(Icons.Filled.Home, "Gallery") },
-            label = { Text("Gallery") },
-            onClick = {
-                if (!gallerySelected) {
-                    saveStateAndNavigate(navController, MigawkaScreen.Gallery)
-                }
-            }
-        )
-        NavigationBarItem(
-            selected = folderViewSelected,
-            icon = { Icon(Icons.Filled.Folder, "Folders") },
-            label = { Text("Folders") },
-            onClick = {
-                if (!folderViewSelected) {
-                    saveStateAndNavigate(navController, MigawkaScreen.FolderView(path = "/"))
-                }
-            }
-        )
-        NavigationBarItem(
-            selected = menuSelected,
-            icon = { Icon(Icons.Filled.Menu, "Menu") },
-            label = { Text("Menu") },
-            onClick = {
-                if (!menuSelected) {
-                    saveStateAndNavigate(navController, MigawkaScreen.Menu)
-                }
-            }
-        )
+        navigationBarEntries.map {
+            NavigationBarItem(
+                selected = currentDestination?.hasRoute(it.destination::class) ?: false,
+                icon = it.icon,
+                label = { Text(it.label) },
+                onClick = { it.onClick(navController) }
+            )
+        }
     }
 }
