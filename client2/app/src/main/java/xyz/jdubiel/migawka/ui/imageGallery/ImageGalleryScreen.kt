@@ -80,20 +80,12 @@ fun ImageGrid(
         ) {
             items(
                 count = entries.size,
-                // TODO: use hash as key but make sure they are unique first
-                // also having hash collision should be handled gracefully
-//                    key = { index ->
-//                        when (val item = images.peek(index)) {
-//                            is ImageGalleryTimelineEntry.ImageItem -> {
-//                                when(item.image) {
-//                                    is PagedImage.FromUri -> item.image.id.toHex()
-//                                    is PagedImage.FromBytes -> item.image.id.toHex()
-//                                }
-//                            }
-//                            is ImageGalleryTimelineEntry.MonthHeader -> item.monthYear
-//                            null -> "placeholder_$index"
-//                        }
-//                    },
+                key = { index ->
+                    when (val item = entries[index]) {
+                        is ImageGalleryTimelineEntry.Header -> item.monthYear
+                        is ImageGalleryTimelineEntry.ImageItem -> item.entry.id.toHex()
+                    }
+                },
                 span = { index ->
                     when (entries[index]) {
                         is ImageGalleryTimelineEntry.Header -> GridItemSpan(maxLineSpan)
@@ -151,9 +143,9 @@ fun ImageGrid(
                     .withLocale(locale)
                     .withZone(zone)
 
-                val date = when (entries[index]) {
-                    is ImageGalleryTimelineEntry.Header -> (entries[index] as ImageGalleryTimelineEntry.Header).date
-                    is ImageGalleryTimelineEntry.ImageItem -> (entries[index] as ImageGalleryTimelineEntry.ImageItem).entry.date
+                val date = when (val entry = entries[index]) {
+                    is ImageGalleryTimelineEntry.Header -> entry.date
+                    is ImageGalleryTimelineEntry.ImageItem -> entry.entry.date
                 }
                 formatter.format(date)
             },
