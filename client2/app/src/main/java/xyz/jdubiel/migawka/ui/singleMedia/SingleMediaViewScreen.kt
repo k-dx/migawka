@@ -74,8 +74,6 @@ fun SingleMediaViewScreen(
     val activity = view.context.findActivity()
 
     val entries = viewModel.entries
-
-    // we want pagerState to survive configuration changes, so it also is stored in viewModel
     val pagerState = rememberPagerState(
         initialPage = viewModel.currentPage.value,
         pageCount = { entries.size }
