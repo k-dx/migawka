@@ -19,7 +19,7 @@ class SettingsScreenViewModel(
     private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
-    private val _settingsModified = MutableStateFlow<Boolean>(false)
+    private val _settingsModified = MutableStateFlow(false)
     val settingsModified: StateFlow<Boolean> = _settingsModified.asStateFlow()
 
     // stateIn call converts (cold) Flow to (hot) StateFlow, so it's immediately available

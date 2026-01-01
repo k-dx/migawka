@@ -197,7 +197,7 @@ class MediaStoreImageProvider(
      * @return highest GENERATION_MODIFIED.
      */
     private suspend fun indexMediaStore(fromGenerationModified: Int): Int {
-        var entries: MutableList<LocalImage> = mutableListOf()
+        val entries: MutableList<LocalImage> = mutableListOf()
         var highestGenerationModified = fromGenerationModified
 
         val projection = arrayOf(
@@ -294,7 +294,7 @@ class MediaStoreImageProvider(
                                 val fmt = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
                                 val ldt = LocalDateTime.parse(s, fmt)
                                 ldt.atZone(ZoneId.systemDefault()).toInstant()
-                            } catch (e: Exception) { null }
+                            } catch (_: Exception) { null }
                         }
                     }
                 } catch (_: Exception) {

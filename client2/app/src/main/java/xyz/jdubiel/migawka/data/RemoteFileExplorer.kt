@@ -31,7 +31,7 @@ class RemoteFileExplorer(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
             Log.e("gRPC", "Error: ${e.message}", e)
             // TODO: this probably should throw
         }
-        return listOf<DirectoryEntry>()
+        return listOf()
     }
 
     suspend fun getDirectoryEntries(path: String): List<DirectoryEntryK> {

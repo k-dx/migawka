@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.provider.Settings
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
@@ -13,57 +12,15 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import io.grpc.ManagedChannelBuilder
-import xyz.jdubiel.migawka.data.Hash
 
 class Utils {
     companion object {
-        suspend fun fetchImageBytesGrpc(id: Hash): MediaItem {
-            val serverAddress = "192.168.5.158"
-            Log.d("serverAddress", serverAddress)
-            val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
-                    .usePlaintext()
-                    .build()
-
-            try {
-                val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
-                val request = GetMediaItemRequest.newBuilder()
-                        .setId(id.toString())
-                        .build()
-
-                val response = stub.getOptimizedMediaItem(request)
-
-                // Update the UI with the response on the main thread
-                Log.i(
-                        "gRPC__",
-                        "Response for full image: ${response.status}"
-                )
-
-                return response.mediaItem
-
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch(e: Exception) {
-                Log.e("gRPC__", "Error: ${e.message}", e)
-                throw e
-            } finally {
-                try {
-                    channel.shutdown()
-                } catch (e: InterruptedException) {
-                    Log.e("gRPC__", "Error shutting down channel: ${e.message}")
-                    channel.shutdownNow()
-                    Thread.currentThread().interrupt()
-                }
-            }
-        }
-
-
         fun isAutoRotateEnabled(context: Context): Boolean {
             return try {
                 Settings.System.getInt(
                     context.contentResolver, Settings.System.ACCELEROMETER_ROTATION
                 ) == 1
-            } catch (e: Settings.SettingNotFoundException) {
+            } catch (_: Settings.SettingNotFoundException) {
                 false
             }
         }
