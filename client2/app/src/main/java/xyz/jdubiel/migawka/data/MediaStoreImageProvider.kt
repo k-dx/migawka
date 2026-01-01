@@ -285,7 +285,7 @@ class MediaStoreImageProvider(
                 try {
                     contentResolver.openInputStream(uri)?.use { input ->
                         // TODO: handle timezone from EXIF?
-                        val exif = androidx.exifinterface.media.ExifInterface(input)
+                        val exif = ExifInterface(input)
                         exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)?.let { s ->
                             // parse "yyyy:MM:dd HH:mm:ss" optionally with offset tag
                             dateExif = try {
