@@ -102,7 +102,7 @@ class MediaStoreImageProvider(
                             LocalImage(
                                 Uri.parse(dbEntry.uri),
                                 dbEntry.date,
-                                hasher.fromHex(dbEntry.hash)
+                                dbEntry.hash
                             )
                         )
                     } else {
@@ -166,7 +166,7 @@ class MediaStoreImageProvider(
         initializationJob.join() // Wait for init to finish before returning data
 
         // query the database
-        val dbEntry = db.getByHash(id.toString())
+        val dbEntry = db.getByHash(id)
         if (dbEntry == null) {
             // TODO: probably returning null would be better
             throw NoSuchElementException("No image with given id=$id found in database")
@@ -184,7 +184,7 @@ class MediaStoreImageProvider(
         return LocalImage(
             Uri.parse(dbEntry.uri),
             dbEntry.date,
-            hasher.fromHex(dbEntry.hash)
+            dbEntry.hash
         )
     }
 
@@ -246,7 +246,7 @@ class MediaStoreImageProvider(
             db.insertEntries(entries.map {
                 LocalMediaEntry(
                     it.contentUri.toString(),
-                    it.hash.toString(),
+                    it.hash,
                     it.date
                 )
             })

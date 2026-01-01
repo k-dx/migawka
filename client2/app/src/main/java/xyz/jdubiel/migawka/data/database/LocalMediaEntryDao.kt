@@ -6,6 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import xyz.jdubiel.migawka.data.Hash
 import java.time.Instant
 
 @Dao
@@ -31,8 +32,7 @@ interface LocalMediaEntryDao {
     @Query("SELECT * FROM localMedia WHERE date < :imagesBefore ORDER BY date DESC LIMIT :count")
     suspend fun getEntriesBeforeTimestamp(count: Int, imagesBefore: Instant): List<LocalMediaEntry>
 
-    // TODO: change to Hash type - does it get converted to string?
     @Query("SELECT * FROM localMedia WHERE hash = :hash")
-    suspend fun getByHash(hash: String): LocalMediaEntry? // TODO - nullable???
+    suspend fun getByHash(hash: Hash): LocalMediaEntry?
 }
 

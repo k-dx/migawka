@@ -45,7 +45,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
                 remoteImages.add(
                     RemoteImage(
-                        hash = hasher.fromHex(it.id),
+                        hash = hasher.fromString(it.id),
                         bytes = it.content.toByteArray(),
                         date = date
                     )
@@ -149,7 +149,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
                 results.add(
                     TimelineEntryK.Remote(
-                        id = hasher.fromHex(it.id),
+                        id = hasher.fromString(it.id),
                         date = date
                     )
                 )

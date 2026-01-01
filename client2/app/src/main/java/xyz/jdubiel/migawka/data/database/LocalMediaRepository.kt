@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.data.database
 
 import android.net.Uri
+import xyz.jdubiel.migawka.data.Hash
 import java.time.Instant
 
 class LocalMediaRepository(
@@ -11,7 +12,7 @@ class LocalMediaRepository(
     override suspend fun getEntriesBeforeTimestamp(count: Int, imagesBefore: Instant) =
         localMediaDao.getEntriesBeforeTimestamp(count, imagesBefore)
 
-    override suspend fun getByHash(hash: String) = localMediaDao.getByHash(hash)
+    override suspend fun getByHash(hash: Hash) = localMediaDao.getByHash(hash)
 
     override suspend fun insertEntry(entry: LocalMediaEntry) = localMediaDao.insert(entry)
 

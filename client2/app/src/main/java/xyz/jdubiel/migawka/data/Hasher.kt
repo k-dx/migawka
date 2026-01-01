@@ -9,8 +9,7 @@ interface Digest {
  * This interface is responsible for creating hashes.
  */
 interface Hasher {
-    fun fromHex(hex: String): Hash
-//    fun fromString(string: String): Hash
+    fun fromString(s: String): Hash
     fun fromBytes(bytes: ByteArray): Hash
     fun getInstance(): Digest
 }

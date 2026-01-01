@@ -8,8 +8,6 @@ class Xx64Hash private constructor(private val bytes: ByteArray) : Hash {
         override fun of(bytes: ByteArray): Xx64Hash =
             if (bytes.size == 8) Xx64Hash(bytes.copyOf())
             else throw IllegalArgumentException("xx64Hash must be 8 bytes")
-//        override fun fromHex(hex: String): Xx64Hash = of(hex.chunked(2)
-//            .map { it.toInt(16).toByte() }.toByteArray())
 
         override fun fromString(s: String): Xx64Hash {
             if (s.length > 16) {
@@ -70,7 +68,7 @@ class Xx64Digest() : Digest {
 }
 
 class Xx64Hasher() : Hasher {
-    override fun fromHex(hex: String): Xx64Hash = Xx64Hash.fromString(hex)
+    override fun fromString(s: String): Xx64Hash = Xx64Hash.fromString(s)
     override fun fromBytes(bytes: ByteArray): Xx64Hash = Xx64Hash.of(bytes)
 
     override fun getInstance(): Digest {

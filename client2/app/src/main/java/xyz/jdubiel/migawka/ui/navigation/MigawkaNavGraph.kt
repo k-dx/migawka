@@ -177,7 +177,7 @@ fun MigawkaNavHost(
                         factory = SingleMediaViewScreenForTimelineViewModelFactory(
                             LocalContext.current.applicationContext as Application,
                             topFolderScreenViewModel.mediaEntries.collectAsState().value,
-                            initialImageId = hasher.fromHex(initialMediaId)
+                            initialImageId = hasher.fromString(initialMediaId)
                         )
                     )
 
@@ -199,7 +199,7 @@ fun MigawkaNavHost(
                     factory = SingleMediaViewScreenForTimelineViewModelFactory(
                         LocalContext.current.applicationContext as Application,
                         imageGalleryViewModel.entries.collectAsState().value,
-                        initialImageId = hasher.fromHex(initialMediaId)
+                        initialImageId = hasher.fromString(initialMediaId)
                     )
                 )
 

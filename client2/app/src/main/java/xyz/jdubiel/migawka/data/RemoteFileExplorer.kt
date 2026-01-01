@@ -48,7 +48,7 @@ class RemoteFileExplorer(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
             DirectoryEntry.FileType.MEDIA -> {
                 DirectoryEntryK.Image(
                     entry.name,
-                    hasher.fromHex(entry.media.id),
+                    hasher.fromString(entry.media.id),
                     Instant.parse(entry.media.creationTime)
                 )
             }

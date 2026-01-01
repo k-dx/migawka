@@ -16,6 +16,7 @@ class Sha256 private constructor(private val bytes: ByteArray) : Hash {
         override fun of(bytes: ByteArray): Sha256 =
             if (bytes.size == 32) Sha256(bytes.copyOf())
             else throw IllegalArgumentException("SHA-256 must be 32 bytes")
+
         override fun fromString(s: String): Sha256 {
             if (s.length > 64) {
                 throw IllegalArgumentException("SHA-256 in hex must be at most 64 characters")
@@ -57,7 +58,7 @@ class Sha256Digest() : Digest {
 }
 
 class Sha256Hasher() : Hasher {
-    override fun fromHex(hex: String): Sha256 = Sha256.fromString(hex)
+    override fun fromString(s: String): Sha256 = Sha256.fromString(s)
     override fun fromBytes(bytes: ByteArray): Sha256 = Sha256.of(bytes)
 
     override fun getInstance(): Digest {
