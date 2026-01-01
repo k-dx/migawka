@@ -55,10 +55,8 @@ fun MediaOverlay(
     content: @Composable () -> Unit
 ) {
     val overlayColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-    // TODO: this should be remembered when gone back to image gallery then chose another photo
     var showOverlay by rememberSaveable { mutableStateOf(true) }
 
-    // TODO: when navigating back, the bars should be set to visible again
     ToggleSystemBars(visible = showOverlay)
 
     Box(

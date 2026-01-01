@@ -1,8 +1,11 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
+import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +25,12 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -29,7 +38,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
@@ -80,6 +93,25 @@ fun SingleMediaViewScreen(
         Log.d("SMS", "page changed to $index")
         if (entries[index] is TimelineEntryK.Remote) {
             viewModel.fetchFullImage(entry.id, index)
+        }
+    }
+
+    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    var backPressHandled by rememberSaveable { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val windowInsetsController = remember(view) {
+        val window = (view.context as? Activity)?.window
+        window?.let { WindowCompat.getInsetsController(it, view) }
+    }
+    BackHandler(enabled = !backPressHandled) {
+        // make system bars visible again
+        windowInsetsController?.show(WindowInsetsCompat.Type.systemBars())
+
+        backPressHandled = true // to disable this BackHandler and have the default
+        coroutineScope.launch {
+            awaitFrame()
+            onBackPressedDispatcher?.onBackPressed()
+            backPressHandled = false
         }
     }
 
