@@ -2,7 +2,6 @@ package xyz.jdubiel.migawka.data
 
 import android.content.ContentResolver
 import android.content.ContentUris
-import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -11,6 +10,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -23,8 +23,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
-const val HERETAG = "MediaStoreImageProvider"
 
 private val LAST_MODIFIED_GENERATION = intPreferencesKey("last_modified_generation")
 private val DB_MEDIA_STORE_VERSION = stringPreferencesKey("db_media_store_version")
@@ -44,26 +42,26 @@ class MediaStoreImageProvider(
         var lastKnownModifiedGeneration = prefs[LAST_MODIFIED_GENERATION] ?: -1
         var lastKnownMediaStoreVersion = prefs[DB_MEDIA_STORE_VERSION] ?: ""
 
-        Log.d(HERETAG, "lastModifiedGeneration = $lastKnownModifiedGeneration")
-        Log.d(HERETAG, "dbMediaStoreVersion = $lastKnownMediaStoreVersion")
+        Log.d(TAG, "lastModifiedGeneration = $lastKnownModifiedGeneration")
+        Log.d(TAG, "dbMediaStoreVersion = $lastKnownMediaStoreVersion")
 
         val currentMediaStoreVersion = MediaStore.getVersion(context)
-        Log.d(HERETAG, "currentMediaStoreVersion = $currentMediaStoreVersion")
+        Log.d(TAG, "currentMediaStoreVersion = $currentMediaStoreVersion")
 
         val indexedModifiedGeneration = if (currentMediaStoreVersion != lastKnownMediaStoreVersion) {
             // do a full scan of the MediaStore
-            Log.d(HERETAG, "full scan of MediaStore")
+            Log.d(TAG, "full scan of MediaStore")
 
             db.deleteAll()
             indexMediaStore(-1)
         } else {
-            Log.d(HERETAG, "partial scan of MediaStore")
+            Log.d(TAG, "partial scan of MediaStore")
 
             // do a partial scan of the MediaStore - detect new media via GENERATION_MODIFIED column
             indexMediaStore(lastKnownModifiedGeneration)
         }
 
-        Log.d(HERETAG, "indexedModifiedGeneration = $indexedModifiedGeneration")
+        Log.d(TAG, "indexedModifiedGeneration = $indexedModifiedGeneration")
 
         dataStore.edit { settings ->
             settings[LAST_MODIFIED_GENERATION] = indexedModifiedGeneration
@@ -232,7 +230,7 @@ class MediaStoreImageProvider(
                     val hash = computeHash(uri)
 
                     if (hash == null) {
-                        Log.e(HERETAG, "Failed to compute hash for $uri")
+                        Log.e(TAG, "Failed to compute hash for $uri")
                         continue
                     }
 
@@ -253,7 +251,7 @@ class MediaStoreImageProvider(
                 )
             })
 
-            Log.d(HERETAG, "indexed ${entries.size} images")
+            Log.d(TAG, "indexed ${entries.size} images")
         }
 
         return highestGenerationModified
@@ -299,7 +297,7 @@ class MediaStoreImageProvider(
                     }
                 } catch (_: Exception) {
                     /* ignore unreadable EXIF */
-                    Log.d(HERETAG, "failed to parse EXIF for $uri")
+                    Log.d(TAG, "failed to parse EXIF for $uri")
                 }
 
             } else {
@@ -313,15 +311,15 @@ class MediaStoreImageProvider(
                 dateExif
             }
             dateTakenMilliSec != null -> {
-                Log.d(HERETAG, "using DATE_TAKEN")
+                Log.d(TAG, "using DATE_TAKEN")
                 Instant.ofEpochMilli(dateTakenMilliSec)
             }
             dateAddedSec != null -> {
-                Log.d(HERETAG, "using DATE_ADDED")
+                Log.d(TAG, "using DATE_ADDED")
                 Instant.ofEpochSecond(dateAddedSec)
             }
             else -> {
-                Log.w(HERETAG, "using current time :(")
+                Log.w(TAG, "using current time :(")
                 Instant.now() // fallback to current time
             }
         }
@@ -344,5 +342,9 @@ class MediaStoreImageProvider(
             Log.e("MediaStoreImageProvider", "Failed to compute hash for $uri", e)
             null
         }
+    }
+
+    companion object {
+        private const val TAG = "MediaStoreImageProvider"
     }
 }
