@@ -207,7 +207,7 @@ fun SingleMediaViewScreen(
     val topOverlayContent = @Composable {
         Column() {
             Text("${dateFormatter.format(creationDate)} ${timeFormatter.format(creationDate)}")
-            Text(hash.toHex()) // TODO: remove me
+            Text(hash.toString()) // TODO: remove me
         }
     }
 

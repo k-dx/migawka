@@ -28,7 +28,7 @@ class Sha256 private constructor(private val bytes: ByteArray) : Hash {
     }
 
     override fun bytes(): ByteArray = bytes.copyOf()
-    override fun toHex(): String = bytes.joinToString("") { "%02x".format(it) }
+    override fun toString(): String = bytes.joinToString("") { "%02x".format(it) }
 
     // Because we are using ByteArray, default equals will not work as it compares
     // references. We must override and compare contents instead.

@@ -58,7 +58,7 @@ class XxHashUnitTests {
 
         val hash = hasher.fromBytes(digest.digest())
 
-        val hashHexString: String = hash.toHex()
+        val hashHexString: String = hash.toString()
         val expected = "0b242d361fda71bc"
 
         assertEquals(expected, hashHexString)
@@ -69,14 +69,14 @@ class XxHashUnitTests {
         val expected = "000000000000000a"
 
         val h = Xx64Hash.fromHex(expected)
-        assertEquals(expected, h.toHex())
+        assertEquals(expected, h.toString())
     }
 
     @Test
     fun parsesHexCorrectly2() {
         val expected = "000000000000000a"
         val h = Xx64Hash.fromHex("00a")
-        assertEquals(expected, h.toHex())
+        assertEquals(expected, h.toString())
     }
 
     @Test

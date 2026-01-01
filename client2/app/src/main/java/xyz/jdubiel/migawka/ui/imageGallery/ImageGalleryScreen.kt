@@ -127,7 +127,7 @@ fun ImageGrid(
                 key = { index ->
                     when (val item = entries[index]) {
                         is ImageGalleryTimelineEntry.Header -> item.date.toString()
-                        is ImageGalleryTimelineEntry.ImageItem -> item.entry.id.toHex()
+                        is ImageGalleryTimelineEntry.ImageItem -> item.entry.id.toString()
                     }
                 },
                 span = { index ->
@@ -156,7 +156,7 @@ fun ImageGrid(
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()
-                                        .clickable { onImageClick(item.id.toHex()) },
+                                        .clickable { onImageClick(item.id.toString()) },
                                     contentScale = ContentScale.Crop
                                 )
                             }
@@ -169,7 +169,7 @@ fun ImageGrid(
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()
-                                        .clickable { onImageClick(item.id.toHex()) },
+                                        .clickable { onImageClick(item.id.toString()) },
                                     contentScale = ContentScale.Crop
                                 )
                             }

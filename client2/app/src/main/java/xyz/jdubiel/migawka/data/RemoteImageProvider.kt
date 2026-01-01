@@ -61,7 +61,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
     suspend fun getThumbnailImage(id: Hash): RemoteImage {
         val request = GetMediaItemRequest.newBuilder()
-            .setId(id.toHex())
+            .setId(id.toString())
             .build()
 
         val response = stub.getThumbnail(request)
@@ -71,7 +71,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
             throw Exception("Error: `${response.status.message}`")
         }
 
-        if (response.mediaItem.id != id.toHex()) {
+        if (response.mediaItem.id != id.toString()) {
             Log.e("gRPC", "getThumbnailImage: returned MediaItemID is different from requested!")
         }
 
@@ -84,7 +84,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
     suspend fun getOptimizedImage(id: Hash): RemoteImage {
         val request = GetMediaItemRequest.newBuilder()
-            .setId(id.toHex())
+            .setId(id.toString())
             .build()
 
         val response = stub.getOptimizedMediaItem(request)
@@ -94,7 +94,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
             throw Exception("Error: `${response.status.message}`")
         }
 
-        if (response.mediaItem.id != id.toHex()) {
+        if (response.mediaItem.id != id.toString()) {
             Log.e("gRPC", "getOptimizedImage: returned MediaItemID is different from requested!")
         }
 
@@ -107,7 +107,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
     suspend fun getFullImage(id: Hash): RemoteFullImage {
         val request = GetMediaItemRequest.newBuilder()
-            .setId(id.toHex())
+            .setId(id.toString())
             .build()
 
         val response = stub.getFullMediaItem(request)
@@ -117,7 +117,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
             throw Exception("Error: `${response.status.message}`")
         }
 
-        if (response.mediaItem.id != id.toHex()) {
+        if (response.mediaItem.id != id.toString()) {
             Log.e("gRPC", "getFullImage: returned MediaItemID is different from requested!")
         }
 

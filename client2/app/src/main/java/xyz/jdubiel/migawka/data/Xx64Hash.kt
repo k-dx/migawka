@@ -29,7 +29,7 @@ class Xx64Hash private constructor(private val bytes: ByteArray) : Hash {
     }
 
     override fun bytes(): ByteArray = bytes.copyOf()
-    override fun toHex(): String = bytes.toULong().toString(16).padStart(16, '0')
+    override fun toString(): String = bytes.toULong().toString(16).padStart(16, '0')
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

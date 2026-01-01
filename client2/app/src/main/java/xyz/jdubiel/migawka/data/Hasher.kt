@@ -10,6 +10,7 @@ interface Digest {
  */
 interface Hasher {
     fun fromHex(hex: String): Hash
+//    fun fromString(string: String): Hash
     fun fromBytes(bytes: ByteArray): Hash
     fun getInstance(): Digest
 }

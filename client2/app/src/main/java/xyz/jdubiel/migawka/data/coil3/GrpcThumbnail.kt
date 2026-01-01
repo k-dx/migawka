@@ -50,6 +50,6 @@ class GrpcFetcher(
 // Keyer defines keys for caching the model
 class GrpcKeyer : Keyer<GrpcThumbnail> {
     override fun key(data: GrpcThumbnail, options: Options): String {
-        return "grpc_image_${data.id.toHex()}"
+        return "grpc_image_${data.id}"
     }
 }

@@ -18,14 +18,14 @@ class Sha256UnitTests {
         val hash = hasher.fromBytes(digest.digest())
 
         val expected = "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
-        assertEquals(expected, hash.toHex())
+        assertEquals(expected, hash.toString())
     }
 
     @Test
     fun parsesHexCorrectly() {
         val h = Sha256.fromHex("a")
         val expected = "000000000000000000000000000000000000000000000000000000000000000a"
-        assertEquals(expected, h.toHex())
+        assertEquals(expected, h.toString())
     }
 
 

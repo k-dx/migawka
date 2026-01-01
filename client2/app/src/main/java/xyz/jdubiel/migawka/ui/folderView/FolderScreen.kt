@@ -164,7 +164,7 @@ fun FolderScreenGrid(
                         contentDescription = "Gallery Image",
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .clickable { onImageClick(item.id.toHex()) },
+                            .clickable { onImageClick(item.id.toString()) },
                         contentScale = ContentScale.Crop)
                 }
             }

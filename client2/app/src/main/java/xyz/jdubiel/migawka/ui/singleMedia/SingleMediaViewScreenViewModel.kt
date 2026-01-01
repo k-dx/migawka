@@ -48,7 +48,7 @@ class SingleMediaViewScreenViewModel(
 
     init {
         Log.d(TAG, "entries size = ${entries.size}")
-        Log.d(TAG, "initialImageId = ${initialImageId.toHex()}")
+        Log.d(TAG, "initialImageId = $initialImageId")
     }
 
     /**
@@ -56,7 +56,7 @@ class SingleMediaViewScreenViewModel(
      * If the image is already fetched for this page, it is not fetched again.
      */
     fun fetchFullImage(id: Hash, page: Int) {
-        Log.d(TAG, "fetchFullImage: id ${id.toHex()} page $page")
+        Log.d(TAG, "fetchFullImage: id $id page $page")
 
         val currentState = _fullImageState.value
         if (currentState is FullImageUiState.Success && currentState.page == page && currentState.image.hash == id) {

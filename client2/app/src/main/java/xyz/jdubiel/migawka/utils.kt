@@ -28,7 +28,7 @@ class Utils {
             try {
                 val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
                 val request = GetMediaItemRequest.newBuilder()
-                        .setId(id.toHex())
+                        .setId(id.toString())
                         .build()
 
                 val response = stub.getOptimizedMediaItem(request)
