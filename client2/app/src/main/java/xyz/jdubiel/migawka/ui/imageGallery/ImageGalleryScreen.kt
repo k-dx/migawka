@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.TAG
@@ -173,8 +172,7 @@ fun ImageGrid(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .zIndex(1f),
+                    .align(Alignment.TopCenter),
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Box(modifier = Modifier.padding(4.dp)) {
