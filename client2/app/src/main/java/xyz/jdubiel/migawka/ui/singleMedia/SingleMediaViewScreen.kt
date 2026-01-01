@@ -43,6 +43,8 @@ import androidx.core.view.WindowInsetsCompat
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
@@ -209,7 +211,13 @@ fun SingleMediaViewScreen(
         }
     }
 
-    MediaOverlay(topOverlayContent = topOverlayContent, buttons = buttons) {
+    var showOverlay by remember { mutableStateOf(true) }
+
+    MediaOverlay(
+        topOverlayContent = topOverlayContent,
+        buttons = buttons,
+        showOverlay = showOverlay
+    ) {
         Column(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -223,12 +231,23 @@ fun SingleMediaViewScreen(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize()
                 ) { pageIndex ->
-                    when (entry) {
+                    val entryForPage = entries[pageIndex]
+                    val zoomState = rememberZoomState()
+
+                    when (entryForPage) {
                         is TimelineEntryK.Local -> {
                             AsyncImage(
-                                model = entry.contentUri,
+                                model = entryForPage.contentUri,
                                 contentDescription = "Full screen image",
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .zoomable(
+                                        zoomState = zoomState,
+                                        onTap = { showOverlay = !showOverlay }
+                                    ),
+                                onSuccess = { state ->
+                                    zoomState.setContentSize(state.painter.intrinsicSize)
+                                },
                                 contentScale = ContentScale.Fit
                             )
                         }
@@ -242,11 +261,18 @@ fun SingleMediaViewScreen(
                                 ) {
                                     Box(modifier = Modifier.fillMaxSize()) {
                                         AsyncImage(
-                                            model = GrpcThumbnail(entry.id),
+                                            model = GrpcThumbnail(entryForPage.id),
                                             contentDescription = "Full screen thumbnail",
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .align(Alignment.Center),
+                                                .align(Alignment.Center)
+                                                .zoomable(
+                                                    zoomState = zoomState,
+                                                    onTap = { showOverlay = !showOverlay }
+                                                ),
+                                            onSuccess = { state ->
+                                                zoomState.setContentSize(state.painter.intrinsicSize)
+                                            },
                                             contentScale = ContentScale.Fit
                                         )
 
@@ -271,7 +297,14 @@ fun SingleMediaViewScreen(
                                             contentDescription = "Full screen image",
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .align(Alignment.Center),
+                                                .align(Alignment.Center)
+                                                .zoomable(
+                                                    zoomState = zoomState,
+                                                    onTap = { showOverlay = !showOverlay }
+                                                ),
+                                            onSuccess = { state ->
+                                                zoomState.setContentSize(state.painter.intrinsicSize)
+                                            },
                                             contentScale = ContentScale.Fit
                                         )
                                     }

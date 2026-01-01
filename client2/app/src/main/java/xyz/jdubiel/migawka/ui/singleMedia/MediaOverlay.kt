@@ -6,9 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -22,11 +20,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +35,8 @@ fun OverlayPreview() {
         buttons = listOf(
             { Button(onClick = {}) { Text("Button 1") } },
             { Button(onClick = {}) { Text("Bu 2") } }
-        )
+        ),
+        showOverlay = true
     ) {
         Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel venenatis nulla. Proin sed luctus tellus, eu elementum nisl. Duis iaculis arcu a interdum ultricies. Aliquam viverra urna egestas nulla sodales, porta venenatis neque placerat. Nulla convallis elit vel diam facilisis, at elementum nibh pellentesque. Etiam lobortis pharetra mauris at interdum. Phasellus id ipsum lobortis, ultrices massa nec, elementum turpis. Aliquam vitae condimentum nunc. Proin tempus erat gravida nisi viverra, sed elementum nunc ornare. Aliquam venenatis tincidunt sodales. Nunc ut ipsum imperdiet, interdum ante vitae, fermentum orci. Pellentesque eget scelerisque turpis. Suspendisse vitae pulvinar mauris. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer dignissim sodales lacus, a mattis arcu aliquet eget. ")
     }
@@ -52,21 +46,14 @@ fun OverlayPreview() {
 fun MediaOverlay(
     topOverlayContent: @Composable () -> Unit,
     buttons: List<@Composable () -> Unit>,
+    showOverlay: Boolean,
     content: @Composable () -> Unit
 ) {
     val overlayColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-    var showOverlay by rememberSaveable { mutableStateOf(true) }
 
     ToggleSystemBars(visible = showOverlay)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { showOverlay = !showOverlay }
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         content()
 
         AnimatedVisibility(

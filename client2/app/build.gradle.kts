@@ -120,4 +120,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.4")
 
     implementation(libs.kotlinx.serialization.json)
+
+//    implementation("net.engawapg.lib:zoomable:2.9.0")
+    implementation(libs.zoomable)
 }
