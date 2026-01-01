@@ -11,13 +11,13 @@ class Xx64Hash private constructor(private val bytes: ByteArray) : Hash {
 //        override fun fromHex(hex: String): Xx64Hash = of(hex.chunked(2)
 //            .map { it.toInt(16).toByte() }.toByteArray())
 
-        override fun fromHex(hex: String): Xx64Hash {
-            if (hex.length > 16) {
+        override fun fromString(s: String): Xx64Hash {
+            if (s.length > 16) {
                 throw IllegalArgumentException("xx64Hash in hex must be at most 16 characters")
             }
 
             // 1. Parse the hex string into an unsigned Long. This is very fast.
-            val longValue = hex.toULong(16).toLong()
+            val longValue = s.toULong(16).toLong()
 
             // 2. Allocate an 8-byte buffer and put the long into it.
             val bytes = ByteBuffer.allocate(8).putLong(longValue).array()
@@ -70,7 +70,7 @@ class Xx64Digest() : Digest {
 }
 
 class Xx64Hasher() : Hasher {
-    override fun fromHex(hex: String): Xx64Hash = Xx64Hash.fromHex(hex)
+    override fun fromHex(hex: String): Xx64Hash = Xx64Hash.fromString(hex)
     override fun fromBytes(bytes: ByteArray): Xx64Hash = Xx64Hash.of(bytes)
 
     override fun getInstance(): Digest {

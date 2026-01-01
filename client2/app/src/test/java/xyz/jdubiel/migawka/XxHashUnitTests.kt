@@ -68,22 +68,22 @@ class XxHashUnitTests {
     fun parsesHexCorrectly() {
         val expected = "000000000000000a"
 
-        val h = Xx64Hash.fromHex(expected)
+        val h = Xx64Hash.fromString(expected)
         assertEquals(expected, h.toString())
     }
 
     @Test
     fun parsesHexCorrectly2() {
         val expected = "000000000000000a"
-        val h = Xx64Hash.fromHex("00a")
+        val h = Xx64Hash.fromString("00a")
         assertEquals(expected, h.toString())
     }
 
     @Test
     fun comparison_isCorrect() {
-        val v1: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdca")
-        val v2: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdca")
-        val v3: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdcd")
+        val v1: Xx64Hash = Xx64Hash.fromString("ca978112ca1bbdca")
+        val v2: Xx64Hash = Xx64Hash.fromString("ca978112ca1bbdca")
+        val v3: Xx64Hash = Xx64Hash.fromString("ca978112ca1bbdcd")
 
         val result1 = v1 == v2
         assertEquals(true, result1)
@@ -95,9 +95,9 @@ class XxHashUnitTests {
 
     @Test
     fun hashCode_isCorrect() {
-        val v1: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdca")
-        val v2: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdca")
-        val v3: Xx64Hash = Xx64Hash.fromHex("ca978112ca1bbdcd")
+        val v1: Xx64Hash = Xx64Hash.fromString("ca978112ca1bbdca")
+        val v2: Xx64Hash = Xx64Hash.fromString("ca978112ca1bbdca")
+        val v3: Xx64Hash = Xx64Hash.fromString("ca978112ca1bbdcd")
 
         val result1 = v1.hashCode() == v2.hashCode()
         assertEquals(true, result1)
