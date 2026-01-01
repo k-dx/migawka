@@ -80,19 +80,17 @@ fun SingleMediaViewScreen(
         initialPage = viewModel.currentPage.value,
         pageCount = { entries.size }
     )
-    // Sync changes back to ViewModel
-    LaunchedEffect(pagerState) {
-        viewModel.setCurrentPage(pagerState.currentPage)
-    }
 
     val entry = entries[pagerState.currentPage]
     // When page changes, check if the new page is a remote image.
     // If it is, download the full image for that page.
     LaunchedEffect(pagerState.currentPage) {
         val index = pagerState.currentPage
+        viewModel.setCurrentPage(index) // sync changes of state to ViewModel
         Log.d("SMS", "page changed to $index")
-        if (entries[index] is TimelineEntryK.Remote) {
-            viewModel.fetchFullImage(entry.id, index)
+        val currentEntry = entries[index]
+        if (currentEntry is TimelineEntryK.Remote) {
+            viewModel.fetchFullImage(currentEntry.id, index)
         }
     }
 
