@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
+import xyz.jdubiel.migawka.data.GrpcResult
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.RemoteImage
@@ -74,19 +75,20 @@ class SingleMediaViewScreenViewModel(
         // launch download on IO dispatcher
         fetchJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                val downloaded = imageRepository.getRemoteOptimizedImage(id)
+                val result = imageRepository.getRemoteOptimizedImage(id)
+
                 withContext(Dispatchers.Main) {
-                    _fullImageState.value =
-                        FullImageUiState.Success(image = downloaded, page = page)
+                    when (result) {
+                        is GrpcResult.Success ->
+                            _fullImageState.value =
+                                FullImageUiState.Success(image = result.data, page = page)
+                        is GrpcResult.Error ->
+                            _fullImageState.value = FullImageUiState.Error(result.message)
+                    }
                 }
             } catch (_: CancellationException) {
                 // This is expected when a job is cancelled.
                 Log.d(TAG, "Image fetch cancelled for page $page")
-            } catch (e: Exception) {
-                // keep thumbnail on failure; optionally set an error image
-                withContext(Dispatchers.Main) {
-                    _fullImageState.value = FullImageUiState.Error(e.message)
-                }
             }
         }
     }

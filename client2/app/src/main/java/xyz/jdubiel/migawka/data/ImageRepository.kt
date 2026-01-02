@@ -3,10 +3,8 @@ package xyz.jdubiel.migawka.data
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.provider.MediaStore
-import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import xyz.jdubiel.migawka.TAG
 import java.io.File
 
 /**
@@ -70,8 +68,7 @@ class ImageRepository(
         return@coroutineScope EntriesResult(results, err)
     }
 
-    suspend fun getRemoteOptimizedImage(id: Hash): RemoteImage {
-        Log.d(TAG, "imageRepository, getRemoteImage")
+    suspend fun getRemoteOptimizedImage(id: Hash): GrpcResult<RemoteImage> {
         return remoteImageProvider.getOptimizedImage(id)
     }
 

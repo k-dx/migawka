@@ -6,14 +6,17 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.RotateLeft
 import androidx.compose.material.icons.filled.Download
@@ -21,6 +24,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -208,6 +213,24 @@ fun SingleMediaViewScreen(
         Column() {
             Text("${dateFormatter.format(creationDate)} ${timeFormatter.format(creationDate)}")
             Text(hash.toString()) // TODO: remove me
+
+            when (val state = viewModel.fullImageState.value) {
+                is FullImageUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.error)
+                    ) {
+                        Text(
+                            text = "Fetching error: ${state.message}",
+                            color = MaterialTheme.colorScheme.onError,
+                            modifier = Modifier.padding(4.dp)
+                        )
+                    }
+                }
+                else -> {}
+            }
         }
     }
 
@@ -276,15 +299,10 @@ fun SingleMediaViewScreen(
                                             contentScale = ContentScale.Fit
                                         )
 
-                                        when (val state = viewModel.fullImageState.value) {
-                                            is FullImageUiState.Error -> {
-                                                Text("Fetching error: ${state.message}")
-                                            }
-
+                                        when (viewModel.fullImageState.value) {
                                             is FullImageUiState.Loading, is FullImageUiState.Empty -> {
                                                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                                             }
-
                                             else -> {}
                                         }
                                     }

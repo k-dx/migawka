@@ -52,32 +52,40 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
                 date = Instant.parse(response.mediaItem.creationTime)
             ))
         } catch (e: Exception) {
-            Log.e("gRPC", "Error: ${e.message}", e)
+            Log.e("gRPC", "getThumbnailImage: ${e.message}", e)
             return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
     }
 
-    suspend fun getOptimizedImage(id: Hash): RemoteImage {
-        val request = GetMediaItemRequest.newBuilder()
-            .setId(id.toString())
-            .build()
+    suspend fun getOptimizedImage(id: Hash): GrpcResult<RemoteImage> {
+        try {
+            val request = GetMediaItemRequest.newBuilder()
+                .setId(id.toString())
+                .build()
 
-        val response = stub.getOptimizedMediaItem(request)
+            val response = stub.getOptimizedMediaItem(request)
 
-        if (response.status.code != 200) {
-            Log.e("gRPC", "Error: `${response.status.message}`")
-            throw Exception("Error: `${response.status.message}`")
+            if (response.status.code != 200) {
+                val message = response.status.message
+                Log.e("gRPC", "getOptimizedImage: `$message`")
+                return GrpcResult.Error(message = message)
+            }
+
+            if (response.mediaItem.id != id.toString()) {
+                val message = "Returned MediaItemID is different from requested!"
+                Log.e("gRPC", "getOptimizedImage: $message")
+                return GrpcResult.Error(message = message)
+            }
+
+            return GrpcResult.Success(RemoteImage(
+                hash = id,
+                bytes = response.mediaItem.content.toByteArray(),
+                date = Instant.parse(response.mediaItem.creationTime)
+            ))
+        } catch (e: Exception) {
+            Log.e("gRPC", "getOptimizedImage: ${e.message}", e)
+            return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
-
-        if (response.mediaItem.id != id.toString()) {
-            Log.e("gRPC", "getOptimizedImage: returned MediaItemID is different from requested!")
-        }
-
-        return RemoteImage(
-            hash = id,
-            bytes = response.mediaItem.content.toByteArray(),
-            date = Instant.parse(response.mediaItem.creationTime)
-        )
     }
 
     suspend fun getFullImage(id: Hash): RemoteFullImage {
@@ -116,7 +124,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
             if (response.status.code != 200) {
                 val message = response.status.message
-                Log.e("gRPC", "Error in response: $message")
+                Log.e("gRPC", "getEntries: $message")
                 return GrpcResult.Error(message = message)
             }
 
@@ -134,7 +142,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
             return GrpcResult.Success(results)
 
         } catch (e: Exception) {
-            Log.e("gRPC", "Error: ${e.message}", e)
+            Log.e("gRPC", "getEntries: ${e.message}", e)
             return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
     }
