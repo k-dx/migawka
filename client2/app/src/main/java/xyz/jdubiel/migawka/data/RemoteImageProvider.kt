@@ -3,7 +3,6 @@ package xyz.jdubiel.migawka.data
 import android.util.Log
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
-import xyz.jdubiel.migawka.ThumbnailsTimestampRequest
 import xyz.jdubiel.migawka.TimelineEntriesRequest
 import xyz.jdubiel.migawka.hasher
 import java.time.Instant
@@ -27,43 +26,6 @@ sealed interface GrpcResult<out T> {
 }
 
 class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
-    suspend fun getThumbnailsBeforeTimestamp(timestamp: Instant, count: Int): List<RemoteImage> {
-        val remoteImages = mutableListOf<RemoteImage>()
-
-        try {
-            val request = ThumbnailsTimestampRequest.newBuilder()
-                .setTimestamp(timestamp.toString())
-                .setCount(count)
-                .build()
-
-            val response = stub.getThumbnailsBeforeTimestamp(request)
-
-            // Update the UI with the response on the main thread
-            Log.i(
-                "gRPC",
-                "Response: ${response.status}"
-            )
-
-            response.thumbnailsList.forEach {
-                val date = Instant.parse(it.creationTime)
-                Log.i("gRPC", "Thumbnail: ${it.creationTime} $date ${it.id}")
-
-                remoteImages.add(
-                    RemoteImage(
-                        hash = hasher.fromString(it.id),
-                        bytes = it.content.toByteArray(),
-                        date = date
-                    )
-                )
-            }
-
-        } catch (e: Exception) {
-            Log.e("gRPC", "Error: ${e.message}", e)
-            // TODO: this probably should throw
-        }
-        return remoteImages
-    }
-
     suspend fun getThumbnailImage(id: Hash): RemoteImage {
         val request = GetMediaItemRequest.newBuilder()
             .setId(id.toString())
