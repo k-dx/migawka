@@ -26,27 +26,35 @@ sealed interface GrpcResult<out T> {
 }
 
 class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
-    suspend fun getThumbnailImage(id: Hash): RemoteImage {
-        val request = GetMediaItemRequest.newBuilder()
-            .setId(id.toString())
-            .build()
+    suspend fun getThumbnailImage(id: Hash): GrpcResult<RemoteImage> {
+        try {
+            val request = GetMediaItemRequest.newBuilder()
+                .setId(id.toString())
+                .build()
 
-        val response = stub.getThumbnail(request)
+            val response = stub.getThumbnail(request)
 
-        if (response.status.code != 200) {
-            Log.e("gRPC", "Error: `${response.status.message}`")
-            throw Exception("Error: `${response.status.message}`")
+            if (response.status.code != 200) {
+                val message = response.status.message
+                Log.e("gRPC", "getThumbnailImage: `$message`")
+                return GrpcResult.Error(message = message)
+            }
+
+            if (response.mediaItem.id != id.toString()) {
+                val message = "Returned MediaItemID is different from requested!"
+                Log.e("gRPC", "getThumbnailImage: $message")
+                return GrpcResult.Error(message = message)
+            }
+
+            return GrpcResult.Success(RemoteImage(
+                hash = id,
+                bytes = response.mediaItem.content.toByteArray(),
+                date = Instant.parse(response.mediaItem.creationTime)
+            ))
+        } catch (e: Exception) {
+            Log.e("gRPC", "Error: ${e.message}", e)
+            return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
-
-        if (response.mediaItem.id != id.toString()) {
-            Log.e("gRPC", "getThumbnailImage: returned MediaItemID is different from requested!")
-        }
-
-        return RemoteImage(
-            hash = id,
-            bytes = response.mediaItem.content.toByteArray(),
-            date = Instant.parse(response.mediaItem.creationTime)
-        )
     }
 
     suspend fun getOptimizedImage(id: Hash): RemoteImage {

@@ -159,6 +159,7 @@ fun ImageGrid(
                                 AsyncImage(
                                     model = item.contentUri,
                                     placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
+                                    error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
                                     contentDescription = "Gallery Image",
                                     modifier = Modifier
                                         .aspectRatio(1f)
@@ -172,6 +173,7 @@ fun ImageGrid(
                                 AsyncImage(
                                     model = GrpcThumbnail(item.id),
                                     placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
+                                    error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
                                     contentDescription = "Gallery Image",
                                     modifier = Modifier
                                         .aspectRatio(1f)

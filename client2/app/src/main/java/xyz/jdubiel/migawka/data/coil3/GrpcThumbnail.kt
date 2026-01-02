@@ -9,6 +9,7 @@ import coil3.fetch.SourceFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
 import okio.Buffer
+import xyz.jdubiel.migawka.data.GrpcResult
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.RemoteImageProvider
 
@@ -24,7 +25,11 @@ class GrpcFetcher(
 
     override suspend fun fetch(): FetchResult {
         // Download image bytes via gRPC
-        val response = remoteImageProvider.getThumbnailImage(model.id)
+        val result = remoteImageProvider.getThumbnailImage(model.id)
+        val response = when(result) {
+            is GrpcResult.Success -> result.data
+            is GrpcResult.Error -> throw Exception(result.message)
+        }
 
         // Convert bytes to a Buffer (Okio)
         val buffer = Buffer().apply { write(response.bytes) }
