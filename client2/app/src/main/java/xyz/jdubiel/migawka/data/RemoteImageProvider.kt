@@ -21,6 +21,11 @@ data class RemoteFullImage(
     val path: String
 )
 
+sealed interface GrpcResult<out T> {
+    data class Success<out T>(val data: T) : GrpcResult<T>
+    data class Error(val message: String, val throwable: Throwable? = null) : GrpcResult<Nothing>
+}
+
 class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
     suspend fun getThumbnailsBeforeTimestamp(timestamp: Instant, count: Int): List<RemoteImage> {
         val remoteImages = mutableListOf<RemoteImage>()
@@ -129,20 +134,22 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
         )
     }
 
-    suspend fun getEntries(): List<TimelineEntryK> {
-        val results = mutableListOf<TimelineEntryK.Remote>()
-
+    suspend fun getEntries(): GrpcResult<List<TimelineEntryK>> {
         try {
+            val results = mutableListOf<TimelineEntryK.Remote>()
             val request = TimelineEntriesRequest.newBuilder()
                 .build()
 
             val response = stub.getTimelineEntries(request)
 
-            // Update the UI with the response on the main thread
-            Log.i(
-                "gRPC",
-                "Response: ${response.status}"
-            )
+            Log.i("gRPC","Response: ${response.status}")
+
+            if (response.status.code != 200) {
+                val message = response.status.message
+                Log.e("gRPC", "Error in response: $message")
+                return GrpcResult.Error(message = message)
+            }
+
             response.entriesList.forEach {
                 val date = Instant.parse(it.creationTime)
                 Log.i("gRPC", "TimelineEntry: ${it.creationTime} $date ${it.id}")
@@ -154,11 +161,11 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
                     )
                 )
             }
+            return GrpcResult.Success(results)
 
         } catch (e: Exception) {
             Log.e("gRPC", "Error: ${e.message}", e)
-            // TODO: this probably should throw
+            return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
-        return results
     }
 }

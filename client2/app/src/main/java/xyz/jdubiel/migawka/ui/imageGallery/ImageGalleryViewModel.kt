@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
+import xyz.jdubiel.migawka.data.GrpcResult
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import java.time.Instant
@@ -32,11 +33,15 @@ class ImageGalleryViewModel(
     private val _entries = MutableStateFlow<List<TimelineEntryK>>(emptyList())
     val entries: StateFlow<List<TimelineEntryK>> = _entries.asStateFlow()
 
+    private val _fetchErr = MutableStateFlow<GrpcResult.Error?>(null)
+    val fetchErr: StateFlow<GrpcResult.Error?> = _fetchErr.asStateFlow()
+
     init {
         viewModelScope.launch {
             val timeline = withContext(Dispatchers.IO) {
                 Log.d("ImageGalleryViewModel", "loading entries")
-                val raw = imageRepository.getEntries()
+                val (raw, err) = imageRepository.getEntries()
+                _fetchErr.value = err
                 Log.d("ImageGalleryViewModel", "entries loaded")
 
                 // ensure desired order: newest first

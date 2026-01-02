@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.ui.imageGallery
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,8 +47,23 @@ fun ImageGalleryScreen(
     viewModel: ImageGalleryViewModel = viewModel()
 ) {
     val entries by viewModel.entriesWithHeaders.collectAsState()
+    val fetchErr by viewModel.fetchErr.collectAsState()
 
     Log.d(TAG, "entries.size = ${entries.size} (including headers)")
+
+    if (fetchErr != null) {
+        Box(
+            modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.error)
+        ) {
+            Text(
+                text = "Connection error: ${fetchErr?.message}",
+                color = MaterialTheme.colorScheme.onError,
+                modifier = Modifier.padding(4.dp)
+            )
+        }
+    }
 
     ImageGrid(
         entries = entries,

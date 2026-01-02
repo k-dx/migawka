@@ -9,6 +9,11 @@ import kotlinx.coroutines.coroutineScope
 import xyz.jdubiel.migawka.TAG
 import java.io.File
 
+/**
+ * Represents a result of fetching entries. `err` can be non-null even if `entries` are non-empty,
+ * because e.g. only local images were available.
+ */
+data class EntriesResult(val entries: List<TimelineEntryK>, val err: GrpcResult.Error?)
 
 class ImageRepository(
     private val contentResolver: ContentResolver,
@@ -18,12 +23,17 @@ class ImageRepository(
     /**
      * @return entries that are both local and remote, unique by hash.
      */
-    suspend fun getEntries(): List<TimelineEntryK> = coroutineScope {
+    suspend fun getEntries(): EntriesResult = coroutineScope {
         val localDeferred = async { localImageProvider.getEntries() }
         val remoteDeferred = async { remoteImageProvider.getEntries() }
 
         val localImages = localDeferred.await()
-        val remoteEntries = remoteDeferred.await()
+        val remoteResult = remoteDeferred.await()
+
+        val remoteEntries = when(remoteResult) {
+            is GrpcResult.Success -> remoteResult.data
+            is GrpcResult.Error -> emptyList()
+        }
 
         val localEntries = localImages.map {
             TimelineEntryK.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
@@ -52,7 +62,12 @@ class ImageRepository(
             }
         }
 
-        return@coroutineScope results
+        val err = when(remoteResult) {
+            is GrpcResult.Success -> null
+            is GrpcResult.Error -> remoteResult
+        }
+
+        return@coroutineScope EntriesResult(results, err)
     }
 
     suspend fun getRemoteOptimizedImage(id: Hash): RemoteImage {
