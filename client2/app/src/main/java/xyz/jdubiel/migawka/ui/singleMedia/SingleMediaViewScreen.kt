@@ -231,6 +231,8 @@ fun SingleMediaViewScreen(
                 }
                 else -> {}
             }
+
+            DownloadStatus(viewModel.downloadState.value)
         }
     }
 

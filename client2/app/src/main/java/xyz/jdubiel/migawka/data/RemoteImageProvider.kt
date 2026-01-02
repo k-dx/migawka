@@ -88,28 +88,37 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
         }
     }
 
-    suspend fun getFullImage(id: Hash): RemoteFullImage {
-        val request = GetMediaItemRequest.newBuilder()
-            .setId(id.toString())
-            .build()
+    suspend fun getFullImage(id: Hash): GrpcResult<RemoteFullImage> {
+        try {
+            val request = GetMediaItemRequest.newBuilder()
+                .setId(id.toString())
+                .build()
 
-        val response = stub.getFullMediaItem(request)
+            val response = stub.getFullMediaItem(request)
 
-        if (response.status.code != 200) {
-            Log.e("gRPC", "Error: `${response.status.message}`")
-            throw Exception("Error: `${response.status.message}`")
+            if (response.status.code != 200) {
+                val message = response.status.message
+                Log.e("gRPC", "getFullImage: `$message`")
+                return GrpcResult.Error(message = message)
+            }
+
+            if (response.mediaItem.id != id.toString()) {
+                val message = "Returned MediaItemID is different from requested!"
+                Log.e("gRPC", "getFullImage: $message")
+                return GrpcResult.Error(message = message)
+            }
+
+            return GrpcResult.Success(RemoteFullImage(
+                hash = id,
+                bytes = response.mediaItem.content.toByteArray(),
+                date = Instant.parse(response.mediaItem.creationTime),
+                path = response.mediaItem.path
+            ))
+        } catch (e: Exception) {
+            Log.e("gRPC", "getFullImage: ${e.message}", e)
+            return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
 
-        if (response.mediaItem.id != id.toString()) {
-            Log.e("gRPC", "getFullImage: returned MediaItemID is different from requested!")
-        }
-
-        return RemoteFullImage(
-            hash = id,
-            bytes = response.mediaItem.content.toByteArray(),
-            date = Instant.parse(response.mediaItem.creationTime),
-            path = response.mediaItem.path
-        )
     }
 
     suspend fun getEntries(): GrpcResult<List<TimelineEntryK>> {

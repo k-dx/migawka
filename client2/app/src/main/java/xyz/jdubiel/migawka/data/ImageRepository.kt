@@ -72,7 +72,7 @@ class ImageRepository(
         return remoteImageProvider.getOptimizedImage(id)
     }
 
-    suspend fun getRemoteFullImage(id: Hash): RemoteFullImage {
+    suspend fun getRemoteFullImage(id: Hash): GrpcResult<RemoteFullImage> {
         return remoteImageProvider.getFullImage(id)
     }
 

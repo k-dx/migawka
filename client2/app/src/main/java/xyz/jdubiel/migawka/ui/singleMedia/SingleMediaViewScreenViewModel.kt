@@ -17,6 +17,7 @@ import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.data.GrpcResult
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
+import xyz.jdubiel.migawka.data.RemoteFullImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.TimelineEntryK
 
@@ -25,6 +26,13 @@ sealed interface FullImageUiState {
     data class Success(val image: RemoteImage, val page: Int) : FullImageUiState
     data class Error(val message: String?) : FullImageUiState
     data object Empty : FullImageUiState
+}
+
+sealed interface DownloadState {
+    data object Loading : DownloadState
+    data class Success(val image: RemoteFullImage) : DownloadState
+    data class Error(val message: String?) : DownloadState
+    data object Empty : DownloadState
 }
 
 class SingleMediaViewScreenViewModel(
@@ -46,6 +54,9 @@ class SingleMediaViewScreenViewModel(
         mutableStateOf<FullImageUiState>(FullImageUiState.Empty)
     val fullImageState: State<FullImageUiState> = _fullImageState
     private var fetchJob: Job? = null
+
+    private val _downloadState = mutableStateOf<DownloadState>(DownloadState.Empty)
+    val downloadState: State<DownloadState> = _downloadState
 
     init {
         Log.d(TAG, "entries size = ${entries.size}")
@@ -96,16 +107,35 @@ class SingleMediaViewScreenViewModel(
     fun setCurrentPage(page: Int) {
         Log.d(TAG, "onPageChange: $page")
         _currentPage.intValue = page
+        _downloadState.value = DownloadState.Empty
     }
 
     fun downloadImage(id: Hash) {
-        viewModelScope.launch(Dispatchers.IO) { // TODO: change the scope
-            try {
-                val img = imageRepository.getRemoteFullImage(id)
-                imageRepository.saveImageToGallery(img)
-            } catch (e: Exception) {
-                Log.d(xyz.jdubiel.migawka.TAG, "error when downloading image: ${e.message}")
-                // TODO: Display info about the error to the user
+        _downloadState.value = DownloadState.Loading
+        // TODO: change the scope, so the download doesn't get cancelled e.g. if the user changes
+        // the screen or exits the app (?)
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = imageRepository.getRemoteFullImage(id)
+            when (result) {
+                is GrpcResult.Success -> {
+                    try {
+                        imageRepository.saveImageToGallery(result.data)
+                        withContext(Dispatchers.Main) {
+                            _downloadState.value = DownloadState.Success(result.data)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "downloadImage: error saving to gallery: ${e.message}", e)
+                        withContext(Dispatchers.Main) {
+                            _downloadState.value = DownloadState.Error(e.message)
+                        }
+                    }
+                }
+                is GrpcResult.Error -> {
+                    Log.e(TAG, "downloadImage: error: ${result.message}")
+                    withContext(Dispatchers.Main) {
+                        _downloadState.value = DownloadState.Error(result.message)
+                    }
+                }
             }
         }
     }
