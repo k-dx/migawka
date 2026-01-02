@@ -4,11 +4,12 @@ import android.util.Log
 import xyz.jdubiel.migawka.DirectoryEntry
 import xyz.jdubiel.migawka.GetFileListRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 
 class RemoteFileExplorer(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
-    private suspend fun _getDirectoryEntries(path: String): List<DirectoryEntry> {
+    private suspend fun _getDirectoryEntries(path: String): GrpcResult<List<DirectoryEntry>> {
         try {
             val request = GetFileListRequest.newBuilder()
                 .setPath(path)
@@ -16,27 +17,24 @@ class RemoteFileExplorer(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
 
             val response = stub.getFileList(request)
 
-            Log.i(
-                "gRPC",
-                "Response: ${response.status}"
-            )
-
-            if (response.status.code == 200) {
-                return response.entriesList
-            } else {
-                Log.e("gRPC", "Error: `${response.status.message}`")
+            if (response.status.code != 200) {
+                val message = response.status.message
+                Log.e("gRPC", "_getDirectoryEntries: `$message`")
+                return GrpcResult.Error(message = message)
             }
 
+            return GrpcResult.Success(response.entriesList)
         } catch (e: Exception) {
-            Log.e("gRPC", "Error: ${e.message}", e)
-            // TODO: this probably should throw
+            Log.e("gRPC", "_getDirectoryEntries: ${e.message}", e)
+            return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
         }
-        return listOf()
     }
 
-    suspend fun getDirectoryEntries(path: String): List<DirectoryEntryK> {
-        val entries = _getDirectoryEntries(path)
-        return entries.map(::convert)
+    suspend fun getDirectoryEntries(path: String): GrpcResult<List<DirectoryEntryK>> {
+        return when (val result = _getDirectoryEntries(path)) {
+            is GrpcResult.Success -> GrpcResult.Success(result.data.map(::convert))
+            is GrpcResult.Error -> result
+        }
     }
 
     private fun convert(entry: DirectoryEntry): DirectoryEntryK {

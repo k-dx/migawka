@@ -2,12 +2,16 @@ package xyz.jdubiel.migawka.ui.navigation
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,6 +25,7 @@ import kotlinx.serialization.Serializable
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
+import xyz.jdubiel.migawka.ui.folderView.EntriesState
 import xyz.jdubiel.migawka.ui.folderView.FolderScreen
 import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModel
 import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModelFactory
@@ -173,15 +178,33 @@ fun MigawkaNavHost(
                             )
                         )
 
-                    val vm: SingleMediaViewScreenViewModel = viewModel(
-                        factory = SingleMediaViewScreenForTimelineViewModelFactory(
-                            LocalContext.current.applicationContext as Application,
-                            topFolderScreenViewModel.mediaEntries.collectAsState().value,
-                            initialImageId = hasher.fromString(initialMediaId)
-                        )
-                    )
+                    val entriesState by topFolderScreenViewModel.mediaEntries.collectAsState()
 
-                    SingleMediaViewScreen(viewModel = vm)
+                    when (val state = entriesState) {
+                        is EntriesState.Success -> {
+                            val vm: SingleMediaViewScreenViewModel = viewModel(
+                                factory = SingleMediaViewScreenForTimelineViewModelFactory(
+                                    LocalContext.current.applicationContext as Application,
+                                    state.data,
+                                    initialImageId = hasher.fromString(initialMediaId)
+                                )
+                            )
+
+                            SingleMediaViewScreen(viewModel = vm)
+                        }
+
+                        else -> {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text("The list of files could not be loaded")
+                            }
+                        }
+                    }
+
+
                 }
             }
 

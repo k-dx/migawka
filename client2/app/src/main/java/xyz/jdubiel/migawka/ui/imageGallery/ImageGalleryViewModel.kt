@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
-import xyz.jdubiel.migawka.data.GrpcResult
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit

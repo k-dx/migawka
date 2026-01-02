@@ -46,37 +46,38 @@ fun FolderScreen(
     Column(modifier = modifier.padding(4.dp)) {
         PathBar(path = path, navigateToPath = navigateToPath)
 
-        if (entries.isEmpty()) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator()
+        when (val state = entries) {
+            is EntriesState.Success -> {
+                FolderScreenGrid(
+                    modifier = Modifier,
+                    state.data,
+                    onDirClick = { dirName ->
+                        val newPath =
+                            if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
+                        navigateToPath(newPath)
+                    },
+                    onImageClick = onImageClick
+                )
+            }
+            is EntriesState.Loading, is EntriesState.Empty -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is EntriesState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("Error loading directory: ${state.message}", modifier = modifier.padding(16.dp))
+                }
             }
         }
-
-        // TODO: display message if error?
-//        if (error) {
-//            Column(
-//                modifier = Modifier.fillMaxSize(),
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//                verticalArrangement = Arrangement.Center
-//            ) {
-//                Text("Error loading directory.", modifier = modifier.padding(16.dp))
-//            }
-//        }
-
-        FolderScreenGrid(
-            modifier = Modifier,
-            entries,
-            onDirClick = { dirName ->
-                val newPath =
-                    if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
-                navigateToPath(newPath)
-            },
-            onImageClick = onImageClick
-        )
     }
 }
 

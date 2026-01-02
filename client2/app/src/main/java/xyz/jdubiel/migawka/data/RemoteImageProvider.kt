@@ -4,6 +4,7 @@ import android.util.Log
 import xyz.jdubiel.migawka.GetMediaItemRequest
 import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.TimelineEntriesRequest
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.hasher
 import java.time.Instant
 
@@ -19,11 +20,6 @@ data class RemoteFullImage(
     val hash: Hash,
     val path: String
 )
-
-sealed interface GrpcResult<out T> {
-    data class Success<out T>(val data: T) : GrpcResult<T>
-    data class Error(val message: String, val throwable: Throwable? = null) : GrpcResult<Nothing>
-}
 
 class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) {
     suspend fun getThumbnailImage(id: Hash): GrpcResult<RemoteImage> {

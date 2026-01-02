@@ -9,7 +9,7 @@ import coil3.fetch.SourceFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
 import okio.Buffer
-import xyz.jdubiel.migawka.data.GrpcResult
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.RemoteImageProvider
 

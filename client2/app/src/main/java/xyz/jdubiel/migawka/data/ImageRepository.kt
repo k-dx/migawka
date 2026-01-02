@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.provider.MediaStore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.io.File
 
 /**

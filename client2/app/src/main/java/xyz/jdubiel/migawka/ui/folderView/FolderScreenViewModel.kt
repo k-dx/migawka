@@ -16,7 +16,15 @@ import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.data.sortedDirectoriesThenImagesByDateDesc
+
+sealed interface EntriesState<out T> {
+    data class Success<out T>(val data: List<T>) : EntriesState<T>
+    data object Loading : EntriesState<Nothing>
+    data class Error(val message: String) : EntriesState<Nothing>
+    data object Empty : EntriesState<Nothing>
+}
 
 class FolderScreenViewModel(
     private val path: String,
@@ -24,33 +32,50 @@ class FolderScreenViewModel(
     private val remoteFileExplorer: RemoteFileExplorer
 ) : ViewModel() {
 
-    private val _entries = MutableStateFlow<List<DirectoryEntryK>>(emptyList())
-    val entries: StateFlow<List<DirectoryEntryK>> = _entries.asStateFlow()
+    private val _entries = MutableStateFlow<EntriesState<DirectoryEntryK>>(EntriesState.Empty)
+    val entries: StateFlow<EntriesState<DirectoryEntryK>> = _entries.asStateFlow()
 
-    private val _mediaEntries = MutableStateFlow<List<TimelineEntryK>>(emptyList())
-    val mediaEntries: StateFlow<List<TimelineEntryK>> = _mediaEntries.asStateFlow()
+    private val _mediaEntries = MutableStateFlow<EntriesState<TimelineEntryK>>(EntriesState.Empty)
+    val mediaEntries: StateFlow<EntriesState<TimelineEntryK>> = _mediaEntries.asStateFlow()
 
     init {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
+                _entries.value = EntriesState.Loading
+                _mediaEntries.value = EntriesState.Loading
+
                 Log.d(TAG, "loading entries")
-                val raw = remoteFileExplorer.getDirectoryEntries(path)
-                Log.d(TAG, "entries loaded")
+                val result = remoteFileExplorer.getDirectoryEntries(path)
 
-                // ensure desired order: directories first, then thumbnails
-                val sorted = raw.sortedDirectoriesThenImagesByDateDesc()
+                when (val raw = result) {
+                    is GrpcResult.Error -> {
+                        withContext(Dispatchers.Main) {
+                            _entries.value = EntriesState.Error(result.message)
+                            _mediaEntries.value = EntriesState.Error(result.message)
+                        }
+                    }
+                    is GrpcResult.Success -> {
+                        Log.d(TAG, "entries loaded")
 
-                // set entries
-                _entries.value = sorted
+                        // ensure desired order: directories first, then thumbnails
+                        val sorted = raw.data.sortedDirectoriesThenImagesByDateDesc()
 
-                // set media entries
-                val mediaEntries = sorted
-                    .filterIsInstance<DirectoryEntryK.Image>()
-                    .map { TimelineEntryK.Remote(it.id, it.date) }
-                _mediaEntries.value = mediaEntries
+                        // media entries
+                        val mediaEntries = sorted
+                            .filterIsInstance<DirectoryEntryK.Image>()
+                            .map { TimelineEntryK.Remote(it.id, it.date) }
+
+                        withContext(Dispatchers.Main) {
+                            _entries.value = EntriesState.Success(sorted)
+                            _mediaEntries.value = EntriesState.Success(mediaEntries)
+                        }
+
+                        val entriesSize = (_entries.value as EntriesState.Success).data.size
+                        val mediaEntriesSize = (_mediaEntries.value as EntriesState.Success).data.size
+                        Log.d(TAG, "loaded $entriesSize directory entries, including $mediaEntriesSize media items")
+                    }
+                }
             }
-
-            Log.d(TAG, "loaded ${entries.value.size} directory entries, including ${mediaEntries.value.size} media items")
         }
     }
 
