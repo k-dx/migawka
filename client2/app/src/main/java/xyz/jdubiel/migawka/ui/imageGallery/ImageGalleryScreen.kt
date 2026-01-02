@@ -54,8 +54,8 @@ fun ImageGalleryScreen(
     if (fetchErr != null) {
         Box(
             modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.error)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.error)
         ) {
             Text(
                 text = "Connection error: ${fetchErr?.message}",
@@ -134,7 +134,10 @@ fun ImageGrid(
                 key = { index ->
                     when (val item = entries[index]) {
                         is ImageGalleryTimelineEntry.Header -> item.date.toString()
-                        is ImageGalleryTimelineEntry.ImageItem -> item.entry.id.toString()
+                        is ImageGalleryTimelineEntry.ImageItem -> when (item.entry) {
+                            is TimelineEntryK.Local -> "${item.entry.id}#${item.entry.contentUri}"
+                            is TimelineEntryK.Remote -> "${item.entry.id}"
+                        }
                     }
                 },
                 span = { index ->
