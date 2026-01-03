@@ -34,3 +34,10 @@ func NewTimelineEntriesResponse(entries []*TimelineEntry, status *Status) *Timel
 		Status:  status,
 	}
 }
+
+func NewFullMetadataReply(values map[int32]string, status *Status) *FullMetadataReply {
+	return &FullMetadataReply{
+		Values: values,
+		Status: status,
+	}
+}

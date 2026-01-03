@@ -327,3 +327,63 @@ func (s *server) GetThumbnail(_ context.Context, in *pb.GetMediaItemRequest) (*p
 
 	return pb.NewGetMediaItemResponse(pbMediaItem, status), nil
 }
+
+func (s *server) GetFullMetadata(_ context.Context, in *pb.FullMetadataRequest) (*pb.FullMetadataReply, error) {
+	log.Info().Str("id", in.GetId()).Msg("GetFullMetadata")
+
+	// parse id
+	id, err := s.mediaStore.GetHasher().HashFromString(in.GetId())
+	if err != nil {
+		log.Error().Err(err).Str("id", in.GetId()).Msg("Invalid ID format")
+		status := pb.NewStatus(400, "Invalid ID format")
+		return pb.NewFullMetadataReply(nil, status), nil
+	}
+
+	// get metadata from media store
+	metadata, err := s.mediaStore.GetFullMetadata(id)
+	if err != nil {
+		log.Error().Err(err).
+			Str("id", in.GetId()).
+			Msg("Failed to get metadata from media store")
+		status := pb.NewStatus(500, "Failed to get metadata from media store")
+		return pb.NewFullMetadataReply(nil, status), nil
+	}
+
+	// convert to gRPC FullMetadataReply type
+	values := make(map[int32]string)
+
+	values[int32(pb.MetadataKey_ID)] = metadata.Metadata.ID.String()
+	values[int32(pb.MetadataKey_Path)] = metadata.Metadata.Path
+	values[int32(pb.MetadataKey_CreationDate)] = metadata.Metadata.CreationTime.String()
+
+	m := GetStatusMap()
+
+	for tag, pbKey := range m {
+		val, ok := metadata.ExifValues[tag]
+		if ok {
+			values[int32(pbKey)] = val
+		}
+	}
+
+	status := pb.NewStatus(200, "")
+
+	return pb.NewFullMetadataReply(values, status), nil
+}
+
+func GetStatusMap() map[ExifTag]pb.MetadataKey {
+	// Map ExifTag to pb.MetadataKey
+	// UPDATE THIS IF YOU ADD MORE EXIF TAGS!!!
+	m := map[ExifTag]pb.MetadataKey{
+		DateTime:     pb.MetadataKey_Exif_DateTime,
+		Make:         pb.MetadataKey_Exif_Make,
+		Model:        pb.MetadataKey_Exif_Model,
+		Orientation:  pb.MetadataKey_Exif_Orientation,
+		FocalLength:  pb.MetadataKey_Exif_FocalLength,
+		ExposureTime: pb.MetadataKey_Exif_ExposureTime,
+		FNumber:      pb.MetadataKey_Exif_FNumber,
+		ISO:          pb.MetadataKey_Exif_ISO,
+		Flash:        pb.MetadataKey_Exif_Flash,
+		WhiteBalance: pb.MetadataKey_Exif_WhiteBalance,
+	}
+	return m
+}

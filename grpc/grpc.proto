@@ -19,6 +19,7 @@ service Migawka {
   rpc GetThumbnail(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFullMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFileList(GetFileListRequest) returns (GetFileListResponse);
+  rpc GetFullMetadata(FullMetadataRequest) returns (FullMetadataReply);
 }
 
 
@@ -136,4 +137,32 @@ message TimelineEntriesRequest {
 message TimelineEntriesResponse {
   Status status = 1;
   repeated TimelineEntry entries = 2;
+}
+
+message FullMetadataRequest {
+  string id = 1;
+}
+
+enum MetadataKey {
+  Exif_DateTime = 0;
+  Exif_Make = 1;
+  Exif_Model = 2;
+  Exif_Orientation = 3;
+  Exif_FocalLength = 4;
+  Exif_ExposureTime = 5;
+  Exif_FNumber = 6;
+  Exif_ISO = 7;
+  Exif_Flash = 8;
+  Exif_WhiteBalance = 9;
+  ID = 10;
+  Path = 11;
+  CreationDate = 12;
+}
+
+
+message FullMetadataReply {
+  Status status = 1;
+
+  // key(int32) is MetadataKey! 
+  map<int32, string> values = 2;
 }

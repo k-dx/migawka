@@ -24,6 +24,28 @@ type MediaItemMetadata struct {
 	CreationTime time.Time
 }
 
+type ExifTag int
+
+const (
+	DateTime ExifTag = iota
+	Make
+	Model
+	Orientation
+	FocalLength
+	ExposureTime
+	FNumber
+	ISO
+	Flash
+	WhiteBalance
+	exifTagCount
+	// MAKE SURE TO UPDATE GetStatusMap() WHEN ADDING NEW TAGS
+)
+
+type MediaItemFullMetadata struct {
+	Metadata   MediaItemMetadata
+	ExifValues map[ExifTag]string
+}
+
 type MediaItem struct {
 	Metadata MediaItemMetadata
 	Content  []byte
@@ -49,6 +71,7 @@ type MediaStore interface {
 	// thumbnaildir.
 	GetTimelineEntriesByPath(path string) ([]TimelineEntry, []string, error)
 	GenerateMissingThumbnails()
+	GetFullMetadata(id Hash) (MediaItemFullMetadata, error)
 
 	GetMediaDirectory() string
 	GetThumbnailDirectory() string
@@ -92,6 +115,60 @@ func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 		return nil, err
 	}
 	return ms, nil
+}
+
+func (ms *mediaStoreImpl) GetFullMetadata(id Hash) (MediaItemFullMetadata, error) {
+
+	item, ok := ms.items[ms.Hasher.HashToKey(id)]
+	if !ok {
+		return MediaItemFullMetadata{}, fmt.Errorf("media item with given id not found")
+	}
+
+	path := item.Path
+	log.Debug().Str("ID", id.String()).
+		Str("path", path).
+		Msg("Returning full media item metadata")
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return MediaItemFullMetadata{}, fmt.Errorf("failed to read media item from disk: %w", err)
+	}
+
+	fullPath := item.Path
+	pathRootedAtMediadir, err := filepath.Rel(ms.mediadir, fullPath)
+	if err != nil || strings.HasPrefix(pathRootedAtMediadir, "/") {
+		return MediaItemFullMetadata{}, fmt.Errorf("failed to get path relative to mediadir: %w", err)
+	}
+
+	metadata := NewMediaItemMetadata(
+		item.ID,
+		pathRootedAtMediadir,
+		item.CreationTime,
+	)
+
+	exifValues, err := getExifMetadata(content)
+	if err != nil {
+		log.Debug().Str("ID", id.String()).
+			Err(err).
+			Msg("Failed to get EXIF metadata")
+	}
+
+	// for tag, value := range exifValues {
+	// 	metadataValue := value
+	// 	metadataValue = strings.TrimSpace(metadataValue)
+	// 	if metadataValue != "" {
+	// 		metadataValue = strings.ReplaceAll(metadataValue, "\x00", "")
+	// 		if metadataValue != "" {
+	// 			exifValues[tag] = metadataValue
+	// 		}
+	// 	}
+	// }
+
+	itemFull := MediaItemFullMetadata{
+		Metadata:   metadata,
+		ExifValues: exifValues,
+	}
+	return itemFull, nil
 }
 
 func (ms *mediaStoreImpl) GetMediaDirectory() string {
@@ -374,6 +451,38 @@ func getExifCreationDate(img []byte) (time.Time, error) {
 	}
 
 	return t, nil
+}
+
+func getExifMetadata(img []byte) (map[ExifTag]string, error) {
+	metadata, err := bimg.Metadata(img)
+	if err != nil {
+		return map[ExifTag]string{}, fmt.Errorf("failed to get EXIF metadata: %w", err)
+	}
+
+	rawTags := make(map[ExifTag]string)
+
+	rawTags[DateTime] = metadata.EXIF.DateTimeOriginal
+	rawTags[Make] = metadata.EXIF.Make
+	rawTags[Model] = metadata.EXIF.Model
+	rawTags[Orientation] = fmt.Sprintf("%d", metadata.EXIF.Orientation)
+	rawTags[FocalLength] = metadata.EXIF.FocalLength
+	rawTags[ExposureTime] = metadata.EXIF.ExposureTime
+	rawTags[FNumber] = metadata.EXIF.FNumber
+	rawTags[ISO] = fmt.Sprintf("%d", metadata.EXIF.ISOSpeedRatings)
+	rawTags[Flash] = fmt.Sprintf("%d", metadata.EXIF.Flash)
+	rawTags[WhiteBalance] = fmt.Sprintf("%d", metadata.EXIF.WhiteBalance)
+
+	cleanedTags := make(map[ExifTag]string)
+	for tag, value := range rawTags {
+		metadataValue := value
+		metadataValue = strings.TrimSpace(metadataValue)
+		metadataValue = strings.ReplaceAll(metadataValue, "\x00", "")
+		if metadataValue != "" {
+			cleanedTags[tag] = metadataValue
+		}
+	}
+
+	return cleanedTags, nil
 }
 
 func optimizeJpg(in []byte) ([]byte, error) {

@@ -28,6 +28,7 @@ const (
 	Migawka_GetThumbnail_FullMethodName                 = "/Migawka/GetThumbnail"
 	Migawka_GetFullMediaItem_FullMethodName             = "/Migawka/GetFullMediaItem"
 	Migawka_GetFileList_FullMethodName                  = "/Migawka/GetFileList"
+	Migawka_GetFullMetadata_FullMethodName              = "/Migawka/GetFullMetadata"
 )
 
 // MigawkaClient is the client API for Migawka service.
@@ -46,6 +47,7 @@ type MigawkaClient interface {
 	GetThumbnail(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error)
+	GetFullMetadata(ctx context.Context, in *FullMetadataRequest, opts ...grpc.CallOption) (*FullMetadataReply, error)
 }
 
 type migawkaClient struct {
@@ -146,6 +148,16 @@ func (c *migawkaClient) GetFileList(ctx context.Context, in *GetFileListRequest,
 	return out, nil
 }
 
+func (c *migawkaClient) GetFullMetadata(ctx context.Context, in *FullMetadataRequest, opts ...grpc.CallOption) (*FullMetadataReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FullMetadataReply)
+	err := c.cc.Invoke(ctx, Migawka_GetFullMetadata_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MigawkaServer is the server API for Migawka service.
 // All implementations must embed UnimplementedMigawkaServer
 // for forward compatibility.
@@ -162,6 +174,7 @@ type MigawkaServer interface {
 	GetThumbnail(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error)
+	GetFullMetadata(context.Context, *FullMetadataRequest) (*FullMetadataReply, error)
 	mustEmbedUnimplementedMigawkaServer()
 }
 
@@ -198,6 +211,9 @@ func (UnimplementedMigawkaServer) GetFullMediaItem(context.Context, *GetMediaIte
 }
 func (UnimplementedMigawkaServer) GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFileList not implemented")
+}
+func (UnimplementedMigawkaServer) GetFullMetadata(context.Context, *FullMetadataRequest) (*FullMetadataReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFullMetadata not implemented")
 }
 func (UnimplementedMigawkaServer) mustEmbedUnimplementedMigawkaServer() {}
 func (UnimplementedMigawkaServer) testEmbeddedByValue()                 {}
@@ -382,6 +398,24 @@ func _Migawka_GetFileList_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Migawka_GetFullMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FullMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MigawkaServer).GetFullMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Migawka_GetFullMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MigawkaServer).GetFullMetadata(ctx, req.(*FullMetadataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Migawka_ServiceDesc is the grpc.ServiceDesc for Migawka service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -424,6 +458,10 @@ var Migawka_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFileList",
 			Handler:    _Migawka_GetFileList_Handler,
+		},
+		{
+			MethodName: "GetFullMetadata",
+			Handler:    _Migawka_GetFullMetadata_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
