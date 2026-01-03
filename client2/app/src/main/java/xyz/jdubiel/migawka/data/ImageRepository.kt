@@ -19,6 +19,7 @@ class ImageRepository(
     private val remoteImageProvider: RemoteImageProvider,
     private val localImageProvider: LocalImageProvider,
 ) {
+    private var entries: Map<Hash, TimelineEntryK> = mapOf()
     /**
      * @return entries that are both local and remote, unique by hash.
      */
@@ -66,6 +67,8 @@ class ImageRepository(
             is GrpcResult.Error -> remoteResult
         }
 
+        entries = results.map { it.id to it }.toMap()
+
         return@coroutineScope EntriesResult(results, err)
     }
 
@@ -110,5 +113,31 @@ class ImageRepository(
         values.clear()
         values.put(MediaStore.Images.Media.IS_PENDING, false)
         contentResolver.update(uri, values, null, null)
+    }
+
+    suspend fun getMetadata(id: Hash): GrpcResult<FullMediaMetadata> {
+        return when (val entry = entries[id]) {
+            is TimelineEntryK.Local -> {
+                // annotate with ID if successful
+                when (val data = localImageProvider.extractExifMetadata(entry.contentUri)) {
+                    is GrpcResult.Success -> {
+                        val metadata = data.data.toMutableMap()
+                        metadata[MediaMetadata.ID] = entry.id.toString()
+                        // TODO: format date better
+                        metadata[MediaMetadata.CreationDate] = entry.date.toString()
+                        GrpcResult.Success(metadata)
+                    }
+                    is GrpcResult.Error -> {
+                        data
+                    }
+                }
+            }
+            is TimelineEntryK.Remote -> {
+                remoteImageProvider.getMetadata(entry.id)
+            }
+            null -> {
+                GrpcResult.Error("Entry not found")
+            }
+        }
     }
 }

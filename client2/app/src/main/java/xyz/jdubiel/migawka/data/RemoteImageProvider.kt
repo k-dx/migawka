@@ -1,7 +1,9 @@
 package xyz.jdubiel.migawka.data
 
 import android.util.Log
+import xyz.jdubiel.migawka.FullMetadataRequest
 import xyz.jdubiel.migawka.GetMediaItemRequest
+import xyz.jdubiel.migawka.MetadataKey
 import xyz.jdubiel.migawka.MigawkaGrpcKt
 import xyz.jdubiel.migawka.TimelineEntriesRequest
 import xyz.jdubiel.migawka.data.network.GrpcResult
@@ -145,6 +147,50 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
                 )
             }
             return GrpcResult.Success(results)
+
+        } catch (e: Exception) {
+            Log.e("gRPC", "getEntries: ${e.message}", e)
+            return GrpcResult.Error(message = e.message ?: "Unknown error", throwable = e)
+        }
+    }
+
+    suspend fun getMetadata(id: Hash): GrpcResult<FullMediaMetadata> {
+        try {
+            val request = FullMetadataRequest.newBuilder()
+                .setId(id.toString())
+                .build()
+
+            val response = stub.getFullMetadata(request)
+
+            if (response.status.code != 200) {
+                val message = response.status.message
+                Log.e("gRPC", "getEntries: $message")
+                return GrpcResult.Error(message = message)
+            }
+
+            // protobuf keys -> kotlin keys
+            val m = mapOf(
+                MetadataKey.Exif_DateTime to MediaMetadata.Exif_DateTime,
+                MetadataKey.Exif_Make to MediaMetadata.Exif_Make,
+                MetadataKey.Exif_Model to MediaMetadata.Exif_Model,
+                MetadataKey.Exif_Orientation to MediaMetadata.Exif_Orientation,
+                MetadataKey.Exif_FocalLength to MediaMetadata.Exif_FocalLength,
+                MetadataKey.Exif_ExposureTime to MediaMetadata.Exif_ExposureTime,
+                MetadataKey.Exif_FNumber to MediaMetadata.Exif_FNumber,
+                MetadataKey.Exif_ISO to MediaMetadata.Exif_ISO,
+                MetadataKey.Exif_Flash to MediaMetadata.Exif_Flash,
+                MetadataKey.Exif_WhiteBalance to MediaMetadata.Exif_WhiteBalance,
+                MetadataKey.ID to MediaMetadata.ID,
+                MetadataKey.Path to MediaMetadata.Path,
+                MetadataKey.CreationDate to MediaMetadata.CreationDate,
+            )
+
+            val result: FullMediaMetadata = response.valuesMap.mapNotNull { (k, v) ->
+                val mediaMetadataKey = m[MetadataKey.forNumber(k)]
+                mediaMetadataKey?.let { it to v }
+            }.toMap()
+
+            return GrpcResult.Success(result)
 
         } catch (e: Exception) {
             Log.e("gRPC", "getEntries: ${e.message}", e)

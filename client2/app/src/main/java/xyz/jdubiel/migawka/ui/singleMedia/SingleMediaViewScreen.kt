@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.RotateLeft
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -117,6 +118,7 @@ fun SingleMediaViewScreen(
             backPressHandled = false
         }
     }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
     val autoRotateEnabled = Utils.isAutoRotateEnabled(context)
     val buttons: List<@Composable () -> Unit> = buildList {
@@ -151,7 +153,6 @@ fun SingleMediaViewScreen(
             }
         }
         add {
-
             OutlinedIconButton(
                 onClick = {
                     when (entry) {
@@ -204,6 +205,17 @@ fun SingleMediaViewScreen(
                 Icon(Icons.Default.Share, contentDescription = "Share")
             }
         }
+        add {
+            OutlinedIconButton(
+                onClick = {
+                    showInfoDialog = true
+                    viewModel.getMetadata(entry.id)
+                },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(Icons.Default.Info, contentDescription = "Information about media")
+            }
+        }
     }
 
     val creationDate = entry.date
@@ -237,6 +249,10 @@ fun SingleMediaViewScreen(
     }
 
     var showOverlay by remember { mutableStateOf(true) }
+
+    if (showInfoDialog) {
+        MediaInfoDialog(onClose = { showInfoDialog = false }, state = viewModel.metadataState.value)
+    }
 
     MediaOverlay(
         topOverlayContent = topOverlayContent,

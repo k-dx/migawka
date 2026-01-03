@@ -2,6 +2,7 @@ package xyz.jdubiel.migawka.data
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -18,7 +19,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.data.database.ILocalMediaRepository
 import xyz.jdubiel.migawka.data.database.LocalMediaEntry
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.hasher
+import java.io.InputStream
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -27,8 +30,9 @@ import java.time.format.DateTimeFormatter
 private val LAST_MODIFIED_GENERATION = intPreferencesKey("last_modified_generation")
 private val DB_MEDIA_STORE_VERSION = stringPreferencesKey("db_media_store_version")
 
+
 class MediaStoreImageProvider(
-    private val context: android.content.Context,
+    private val context: Context,
     private val contentResolver: ContentResolver,
     private val db: ILocalMediaRepository,
     scope: CoroutineScope,
@@ -186,6 +190,50 @@ class MediaStoreImageProvider(
             dbEntry.date,
             dbEntry.hash
         )
+    }
+
+    override fun extractExifMetadata(imageUri: Uri): GrpcResult<Map<MediaMetadata, String>> {
+        val resolver = context.contentResolver
+        val result = mutableMapOf<MediaMetadata, String>()
+        var stream: InputStream? = null
+        try {
+            stream = resolver.openInputStream(imageUri)
+                ?: return GrpcResult.Error("Failed to open input stream")
+            val exif = ExifInterface(stream)
+
+            // Basic tags
+            exif.getAttribute(ExifInterface.TAG_DATETIME)
+                ?.let { result[MediaMetadata.Exif_DateTime] = it }
+            exif.getAttribute(ExifInterface.TAG_MAKE)
+                ?.let { result[MediaMetadata.Exif_Make] = it }
+            exif.getAttribute(ExifInterface.TAG_MODEL)
+                ?.let { result[MediaMetadata.Exif_Model] = it }
+            exif.getAttribute(ExifInterface.TAG_ORIENTATION)
+                ?.let { result[MediaMetadata.Exif_Orientation] = it }
+            exif.getAttribute(ExifInterface.TAG_FOCAL_LENGTH)
+                ?.let { result[MediaMetadata.Exif_FocalLength] = it }
+            exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME)
+                ?.let { result[MediaMetadata.Exif_ExposureTime] = it }
+            exif.getAttribute(ExifInterface.TAG_F_NUMBER)
+                ?.let { result[MediaMetadata.Exif_FNumber] = it }
+            exif.getAttribute(ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY)
+                ?.let { result[MediaMetadata.Exif_ISO] = it }
+            exif.getAttribute(ExifInterface.TAG_FLASH)
+                ?.let { result[MediaMetadata.Exif_Flash] = it }
+            exif.getAttribute(ExifInterface.TAG_WHITE_BALANCE)
+                ?.let { result[MediaMetadata.Exif_WhiteBalance] = it }
+
+            return GrpcResult.Success(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse EXIF data")
+            e.printStackTrace()
+            return GrpcResult.Error("Failed to parse EXIF data: ${e.message}", e)
+        } finally {
+            try {
+                stream?.close()
+            } catch (_: Exception) {
+            }
+        }
     }
 
     /**

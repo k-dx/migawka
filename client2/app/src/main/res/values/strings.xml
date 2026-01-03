@@ -16,4 +16,17 @@
     <string name="apply_changes">Apply changes</string>
     <string name="the_app_will_be_restarted_to_apply_the_changes">The app will be restarted to apply the changes.</string>
     <string name="ok">Ok</string>
+    <string name="id">ID</string>
+    <string name="path">Path</string>
+    <string name="creation_date">Creation Date</string>
+    <string name="exif_datetime">Datetime (EXIF)</string>
+    <string name="exif_make">Make (EXIF)</string>
+    <string name="exif_model">Model (EXIF)</string>
+    <string name="exif_orientation">Orientation (EXIF)</string>
+    <string name="exif_focal_length">Focal Length (EXIF)</string>
+    <string name="exif_exposure_time">Exposure Time (EXIF)</string>
+    <string name="exif_f_number">F Number (EXIF)</string>
+    <string name="exif_iso">ISO (EXIF)</string>
+    <string name="exif_flash">Flash (EXIF)</string>
+    <string name="exif_white_balance">White Balance (EXIF)</string>
 </resources>

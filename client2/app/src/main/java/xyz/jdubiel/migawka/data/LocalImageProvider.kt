@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.data
 
 import android.net.Uri
+import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.time.Instant
 
 // Data class to hold processed local image information
@@ -28,4 +29,5 @@ interface LocalImageProvider {
      * Fetches a list of local images from the MediaStore.
      */
     suspend fun getEntries(): List<LocalImage>
+    fun extractExifMetadata(uri: Uri): GrpcResult<Map<MediaMetadata, String>>
 }

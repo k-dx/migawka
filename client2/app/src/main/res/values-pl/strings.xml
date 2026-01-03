@@ -14,4 +14,17 @@
     <string name="apply_changes">Zastosuj zmiany</string>
     <string name="the_app_will_be_restarted_to_apply_the_changes">Zrestartuj aplikację by wprowadzić zmiany.</string>
     <string name="ok">Ok</string>
+    <string name="id">ID</string>
+    <string name="path">Ścieżka</string>
+    <string name="creation_date">Data utworzenia</string>
+    <string name="exif_datetime">Datetime (EXIF)</string>
+    <string name="exif_make">Marka (EXIF)</string>
+    <string name="exif_model">Model (EXIF)</string>
+    <string name="exif_orientation">Orientacja (EXIF)</string>
+    <string name="exif_focal_length">Odległość Ogniskowa (EXIF)</string>
+    <string name="exif_exposure_time">Czas ekspozycji (EXIF)</string>
+    <string name="exif_f_number">Wartość F (EXIF)</string>
+    <string name="exif_iso">ISO (EXIF)</string>
+    <string name="exif_flash">Lampa błyskowa (EXIF)</string>
+    <string name="exif_white_balance">Balans bieli (EXIF)</string>
 </resources>

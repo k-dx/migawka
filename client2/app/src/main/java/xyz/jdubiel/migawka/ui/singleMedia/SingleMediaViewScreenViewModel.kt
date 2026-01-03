@@ -14,12 +14,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
-import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.ImageRepository
+import xyz.jdubiel.migawka.data.MediaMetadata
 import xyz.jdubiel.migawka.data.RemoteFullImage
 import xyz.jdubiel.migawka.data.RemoteImage
 import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.data.network.GrpcResult
 
 sealed interface FullImageUiState {
     data object Loading : FullImageUiState
@@ -33,6 +34,13 @@ sealed interface DownloadState {
     data class Success(val image: RemoteFullImage) : DownloadState
     data class Error(val message: String?) : DownloadState
     data object Empty : DownloadState
+}
+
+sealed interface MediaMetadataState {
+    data object Loading : MediaMetadataState
+    data class Success(val data: Map<MediaMetadata, String>) : MediaMetadataState
+    data class Error(val message: String?) : MediaMetadataState
+    data object Empty : MediaMetadataState
 }
 
 class SingleMediaViewScreenViewModel(
@@ -57,6 +65,10 @@ class SingleMediaViewScreenViewModel(
 
     private val _downloadState = mutableStateOf<DownloadState>(DownloadState.Empty)
     val downloadState: State<DownloadState> = _downloadState
+
+    private val _metadataState = mutableStateOf<MediaMetadataState>(MediaMetadataState.Empty)
+    val metadataState: State<MediaMetadataState> = _metadataState
+
 
     init {
         Log.d(TAG, "entries size = ${entries.size}")
@@ -139,6 +151,26 @@ class SingleMediaViewScreenViewModel(
             }
         }
     }
+
+//    fun getExifMetadata(id: Hash) = imageRepository.getExifMetadata(id)
+    fun getMetadata(id: Hash) {
+        _metadataState.value = MediaMetadataState.Loading
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                imageRepository.getMetadata(id)
+            }
+            when (result) {
+                is GrpcResult.Success -> {
+                    _metadataState.value = MediaMetadataState.Success(result.data)
+                }
+
+                is GrpcResult.Error -> {
+                    _metadataState.value = MediaMetadataState.Error(result.message)
+                }
+            }
+        }
+    }
+
 
     companion object {
         private const val TAG = "SingleMediaViewScreenForTimelineViewModel"
