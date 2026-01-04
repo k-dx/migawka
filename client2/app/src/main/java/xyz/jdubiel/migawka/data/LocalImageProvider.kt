@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.data
 
 import android.net.Uri
+import kotlinx.coroutines.flow.StateFlow
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.time.Instant
 
@@ -13,6 +14,8 @@ data class LocalImage(
 
 // Interface for our provider
 interface LocalImageProvider {
+    val indexingState: StateFlow<IndexingState>
+
     /**
      * Fetches a list of local images from the MediaStore. Tries not to return invalid entries (e.g.
      * ones that have been deleted).

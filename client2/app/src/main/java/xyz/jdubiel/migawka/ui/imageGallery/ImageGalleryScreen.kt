@@ -41,9 +41,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.TAG
+import xyz.jdubiel.migawka.data.IndexingState
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 import xyz.jdubiel.migawka.ui.GallerySettingsBottomSheet
@@ -63,6 +65,7 @@ fun ImageGalleryScreen(
 ) {
     val entries by viewModel.entriesWithHeaders.collectAsState()
     val fetchErr by viewModel.fetchErr.collectAsState()
+    val indexingState by viewModel.localMediaIndexingState.collectAsStateWithLifecycle()
 
     val columnCount by viewModel.galleryColumnCount.collectAsState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -84,13 +87,57 @@ fun ImageGalleryScreen(
         }
     }
 
-    ImageGrid(
-        entries = entries,
-        onImageClick = onImageClick,
-        onGallerySettingsClick = { showBottomSheet = true },
-        columnCount = columnCount,
-        modifier = modifier
-    )
+    when (val state = indexingState) {
+        is IndexingState.Idle -> {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                Text(text = stringResource(R.string.indexing_local))
+            }
+        }
+        is IndexingState.Indexing -> {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                Text(text = "${stringResource(R.string.indexing_local)} : ${state.processedCount * 100 / state.totalCount}%")
+            }
+        }
+        is IndexingState.Error -> {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                Text(text = "${stringResource(R.string.error)} : ${state.message}%")
+            }
+        }
+        is IndexingState.Finished -> {
+            if (entries.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                }
+            } else {
+                ImageGrid(
+                    entries = entries,
+                    onImageClick = onImageClick,
+                    onGallerySettingsClick = { showBottomSheet = true },
+                    columnCount = columnCount,
+                    modifier = modifier
+                )
+            }
+        }
+    }
 
     if (showBottomSheet) {
         GallerySettingsBottomSheet(
@@ -167,26 +214,19 @@ fun ImageGrid(
 ) {
     val gridState = rememberLazyGridState()
 
-    if (entries.isEmpty()) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-
-    val stickyHeader by remember {
+    val stickyHeader: Instant? by remember {
         derivedStateOf {
             // Logic to determine which header should be sticky
             // based on first visible item
 
             val firstVisibleIndex = gridState.firstVisibleItemIndex
-            when (val entry = entries[firstVisibleIndex]) {
-                is ImageGalleryTimelineEntry.Header -> entry.date
-                is ImageGalleryTimelineEntry.ImageItem -> entry.entry.date
+            if (firstVisibleIndex < 0 || firstVisibleIndex >= entries.size) {
+                null
+            } else {
+                when (val entry = entries[firstVisibleIndex]) {
+                    is ImageGalleryTimelineEntry.Header -> entry.date
+                    is ImageGalleryTimelineEntry.ImageItem -> entry.entry.date
+                }
             }
         }
     }
@@ -262,7 +302,7 @@ fun ImageGrid(
         }
 
         // Sticky header overlay
-        stickyHeader.let { date ->
+        stickyHeader?.let { date ->
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()

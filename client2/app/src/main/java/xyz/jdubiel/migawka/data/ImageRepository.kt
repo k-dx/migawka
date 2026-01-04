@@ -6,6 +6,7 @@ import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.StateFlow
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.io.File
 
@@ -20,6 +21,8 @@ class ImageRepository(
     private val remoteImageProvider: RemoteImageProvider,
     private val localImageProvider: LocalImageProvider,
 ) {
+
+    val localMediaIndexingState: StateFlow<IndexingState> = localImageProvider.indexingState
     private var entries: Map<Hash, TimelineEntryK> = mapOf()
     /**
      * @return entries that are both local and remote, unique by hash.

@@ -57,4 +57,5 @@
     <string name="open_settings">Otwórz ustawienia</string>
     <string name="grant_permission">Przyznaj uprawnienia</string>
     <string name="open_grid_settings">Otwórz ustawienia siatki</string>
+    <string name="indexing_local">Katalogowanie lokalnych multimediów</string>
 </resources>

@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.data.ImageRepository
+import xyz.jdubiel.migawka.data.IndexingState
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.network.GrpcResult
@@ -30,6 +31,8 @@ class ImageGalleryViewModel(
     private val settingsRepository: UserSettingsRepository
 ) :
     AndroidViewModel(application) {
+
+    val localMediaIndexingState: StateFlow<IndexingState> = imageRepository.localMediaIndexingState
 
     val galleryColumnCount: StateFlow<Int> = settingsRepository.galleryColumnCount.stateIn(
         scope = viewModelScope,

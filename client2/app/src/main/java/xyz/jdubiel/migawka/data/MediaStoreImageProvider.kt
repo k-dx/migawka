@@ -14,7 +14,11 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.data.database.ILocalMediaRepository
@@ -32,6 +36,12 @@ object LocalImageDataStoreKeys {
     val DB_MEDIA_STORE_VERSION = stringPreferencesKey("db_media_store_version")
 }
 
+sealed interface IndexingState {
+    object Idle : IndexingState
+    data class Indexing(val processedCount: Int = 0, val totalCount: Int) : IndexingState
+    data class Finished(val totalCount: Int) : IndexingState
+    data class Error(val message: String) : IndexingState
+}
 
 class MediaStoreImageProvider(
     private val context: Context,
@@ -42,6 +52,9 @@ class MediaStoreImageProvider(
 ) : LocalImageProvider {
 
     // TODO: add logic to observe newly added photos, after initialization
+
+    private val _indexingState = MutableStateFlow<IndexingState>(IndexingState.Idle)
+    override val indexingState: StateFlow<IndexingState> = _indexingState.asStateFlow()
 
     val initializationJob = scope.launch(Dispatchers.IO) {
         val prefs = dataStore.data.first()
@@ -268,7 +281,10 @@ class MediaStoreImageProvider(
                 val generationModifiedColumn =
                     cursor.getColumnIndexOrThrow(MediaStore.Images.Media.GENERATION_MODIFIED)
 
+                val totalCount = cursor.count
+                _indexingState.update { IndexingState.Indexing(totalCount = totalCount) }
 
+                var processedCount = 0
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
                     val uri =
@@ -288,20 +304,41 @@ class MediaStoreImageProvider(
                     highestGenerationModified = maxOf(highestGenerationModified, generationModified)
 
                     // Log.d(HERETAG, "uri $uri has date $date and hash $hash")
+
+                    // Update progress
+                    processedCount++
+                    _indexingState.update {
+                        when (it) {
+                            is IndexingState.Indexing -> it.copy(processedCount = processedCount)
+                            else -> IndexingState.Indexing(
+                                processedCount = processedCount,
+                                totalCount = totalCount
+                            )
+                        }
+                    }
                 }
             }
 
 
             // batch insert into database
-            db.insertEntries(entries.map {
-                LocalMediaEntry(
-                    it.contentUri.toString(),
-                    it.hash,
-                    it.date
-                )
-            })
 
-            Log.d(TAG, "indexed ${entries.size} images")
+            try {
+                db.insertEntries(entries.map {
+                    LocalMediaEntry(
+                        it.contentUri.toString(),
+                        it.hash,
+                        it.date
+                    )
+                })
+                Log.d(TAG, "indexed ${entries.size} images")
+
+                _indexingState.update { IndexingState.Finished(totalCount = entries.size) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error inserting entries", e)
+                _indexingState.update {
+                    IndexingState.Error(e.message ?: "Unknown error")
+                }
+            }
         }
 
         return highestGenerationModified
