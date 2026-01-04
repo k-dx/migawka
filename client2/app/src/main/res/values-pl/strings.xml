@@ -56,4 +56,5 @@
     <string name="media_permission_explanation">Ta aplikacja wymaga dostępu do zdjęć by móc je wyświetlać. Proszę zezwolić na dostęp aby kontynuować.</string>
     <string name="open_settings">Otwórz ustawienia</string>
     <string name="grant_permission">Przyznaj uprawnienia</string>
+    <string name="open_grid_settings">Otwórz ustawienia siatki</string>
 </resources>
