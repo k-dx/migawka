@@ -28,6 +28,11 @@ abstract class LocalMediaDatabase : RoomDatabase() {
                     LocalMediaDatabase::class.java,
                     "local_media_database"
                 )
+                    // TODO: it would be best (and safest) to also clear metadata about db
+                    // contents stored in DataStore in mediaStoreIMageProvider when all tables
+                    // are dropped. However, since the schema should not change, it should not
+                    // be an issue.
+
                     // when database schema changes, drop all tables
                     .fallbackToDestructiveMigration(true)
                     .build()

@@ -157,6 +157,8 @@ fun SettingsContent(
 
     val isChanged = (textAddress != savedAddress) || (textPort != savedPort)
 
+    val databaseCleared by viewModel.databaseCleared.collectAsState()
+
     Card(
         modifier = modifier.padding(16.dp),
         elevation = CardDefaults.elevatedCardElevation()
@@ -235,8 +237,9 @@ fun SettingsContent(
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Button(
+                    enabled = !databaseCleared,
                     onClick = {
-                        // TODO: clear database
+                        viewModel.clearLocalMediaDatabase()
                     }
                 ) {
                     Text(stringResource(R.string.clear_internal_media_database))

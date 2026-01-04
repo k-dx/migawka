@@ -3,6 +3,7 @@ package xyz.jdubiel.migawka.data
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.provider.MediaStore
+import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import xyz.jdubiel.migawka.data.network.GrpcResult
@@ -38,6 +39,7 @@ class ImageRepository(
         val localEntries = localImages.map {
             TimelineEntryK.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
         }
+        Log.d(TAG, "getEntries: local: ${localEntries.size}, remote: ${remoteEntries.size}")
 
         val results: MutableList<TimelineEntryK> = mutableListOf()
 
@@ -139,5 +141,9 @@ class ImageRepository(
                 GrpcResult.Error("Entry not found")
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "ImageRepository"
     }
 }

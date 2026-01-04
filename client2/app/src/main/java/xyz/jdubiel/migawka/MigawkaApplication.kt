@@ -51,6 +51,8 @@ class MigawkaApplication : Application(), SingletonImageLoader.Factory {
     lateinit var grpcProvider: GrpcProvider
     lateinit var localImageProvider: LocalImageProvider
     lateinit var remoteImageProvider: RemoteImageProvider
+    lateinit var localImageProviderDataStore_: DataStore<Preferences>
+
 
     // SupervisorJob ensures a failure in one task doesn't cancel the whole scope
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -77,12 +79,13 @@ class MigawkaApplication : Application(), SingletonImageLoader.Factory {
         val localMediaRepo: ILocalMediaRepository = LocalMediaRepository(
             LocalMediaDatabase.getDatabase(this).localMediaDao()
             )
+        localImageProviderDataStore_ = localImageProviderDataStore
         localImageProvider = MediaStoreImageProvider(
             this.applicationContext,
             contentResolver,
             localMediaRepo,
             applicationScope,
-            localImageProviderDataStore
+            localImageProviderDataStore_
         )
 
         remoteImageProvider = RemoteImageProvider(grpcProvider.getMigawkaServiceStub())

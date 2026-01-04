@@ -27,8 +27,10 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private val LAST_MODIFIED_GENERATION = intPreferencesKey("last_modified_generation")
-private val DB_MEDIA_STORE_VERSION = stringPreferencesKey("db_media_store_version")
+object LocalImageDataStoreKeys {
+    val LAST_MODIFIED_GENERATION = intPreferencesKey("last_modified_generation")
+    val DB_MEDIA_STORE_VERSION = stringPreferencesKey("db_media_store_version")
+}
 
 
 class MediaStoreImageProvider(
@@ -43,8 +45,8 @@ class MediaStoreImageProvider(
 
     val initializationJob = scope.launch(Dispatchers.IO) {
         val prefs = dataStore.data.first()
-        var lastKnownModifiedGeneration = prefs[LAST_MODIFIED_GENERATION] ?: -1
-        var lastKnownMediaStoreVersion = prefs[DB_MEDIA_STORE_VERSION] ?: ""
+        var lastKnownModifiedGeneration = prefs[LocalImageDataStoreKeys.LAST_MODIFIED_GENERATION] ?: -1
+        var lastKnownMediaStoreVersion = prefs[LocalImageDataStoreKeys.DB_MEDIA_STORE_VERSION] ?: ""
 
         Log.d(TAG, "lastModifiedGeneration = $lastKnownModifiedGeneration")
         Log.d(TAG, "dbMediaStoreVersion = $lastKnownMediaStoreVersion")
@@ -68,8 +70,8 @@ class MediaStoreImageProvider(
         Log.d(TAG, "indexedModifiedGeneration = $indexedModifiedGeneration")
 
         dataStore.edit { settings ->
-            settings[LAST_MODIFIED_GENERATION] = indexedModifiedGeneration
-            settings[DB_MEDIA_STORE_VERSION] = currentMediaStoreVersion
+            settings[LocalImageDataStoreKeys.LAST_MODIFIED_GENERATION] = indexedModifiedGeneration
+            settings[LocalImageDataStoreKeys.DB_MEDIA_STORE_VERSION] = currentMediaStoreVersion
         }
     }
 
