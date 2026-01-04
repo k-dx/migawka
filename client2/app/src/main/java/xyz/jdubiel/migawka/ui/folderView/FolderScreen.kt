@@ -56,12 +56,13 @@ fun FolderScreen(
     val columnCount by viewModel.galleryColumnCount.collectAsState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
-    GallerySettingsBottomSheet(
-        show = showBottomSheet,
-        onDismiss = { showBottomSheet = false },
-        columnCount = columnCount,
-        setColumnCount = { viewModel.setGalleryColumnCount(it) }
-    )
+    if (showBottomSheet) {
+        GallerySettingsBottomSheet(
+            onDismiss = { showBottomSheet = false },
+            columnCount = columnCount,
+            setColumnCount = { viewModel.setGalleryColumnCount(it) }
+        )
+    }
 
     Column(modifier = modifier.padding(horizontal = 4.dp)) {
         TopBar(
@@ -166,8 +167,8 @@ fun PathBarPreview() {
 fun TopBar(
     path: String,
     navigateToPath: (String) -> Unit,
+    modifier: Modifier = Modifier,
     onButtonClick: () -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier,

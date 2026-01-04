@@ -94,7 +94,7 @@ class ImageGalleryViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ImageGalleryViewModel::class.java)) {
             val settingsRepository = (application as MigawkaApplication).userSettingsRepository
-            val imageRepository = (application as MigawkaApplication).imageRepository
+            val imageRepository = application.imageRepository
             return ImageGalleryViewModel(application, imageRepository, settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

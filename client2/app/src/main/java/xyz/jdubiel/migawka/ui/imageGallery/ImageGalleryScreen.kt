@@ -92,11 +92,13 @@ fun ImageGalleryScreen(
         modifier = modifier
     )
 
-    GallerySettingsBottomSheet(
-        show = showBottomSheet,
-        columnCount = columnCount,
-        setColumnCount = { viewModel.setGalleryColumnCount(it) }
-    )
+    if (showBottomSheet) {
+        GallerySettingsBottomSheet(
+            onDismiss = { showBottomSheet = false },
+            columnCount = columnCount,
+            setColumnCount = { viewModel.setGalleryColumnCount(it) }
+        )
+    }
 }
 
 @Composable
@@ -160,8 +162,8 @@ fun ImageGrid(
     entries: List<ImageGalleryTimelineEntry>,
     onImageClick: (String) -> Unit,
     onGallerySettingsClick: () -> Unit,
+    modifier: Modifier = Modifier,
     columnCount: Int = 3,
-    modifier: Modifier = Modifier
 ) {
     val gridState = rememberLazyGridState()
 

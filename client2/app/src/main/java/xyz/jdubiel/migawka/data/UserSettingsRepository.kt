@@ -159,7 +159,6 @@ class PersistentUserSettingsRepository(
     }
 
     override suspend fun setGalleryColumnCount(count: Int) {
-        Log.d("settings", "setting gallery column count")
         dataStore.edit { preferences ->
             preferences[GALLERY_COLUMN_COUNT_KEY] = count
         }

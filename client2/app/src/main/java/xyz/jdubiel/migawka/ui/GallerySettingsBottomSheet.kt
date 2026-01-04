@@ -13,7 +13,6 @@ import xyz.jdubiel.migawka.ui.imageGallery.SliderWithLabels
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GallerySettingsBottomSheet(
-    show: Boolean,
     columnCount: Int,
     setColumnCount: (Int) -> Unit,
     onDismiss: () -> Unit = {}
@@ -21,25 +20,23 @@ fun GallerySettingsBottomSheet(
     val columnOptions = listOf(6, 5, 4, 3, 2)
     val sliderValue = columnOptions.indexOf(columnCount).coerceAtLeast(0).toFloat()
     val sheetState = rememberModalBottomSheetState()
-    if (show) {
-        ModalBottomSheet(
-            onDismissRequest = { onDismiss() },
-            sheetState = sheetState
+    ModalBottomSheet(
+        onDismissRequest = { onDismiss() },
+        sheetState = sheetState
+    ) {
+        Box(
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 16.dp,
+                bottom = 32.dp
+            )
         ) {
-            Box(
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 16.dp,
-                    bottom = 32.dp
-                )
-            ) {
-                SliderWithLabels(
-                    value = sliderValue,
-                    onValueChange = { setColumnCount(columnOptions[it.toInt()]) },
-                    options = columnOptions
-                )
-            }
+            SliderWithLabels(
+                value = sliderValue,
+                onValueChange = { setColumnCount(columnOptions[it.toInt()]) },
+                options = columnOptions
+            )
         }
     }
 }

@@ -107,8 +107,8 @@ class FolderScreenViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val imageRepository = (application as MigawkaApplication).imageRepository
-        val remoteFileExplorer = (application as MigawkaApplication).remoteFileExplorer
-        val settingsRepository = (application as MigawkaApplication).userSettingsRepository
+        val remoteFileExplorer = application.remoteFileExplorer
+        val settingsRepository = application.userSettingsRepository
 
         if (modelClass.isAssignableFrom(FolderScreenViewModel::class.java)) {
             return FolderScreenViewModel(
