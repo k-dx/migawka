@@ -8,13 +8,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.time.Instant
 import java.time.ZoneOffset
@@ -23,9 +26,16 @@ import java.time.temporal.ChronoUnit
 
 class ImageGalleryViewModel(
     application: Application,
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    private val settingsRepository: UserSettingsRepository
 ) :
     AndroidViewModel(application) {
+
+    val galleryColumnCount: StateFlow<Int> = settingsRepository.galleryColumnCount.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
+    )
 
     private val _entriesWithHeaders = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
     val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = _entriesWithHeaders.asStateFlow()
@@ -68,6 +78,12 @@ class ImageGalleryViewModel(
             Log.d("ImageGalleryViewModel", "loaded ${timeline.size} entries")
         }
     }
+
+    fun setGalleryColumnCount(count: Int) {
+        viewModelScope.launch {
+            settingsRepository.setGalleryColumnCount(count)
+        }
+    }
 }
 
 class ImageGalleryViewModelFactory(
@@ -77,8 +93,9 @@ class ImageGalleryViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ImageGalleryViewModel::class.java)) {
+            val settingsRepository = (application as MigawkaApplication).userSettingsRepository
             val imageRepository = (application as MigawkaApplication).imageRepository
-            return ImageGalleryViewModel(application, imageRepository) as T
+            return ImageGalleryViewModel(application, imageRepository, settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

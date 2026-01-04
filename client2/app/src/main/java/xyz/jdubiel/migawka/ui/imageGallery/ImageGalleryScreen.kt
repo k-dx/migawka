@@ -33,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,7 +43,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.TAG
@@ -62,15 +60,15 @@ import java.util.Locale
 fun ImageGalleryScreen(
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ImageGalleryViewModel = viewModel()
+    viewModel: ImageGalleryViewModel
 ) {
     val entries by viewModel.entriesWithHeaders.collectAsState()
     val fetchErr by viewModel.fetchErr.collectAsState()
 
+    val columnCount by viewModel.galleryColumnCount.collectAsState()
     val columnOptions = listOf(6, 5, 4, 3, 2)
-    // TODO: save this in a datastore
-    var sliderValue by remember { mutableFloatStateOf(columnOptions.indexOf(3).toFloat()) }
     val sheetState = rememberModalBottomSheetState()
+    val sliderValue = columnOptions.indexOf(columnCount).coerceAtLeast(0).toFloat()
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Log.d(TAG, "entries.size = ${entries.size} (including headers)")
@@ -100,9 +98,7 @@ fun ImageGalleryScreen(
 
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = {
-                showBottomSheet = false
-            },
+            onDismissRequest = { showBottomSheet = false },
             sheetState = sheetState
         ) {
             Box(
@@ -115,7 +111,7 @@ fun ImageGalleryScreen(
             ) {
                 SliderWithLabels(
                     value = sliderValue,
-                    onValueChange = { sliderValue = it },
+                    onValueChange = { viewModel.setGalleryColumnCount(columnOptions[it.toInt()]) },
                     options = columnOptions
                 )
             }

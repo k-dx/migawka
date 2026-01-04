@@ -26,14 +26,19 @@ import kotlin.coroutines.cancellation.CancellationException
 interface UserSettingsRepository {
     val serverAddress: Flow<String>
     val serverPort: Flow<Int>
+    val galleryColumnCount: Flow<Int>
     suspend fun setServerAddress(address: String)
     suspend fun setServerPort(port: Int)
+    suspend fun setGalleryColumnCount(count: Int)
     suspend fun getServerAddress(timeoutMs: Long = 5_000L): String
     suspend fun getServerPort(timeoutMs: Long = 5_000L): Int
+    suspend fun getGalleryColumnCount(timeoutMs: Long = 5_000L): Int
+
 
     companion object {
         const val DEFAULT_SERVER_ADDRESS = "127.0.0.1"
         const val DEFAULT_SERVER_PORT = 50051
+        const val DEFAULT_GALLERY_COLUMN_COUNT = 3
     }
 }
 
@@ -43,9 +48,11 @@ interface UserSettingsRepository {
 class InMemoryUserSettingsRepository : UserSettingsRepository {
     private val _serverAddress = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_ADDRESS)
     private val _serverPort = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_PORT)
+    private val _galleryColumnCount = MutableStateFlow(UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT)
 
     override val serverAddress: Flow<String> = _serverAddress
     override val serverPort: Flow<Int> = _serverPort
+    override val galleryColumnCount: Flow<Int> = _galleryColumnCount
 
     override suspend fun setServerAddress(address: String) {
         _serverAddress.value = address
@@ -53,6 +60,10 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
 
     override suspend fun setServerPort(port: Int) {
         _serverPort.value = port
+    }
+
+    override suspend fun setGalleryColumnCount(count: Int) {
+        _galleryColumnCount.value = count
     }
 
     override suspend fun getServerAddress(timeoutMs: Long): String {
@@ -71,6 +82,14 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
             UserSettingsRepository.DEFAULT_SERVER_PORT
         }
     }
+
+    override suspend fun getGalleryColumnCount(timeoutMs: Long): Int {
+        return try {
+            withTimeout(timeoutMs) { _galleryColumnCount.first() }
+        } catch (e: TimeoutCancellationException) {
+            UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
+        }
+    }
 }
 
 /**
@@ -83,6 +102,7 @@ class PersistentUserSettingsRepository(
     private companion object {
         private val SERVER_ADDRESS_KEY = stringPreferencesKey("server_address")
         private val SERVER_PORT_KEY = intPreferencesKey("server_port")
+        private val GALLERY_COLUMN_COUNT_KEY = intPreferencesKey("gallery_column_count")
         const val TAG = "UserSettingsRepository"
     }
 
@@ -112,6 +132,19 @@ class PersistentUserSettingsRepository(
             preferences[SERVER_PORT_KEY] ?: UserSettingsRepository.DEFAULT_SERVER_PORT
         }
 
+    override val galleryColumnCount: Flow<Int> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            preferences[GALLERY_COLUMN_COUNT_KEY] ?: UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
+        }
+
 
     override suspend fun setServerAddress(address: String) {
         dataStore.edit { preferences ->
@@ -122,6 +155,13 @@ class PersistentUserSettingsRepository(
     override suspend fun setServerPort(port: Int) {
         dataStore.edit { preferences ->
             preferences[SERVER_PORT_KEY] = port
+        }
+    }
+
+    override suspend fun setGalleryColumnCount(count: Int) {
+        Log.d("settings", "setting gallery column count")
+        dataStore.edit { preferences ->
+            preferences[GALLERY_COLUMN_COUNT_KEY] = count
         }
     }
 
@@ -147,5 +187,14 @@ class PersistentUserSettingsRepository(
         }
         return result
     }
-}
 
+    override suspend fun getGalleryColumnCount(timeoutMs: Long): Int {
+        val result = withTimeoutOrNull(timeoutMs) {
+            galleryColumnCount.first()
+        }
+        if (result == null) {
+            throw CancellationException("Timeout getting gallery column count after $timeoutMs ms")
+        }
+        return result
+    }
+}
