@@ -24,11 +24,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -48,6 +46,7 @@ import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
+import xyz.jdubiel.migawka.ui.GallerySettingsBottomSheet
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 import java.time.Instant
 import java.time.ZoneId
@@ -66,9 +65,6 @@ fun ImageGalleryScreen(
     val fetchErr by viewModel.fetchErr.collectAsState()
 
     val columnCount by viewModel.galleryColumnCount.collectAsState()
-    val columnOptions = listOf(6, 5, 4, 3, 2)
-    val sheetState = rememberModalBottomSheetState()
-    val sliderValue = columnOptions.indexOf(columnCount).coerceAtLeast(0).toFloat()
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Log.d(TAG, "entries.size = ${entries.size} (including headers)")
@@ -92,31 +88,15 @@ fun ImageGalleryScreen(
         entries = entries,
         onImageClick = onImageClick,
         onGallerySettingsClick = { showBottomSheet = true },
-        columnCount = columnOptions[sliderValue.toInt()],
+        columnCount = columnCount,
         modifier = modifier
     )
 
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = sheetState
-        ) {
-            Box(
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 16.dp,
-                    bottom = 32.dp
-                )
-            ) {
-                SliderWithLabels(
-                    value = sliderValue,
-                    onValueChange = { viewModel.setGalleryColumnCount(columnOptions[it.toInt()]) },
-                    options = columnOptions
-                )
-            }
-        }
-    }
+    GallerySettingsBottomSheet(
+        show = showBottomSheet,
+        columnCount = columnCount,
+        setColumnCount = { viewModel.setGalleryColumnCount(it) }
+    )
 }
 
 @Composable
