@@ -240,17 +240,40 @@ fun ImageGrid(
                     is ImageGalleryTimelineEntry.ImageItem -> {
                         when (val item = uiModel.entry) {
                             is TimelineEntryK.Local -> {
-                                AsyncImage(
-                                    model = item.contentUri,
-                                    placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
-                                    error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
-                                    contentDescription = stringResource(R.string.gallery_image),
+                                Box(
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()
-                                        .clickable { onImageClick(item.id.toString()) },
-                                    contentScale = ContentScale.Crop
-                                )
+                                        .clickable { onImageClick(item.id.toString()) }
+                                        .onSizeChanged { size ->
+                                            val twentyPercent = (size.width * 0.2f).dp
+                                            iconSize = minOf(maxIconSize, twentyPercent)
+                                        },
+                                ) {
+                                    AsyncImage(
+                                        model = item.contentUri,
+                                        placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
+                                        error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
+                                        contentDescription = stringResource(R.string.gallery_image),
+                                        modifier = Modifier
+                                            .aspectRatio(1f)
+                                            .fillMaxWidth(),
+                                        contentScale = ContentScale.Crop
+                                    )
+
+                                    if (showOverlayIcons && item.onRemote) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.CloudDone,
+                                            contentDescription = stringResource(R.string.media_on_remote_server),
+                                            modifier = Modifier
+                                                .align(Alignment.TopStart)
+                                                .size(iconSize)
+                                                .padding(2.dp),
+                                            tint = Color.White.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
+
                             }
 
                             is TimelineEntryK.Remote -> {

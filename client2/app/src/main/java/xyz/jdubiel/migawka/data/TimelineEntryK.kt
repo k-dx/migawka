@@ -10,7 +10,8 @@ sealed class TimelineEntryK {
     data class Local(
         val contentUri: Uri,
         override val id: Hash,
-        override val date: Instant
+        override val date: Instant,
+        val onRemote: Boolean
     ) : TimelineEntryK()
 
     data class Remote(

@@ -39,10 +39,17 @@ class ImageRepository(
             is GrpcResult.Error -> emptyList()
         }
 
+        // mark local entries that are present on the remote
+        val remoteIds: Set<Hash> = remoteEntries.map { it.id }.toSet()
         val localEntries = localImages.map {
-            TimelineEntryK.Local(contentUri = it.contentUri, id = it.hash, date = it.date)
+            TimelineEntryK.Local(
+                contentUri = it.contentUri,
+                id = it.hash,
+                date = it.date,
+                onRemote = remoteIds.contains(it.hash)
+            )
         }
-        Log.d(TAG, "getEntries: local: ${localEntries.size}, remote: ${remoteEntries.size}")
+        Log.d(TAG, "getEntries (before merge): local: ${localEntries.size}, remote: ${remoteEntries.size}")
 
         val results: MutableList<TimelineEntryK> = mutableListOf()
 
