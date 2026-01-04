@@ -26,19 +26,19 @@ import kotlin.coroutines.cancellation.CancellationException
 interface UserSettingsRepository {
     val serverAddress: Flow<String>
     val serverPort: Flow<Int>
-    val galleryColumnCount: Flow<Int>
+    val galleryColumnCount: Flow<UInt>
     suspend fun setServerAddress(address: String)
     suspend fun setServerPort(port: Int)
-    suspend fun setGalleryColumnCount(count: Int)
+    suspend fun setGalleryColumnCount(count: UInt)
     suspend fun getServerAddress(timeoutMs: Long = 5_000L): String
     suspend fun getServerPort(timeoutMs: Long = 5_000L): Int
-    suspend fun getGalleryColumnCount(timeoutMs: Long = 5_000L): Int
+    suspend fun getGalleryColumnCount(timeoutMs: Long = 5_000L): UInt
 
 
     companion object {
         const val DEFAULT_SERVER_ADDRESS = "127.0.0.1"
         const val DEFAULT_SERVER_PORT = 50051
-        const val DEFAULT_GALLERY_COLUMN_COUNT = 3
+        const val DEFAULT_GALLERY_COLUMN_COUNT = 3u
     }
 }
 
@@ -48,11 +48,12 @@ interface UserSettingsRepository {
 class InMemoryUserSettingsRepository : UserSettingsRepository {
     private val _serverAddress = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_ADDRESS)
     private val _serverPort = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_PORT)
-    private val _galleryColumnCount = MutableStateFlow(UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT)
+    private val _galleryColumnCount =
+        MutableStateFlow<UInt>(UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT)
 
     override val serverAddress: Flow<String> = _serverAddress
     override val serverPort: Flow<Int> = _serverPort
-    override val galleryColumnCount: Flow<Int> = _galleryColumnCount
+    override val galleryColumnCount: Flow<UInt> = _galleryColumnCount
 
     override suspend fun setServerAddress(address: String) {
         _serverAddress.value = address
@@ -62,7 +63,7 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
         _serverPort.value = port
     }
 
-    override suspend fun setGalleryColumnCount(count: Int) {
+    override suspend fun setGalleryColumnCount(count: UInt) {
         _galleryColumnCount.value = count
     }
 
@@ -83,7 +84,7 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
         }
     }
 
-    override suspend fun getGalleryColumnCount(timeoutMs: Long): Int {
+    override suspend fun getGalleryColumnCount(timeoutMs: Long): UInt {
         return try {
             withTimeout(timeoutMs) { _galleryColumnCount.first() }
         } catch (e: TimeoutCancellationException) {
@@ -132,7 +133,7 @@ class PersistentUserSettingsRepository(
             preferences[SERVER_PORT_KEY] ?: UserSettingsRepository.DEFAULT_SERVER_PORT
         }
 
-    override val galleryColumnCount: Flow<Int> = dataStore.data
+    override val galleryColumnCount: Flow<UInt> = dataStore.data
         .catch {
             if (it is IOException) {
                 Log.e(TAG, "Error reading preferences.", it)
@@ -142,7 +143,8 @@ class PersistentUserSettingsRepository(
             }
         }
         .map { preferences ->
-            preferences[GALLERY_COLUMN_COUNT_KEY] ?: UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
+            preferences[GALLERY_COLUMN_COUNT_KEY]?.toUInt()
+                ?: UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
         }
 
 
@@ -158,9 +160,9 @@ class PersistentUserSettingsRepository(
         }
     }
 
-    override suspend fun setGalleryColumnCount(count: Int) {
+    override suspend fun setGalleryColumnCount(count: UInt) {
         dataStore.edit { preferences ->
-            preferences[GALLERY_COLUMN_COUNT_KEY] = count
+            preferences[GALLERY_COLUMN_COUNT_KEY] = count.toInt()
         }
     }
 
@@ -187,7 +189,7 @@ class PersistentUserSettingsRepository(
         return result
     }
 
-    override suspend fun getGalleryColumnCount(timeoutMs: Long): Int {
+    override suspend fun getGalleryColumnCount(timeoutMs: Long): UInt {
         val result = withTimeoutOrNull(timeoutMs) {
             galleryColumnCount.first()
         }

@@ -37,10 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.Constants
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
-import xyz.jdubiel.migawka.ui.GallerySettingsBottomSheet
 import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 @Composable
@@ -57,7 +57,8 @@ fun FolderScreen(
     var showBottomSheet by remember { mutableStateOf(false) }
 
     if (showBottomSheet) {
-        GallerySettingsBottomSheet(
+        FolderScreenSettingsBottomSheet(
+            columnOptions = Constants.columnGalleryViewOptions,
             onDismiss = { showBottomSheet = false },
             columnCount = columnCount,
             setColumnCount = { viewModel.setGalleryColumnCount(it) }
@@ -77,7 +78,7 @@ fun FolderScreen(
                 FolderScreenGrid(
                     modifier = Modifier,
                     entries = state.data,
-                    columnCount = columnCount,
+                    columnCount = columnCount.toInt(),
                     onDirClick = { dirName ->
                         val newPath =
                             if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")

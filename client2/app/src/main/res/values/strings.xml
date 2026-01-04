@@ -60,4 +60,5 @@
     <string name="grant_permission">Grant Permission</string>
     <string name="open_grid_settings">Open grid settings</string>
     <string name="indexing_local">Indexing local media</string>
+    <string name="media_on_remote_server">Media on remote server</string>
 </resources>

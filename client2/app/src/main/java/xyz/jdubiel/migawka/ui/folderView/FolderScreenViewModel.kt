@@ -36,7 +36,7 @@ class FolderScreenViewModel(
     private val settingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
-    val galleryColumnCount: StateFlow<Int> = settingsRepository.galleryColumnCount.stateIn(
+    val galleryColumnCount: StateFlow<UInt> = settingsRepository.galleryColumnCount.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
@@ -88,7 +88,7 @@ class FolderScreenViewModel(
         }
     }
 
-    fun setGalleryColumnCount(count: Int) {
+    fun setGalleryColumnCount(count: UInt) {
         viewModelScope.launch {
             settingsRepository.setGalleryColumnCount(count)
         }

@@ -13,18 +13,19 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,20 +37,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.Constants
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.IndexingState
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
-import xyz.jdubiel.migawka.ui.GallerySettingsBottomSheet
-import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -132,7 +133,7 @@ fun ImageGalleryScreen(
                     entries = entries,
                     onImageClick = onImageClick,
                     onGallerySettingsClick = { showBottomSheet = true },
-                    columnCount = columnCount,
+                    columnCount = columnCount.toInt(),
                     modifier = modifier
                 )
             }
@@ -140,50 +141,11 @@ fun ImageGalleryScreen(
     }
 
     if (showBottomSheet) {
-        GallerySettingsBottomSheet(
+        ImageGallerySettingsBottomSheet(
+            columnOptions = Constants.columnGalleryViewOptions,
             onDismiss = { showBottomSheet = false },
             columnCount = columnCount,
             setColumnCount = { viewModel.setGalleryColumnCount(it) }
-        )
-    }
-}
-
-@Composable
-fun SliderWithLabels(value: Float, onValueChange: (Float) -> Unit, options: List<Int>) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 0.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        options.forEach { option ->
-            Text(
-                text = option.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-
-    Slider(
-        value = value,
-        onValueChange = { onValueChange(it) },
-        valueRange = 0f..(options.size - 1).toFloat(),
-        steps = options.size - 2,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 32.dp),
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SliderPreview() {
-    MigawkaTheme {
-        SliderWithLabels(
-            value = 1f,
-            onValueChange = {},
-            options = listOf(6, 5, 4, 3, 2)
         )
     }
 }
@@ -209,10 +171,15 @@ fun ImageGrid(
     entries: List<ImageGalleryTimelineEntry>,
     onImageClick: (String) -> Unit,
     onGallerySettingsClick: () -> Unit,
+    showOverlayIcons: Boolean = true,
     modifier: Modifier = Modifier,
     columnCount: Int = 3,
 ) {
     val gridState = rememberLazyGridState()
+
+    val maxIconSize = 24.dp
+    var iconSize by remember { mutableStateOf(maxIconSize) }
+
 
     val stickyHeader: Instant? by remember {
         derivedStateOf {
@@ -283,17 +250,39 @@ fun ImageGrid(
                             }
 
                             is TimelineEntryK.Remote -> {
-                                AsyncImage(
-                                    model = GrpcThumbnail(item.id),
-                                    placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
-                                    error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
-                                    contentDescription = stringResource(R.string.gallery_image),
+                                Box(
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()
-                                        .clickable { onImageClick(item.id.toString()) },
-                                    contentScale = ContentScale.Crop
-                                )
+                                        .clickable { onImageClick(item.id.toString()) }
+                                        .onSizeChanged { size ->
+                                            val twentyPercent = (size.width * 0.2f).dp
+                                            iconSize = minOf(maxIconSize, twentyPercent)
+                                        },
+                                ) {
+                                    AsyncImage(
+                                        model = GrpcThumbnail(item.id),
+                                        placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
+                                        error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
+                                        contentDescription = stringResource(R.string.gallery_image),
+                                        modifier = Modifier
+                                            .aspectRatio(1f)
+                                            .fillMaxWidth(),
+                                        contentScale = ContentScale.Crop
+                                    )
+
+                                    if (showOverlayIcons) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.CloudDone,
+                                            contentDescription = stringResource(R.string.media_on_remote_server),
+                                            modifier = Modifier
+                                                .align(Alignment.TopStart)
+                                                .size(iconSize)
+                                                .padding(2.dp),
+                                            tint = Color.White.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

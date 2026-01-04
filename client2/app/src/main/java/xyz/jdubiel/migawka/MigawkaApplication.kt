@@ -44,6 +44,10 @@ private val Context.localImageProviderDataStore: DataStore<Preferences> by prefe
 
 val hasher: Hasher = Xx64Hasher()
 
+object Constants {
+    val columnGalleryViewOptions: List<UInt> = listOf(6u, 5u, 4u, 3u, 2u)
+}
+
 class MigawkaApplication : Application(), SingletonImageLoader.Factory {
     lateinit var userSettingsRepository: UserSettingsRepository
     lateinit var imageRepository: ImageRepository

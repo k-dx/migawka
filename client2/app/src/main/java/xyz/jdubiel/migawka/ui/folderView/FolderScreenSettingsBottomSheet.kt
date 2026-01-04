@@ -1,4 +1,4 @@
-package xyz.jdubiel.migawka.ui
+package xyz.jdubiel.migawka.ui.folderView
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -8,16 +8,16 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import xyz.jdubiel.migawka.ui.imageGallery.SliderWithLabels
+import xyz.jdubiel.migawka.ui.components.SliderWithLabels
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GallerySettingsBottomSheet(
-    columnCount: Int,
-    setColumnCount: (Int) -> Unit,
+fun FolderScreenSettingsBottomSheet(
+    columnOptions: List<UInt>,
+    columnCount: UInt,
+    setColumnCount: (UInt) -> Unit,
     onDismiss: () -> Unit = {}
 ) {
-    val columnOptions = listOf(6, 5, 4, 3, 2)
     val sliderValue = columnOptions.indexOf(columnCount).coerceAtLeast(0).toFloat()
     val sheetState = rememberModalBottomSheetState()
     ModalBottomSheet(
