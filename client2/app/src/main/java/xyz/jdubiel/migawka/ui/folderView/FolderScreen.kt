@@ -27,10 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 
@@ -74,7 +76,10 @@ fun FolderScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Error loading directory: ${state.message}", modifier = modifier.padding(16.dp))
+                    Text(
+                        stringResource(R.string.error_loading_directory, state.message),
+                        modifier = modifier.padding(16.dp)
+                    )
                 }
             }
         }
@@ -100,7 +105,7 @@ fun PathBar(path: String, navigateToPath: (String) -> Unit, modifier: Modifier =
             .horizontalScroll(scrollState)
     ) {
         Text(
-            text = "HOME",
+            text = stringResource(R.string.home),
             maxLines = 1,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
@@ -109,7 +114,10 @@ fun PathBar(path: String, navigateToPath: (String) -> Unit, modifier: Modifier =
         )
 
         pathParts.forEachIndexed { index, part ->
-            Icon(Icons.Default.ChevronRight, contentDescription = "Separator")
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = stringResource(R.string.separator)
+            )
             val currentPath = remember(pathParts, index) {
                 "/" + pathParts.subList(0, index + 1).joinToString("/")
             }
@@ -162,7 +170,7 @@ fun FolderScreenGrid(
                 is DirectoryEntryK.Image -> {
                     AsyncImage(
                         model = GrpcThumbnail(item.id),
-                        contentDescription = "Gallery Image",
+                        contentDescription = stringResource(R.string.gallery_image),
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable { onImageClick(item.id.toString()) },

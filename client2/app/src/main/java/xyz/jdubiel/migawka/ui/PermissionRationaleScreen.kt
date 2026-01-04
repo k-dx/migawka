@@ -17,9 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import xyz.jdubiel.migawka.R
+import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 @Composable
 fun PermissionRationaleScreen(
@@ -37,19 +40,21 @@ fun PermissionRationaleScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Permission Required",
+            text = stringResource(R.string.permission_required),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "This app needs to access your photos to display them in the gallery. Please grant the permission to continue.",
+            text = stringResource(R.string.media_permission_explanation),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        val buttonText = if (isPermanentlyDeclined) "Open Settings" else "Grant Permission"
+        val buttonText =
+            if (isPermanentlyDeclined) stringResource(R.string.open_settings)
+            else stringResource(R.string.grant_permission)
         val onClickAction = if (isPermanentlyDeclined) {
             { context.openAppSettings() }
         } else {
@@ -73,8 +78,10 @@ private fun Context.openAppSettings() {
 @Preview(showBackground = true)
 @Composable
 fun PermissionRationaleScreenPreview() {
-    PermissionRationaleScreen(
-        isPermanentlyDeclined = false,
-        onPermissionRequest = {}
-    )
+    MigawkaTheme {
+        PermissionRationaleScreen(
+            isPermanentlyDeclined = false,
+            onPermissionRequest = {}
+        )
+    }
 }

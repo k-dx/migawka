@@ -230,12 +230,16 @@ fun SettingsContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+
+            }
+
+            Row(modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = {
                         // TODO: clear database
                     }
                 ) {
-                    Text("Clear internal media database")
+                    Text(stringResource(R.string.clear_internal_media_database))
                 }
             }
         }

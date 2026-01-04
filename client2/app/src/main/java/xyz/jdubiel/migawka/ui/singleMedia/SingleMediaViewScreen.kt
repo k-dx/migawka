@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
@@ -51,6 +52,7 @@ import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.Utils
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
@@ -134,21 +136,23 @@ fun SingleMediaViewScreen(
                     },
                     modifier = Modifier.size(48.dp)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.RotateLeft, contentDescription = "Rotate")
+                    Icon(
+                        Icons.AutoMirrored.Filled.RotateLeft,
+                        contentDescription = stringResource(R.string.rotate)
+                    )
                 }
             }
         }
         if (entry is TimelineEntryK.Remote) {
             add {
                 OutlinedIconButton(
-                    onClick = {
-                        Toast.makeText(context, "Download started", Toast.LENGTH_SHORT)
-                            .show()
-                        viewModel.downloadImage(entry.id)
-                    },
+                    onClick = { viewModel.downloadImage(entry.id) },
                     modifier = Modifier.size(48.dp)
                 ) {
-                    Icon(Icons.Default.Download, contentDescription = "Download")
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = stringResource(R.string.download)
+                    )
                 }
             }
         }
@@ -164,7 +168,10 @@ fun SingleMediaViewScreen(
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
                             context.startActivity(
-                                Intent.createChooser(shareIntent, "Share image via")
+                                Intent.createChooser(
+                                    shareIntent,
+                                    context.getString(R.string.share_image_via)
+                                )
                             )
                         }
                         is TimelineEntryK.Remote -> {
@@ -186,14 +193,21 @@ fun SingleMediaViewScreen(
                                     }
 
                                     context.startActivity(
-                                        Intent.createChooser(shareIntent, "Share image via")
+                                        Intent.createChooser(
+                                            shareIntent,
+                                            context.getString(R.string.share_image_via)
+                                        )
                                     )
 
                                     // TODO: remove the file after sharing
                                 }
 
                                 else -> {
-                                    Toast.makeText(context, "Cannot share thumbnail. Please wait for the image to load.", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.cannot_share_thumbnail_please_wait_for_the_image_to_load),
+                                        Toast.LENGTH_LONG
+                                    ).show()
 
                                 }
                             }
@@ -202,7 +216,7 @@ fun SingleMediaViewScreen(
                 },
                 modifier = Modifier.size(48.dp)
             ) {
-                Icon(Icons.Default.Share, contentDescription = "Share")
+                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share))
             }
         }
         add {
@@ -213,7 +227,7 @@ fun SingleMediaViewScreen(
                 },
                 modifier = Modifier.size(48.dp)
             ) {
-                Icon(Icons.Default.Info, contentDescription = "Information about media")
+                Icon(Icons.Default.Info, contentDescription = stringResource(R.string.media_info))
             }
         }
     }
@@ -235,7 +249,7 @@ fun SingleMediaViewScreen(
                             .background(MaterialTheme.colorScheme.error)
                     ) {
                         Text(
-                            text = "Fetching error: ${state.message}",
+                            text = stringResource(R.string.fetching_error, state.message ?: ""),
                             color = MaterialTheme.colorScheme.onError,
                             modifier = Modifier.padding(4.dp)
                         )
@@ -266,7 +280,7 @@ fun SingleMediaViewScreen(
         ) {
             if (entries.isEmpty()) {
                 CircularProgressIndicator()
-                Text("The list of photos is empty. This should not be possible!")
+                Text(stringResource(R.string.empty_photo_list_error_message))
             } else {
                 HorizontalPager(
                     state = pagerState,
@@ -279,7 +293,7 @@ fun SingleMediaViewScreen(
                         is TimelineEntryK.Local -> {
                             AsyncImage(
                                 model = entryForPage.contentUri,
-                                contentDescription = "Full screen image",
+                                contentDescription = stringResource(R.string.full_screen_image),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .zoomable(
@@ -303,7 +317,7 @@ fun SingleMediaViewScreen(
                                     Box(modifier = Modifier.fillMaxSize()) {
                                         AsyncImage(
                                             model = GrpcThumbnail(entryForPage.id),
-                                            contentDescription = "Full screen thumbnail",
+                                            contentDescription = stringResource(R.string.full_screen_thumbnail),
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .align(Alignment.Center)
@@ -330,7 +344,7 @@ fun SingleMediaViewScreen(
                                     is FullImageUiState.Success -> {
                                         AsyncImage(
                                             model = state.image.bytes,
-                                            contentDescription = "Full screen image",
+                                            contentDescription = stringResource(R.string.full_screen_image),
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .align(Alignment.Center)

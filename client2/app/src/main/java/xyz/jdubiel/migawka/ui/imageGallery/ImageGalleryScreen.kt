@@ -29,9 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
@@ -58,7 +60,7 @@ fun ImageGalleryScreen(
                 .background(MaterialTheme.colorScheme.error)
         ) {
             Text(
-                text = "Connection error: ${fetchErr?.message}",
+                text = stringResource(R.string.connection_error, fetchErr?.message ?: ""),
                 color = MaterialTheme.colorScheme.onError,
                 modifier = Modifier.padding(4.dp)
             )
@@ -163,7 +165,7 @@ fun ImageGrid(
                                     model = item.contentUri,
                                     placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
                                     error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
-                                    contentDescription = "Gallery Image",
+                                    contentDescription = stringResource(R.string.gallery_image),
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()
@@ -177,7 +179,7 @@ fun ImageGrid(
                                     model = GrpcThumbnail(item.id),
                                     placeholder = ColorPainter(MaterialTheme.colorScheme.secondaryContainer),
                                     error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
-                                    contentDescription = "Gallery Image",
+                                    contentDescription = stringResource(R.string.gallery_image),
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .fillMaxWidth()

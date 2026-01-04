@@ -10,40 +10,42 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import xyz.jdubiel.migawka.R
 import kotlin.reflect.KClass
 
 data class NavBarEntry(
     val destination: MigawkaScreen,
     val icon: @Composable () -> Unit,
-    val label: String,
+    val label: @Composable () -> Unit,
     val onClick: (NavHostController) -> Unit
 )
 
 val navigationBarEntries = listOf(
     NavBarEntry(
         destination = MigawkaScreen.Gallery,
-        icon = { Icon(Icons.Filled.Home, "Gallery") },
-        label = "Gallery",
+        icon = { Icon(Icons.Filled.Home, stringResource(R.string.gallery)) },
+        label = { Text(stringResource(R.string.gallery)) },
         onClick = { navController ->
             saveStateAndNavigate(navController, MigawkaScreen.Gallery) }
     ),
     NavBarEntry(
         destination = MigawkaScreen.FolderView(path = "/"),
-        icon = { Icon(Icons.Filled.Folder, "Folders") },
-        label = "Folders",
+        icon = { Icon(Icons.Filled.Folder, stringResource(R.string.folders)) },
+        label = { Text(stringResource(R.string.folders)) },
         onClick = { navController ->
             saveStateAndNavigate(navController, MigawkaScreen.FolderView(path = "/"))
         }
     ),
     NavBarEntry(
         destination = MigawkaScreen.Menu,
-        icon = { Icon(Icons.Filled.Menu, "Menu") },
-        label = "Menu",
+        icon = { Icon(Icons.Filled.Menu, stringResource(R.string.menu)) },
+        label = { Text(stringResource(R.string.menu)) },
         onClick = { navController ->
             saveStateAndNavigate(navController, MigawkaScreen.Menu)
         }
@@ -86,7 +88,7 @@ fun MigawkaNavigationBar(navController: NavHostController) {
             NavigationBarItem(
                 selected = currentDestination?.hasRoute(it.destination::class) ?: false,
                 icon = it.icon,
-                label = { Text(it.label) },
+                label = it.label,
                 onClick = { it.onClick(navController) }
             )
         }

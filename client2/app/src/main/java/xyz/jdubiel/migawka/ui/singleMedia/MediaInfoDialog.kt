@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,8 +36,26 @@ val mockData = mapOf(
 
 @Preview
 @Composable
-fun MediaInfoDialogPreview() {
+fun MediaInfoDialogPreviewSuccess() {
     MediaInfoDialog(onClose = {}, state = MediaMetadataState.Success(mockData))
+}
+
+@Preview
+@Composable
+fun MediaInfoDialogPreviewLoading() {
+    MediaInfoDialog(onClose = {}, state = MediaMetadataState.Loading)
+}
+
+@Preview
+@Composable
+fun MediaInfoDialogPreviewError() {
+    MediaInfoDialog(onClose = {}, state = MediaMetadataState.Error("an example error message"))
+}
+
+@Preview
+@Composable
+fun MediaInfoDialogPreviewNoData() {
+    MediaInfoDialog(onClose = {}, state = MediaMetadataState.Empty)
 }
 
 val tagToName = mapOf(
@@ -78,22 +97,40 @@ fun MediaInfoDialog(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "Media info",
+                    text = stringResource(R.string.media_info),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
                 when (state) {
                     is MediaMetadataState.Loading -> {
-                        Text("Loading...")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
 
                     is MediaMetadataState.Error -> {
-                        Text("Error: ${state.message}")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.error, state.message ?: ""),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
 
                     is MediaMetadataState.Empty -> {
-                        Text("No data")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(stringResource(R.string.no_data))
+                        }
                     }
 
                     is MediaMetadataState.Success -> {
@@ -109,7 +146,10 @@ fun MediaInfoDialog(
                                 if (tagValue != null) {
                                     Text(tagValue)
                                 } else {
-                                    Text("Unknown", fontStyle = FontStyle.Italic)
+                                    Text(
+                                        stringResource(R.string.no_data),
+                                        fontStyle = FontStyle.Italic
+                                    )
                                 }
                             }
 
@@ -128,7 +168,7 @@ fun MediaInfoDialog(
                         onClick = { onClose() },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Close")
+                        Text(stringResource(R.string.close))
                     }
                 }
             }

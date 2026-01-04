@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
@@ -22,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.TAG
 import xyz.jdubiel.migawka.hasher
 import xyz.jdubiel.migawka.ui.SecondScreen
@@ -199,7 +201,7 @@ fun MigawkaNavHost(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Text("The list of files could not be loaded")
+                                Text(stringResource(R.string.the_list_of_files_could_not_be_loaded))
                             }
                         }
                     }

@@ -10,7 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import xyz.jdubiel.migawka.R
 
 @Composable
 fun DownloadStatus(state: DownloadState) {
@@ -24,7 +26,7 @@ fun DownloadStatus(state: DownloadState) {
                     .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Text(
-                    text = "Saved to gallery",
+                    text = stringResource(R.string.saved_to_gallery),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(4.dp)
                 )
@@ -39,7 +41,7 @@ fun DownloadStatus(state: DownloadState) {
                     .background(MaterialTheme.colorScheme.error)
             ) {
                 Text(
-                    text = "Fetching error: ${state.message}",
+                    text = stringResource(R.string.fetching_error, state.message ?: ""),
                     color = MaterialTheme.colorScheme.onError,
                     modifier = Modifier.padding(4.dp)
                 )
@@ -54,7 +56,7 @@ fun DownloadStatus(state: DownloadState) {
                     .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Text(
-                    text = "Saving image to gallery...",
+                    text = stringResource(R.string.saving_image_to_gallery),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(4.dp)
                 )
