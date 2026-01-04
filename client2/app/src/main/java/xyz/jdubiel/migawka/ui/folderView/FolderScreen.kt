@@ -9,20 +9,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +40,8 @@ import coil3.compose.AsyncImage
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
+import xyz.jdubiel.migawka.ui.GallerySettingsBottomSheet
+import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 
 @Composable
 fun FolderScreen(
@@ -45,14 +52,31 @@ fun FolderScreen(
     viewModel: FolderScreenViewModel
 ) {
     val entries by viewModel.entries.collectAsState()
-    Column(modifier = modifier.padding(4.dp)) {
-        PathBar(path = path, navigateToPath = navigateToPath)
+
+    val columnCount by viewModel.galleryColumnCount.collectAsState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    GallerySettingsBottomSheet(
+        show = showBottomSheet,
+        onDismiss = { showBottomSheet = false },
+        columnCount = columnCount,
+        setColumnCount = { viewModel.setGalleryColumnCount(it) }
+    )
+
+    Column(modifier = modifier.padding(horizontal = 4.dp)) {
+        TopBar(
+            path = path,
+            navigateToPath = navigateToPath,
+            onButtonClick = { showBottomSheet = true },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         when (val state = entries) {
             is EntriesState.Success -> {
                 FolderScreenGrid(
                     modifier = Modifier,
-                    state.data,
+                    entries = state.data,
+                    columnCount = columnCount,
                     onDirClick = { dirName ->
                         val newPath =
                             if (path.endsWith('/')) (path + dirName) else ("$path/$dirName")
@@ -139,14 +163,64 @@ fun PathBarPreview() {
 }
 
 @Composable
+fun TopBar(
+    path: String,
+    navigateToPath: (String) -> Unit,
+    onButtonClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier.weight(1f)) {
+            PathBar(path = path, navigateToPath = navigateToPath)
+        }
+        IconButton(onClick = { onButtonClick() }) {
+            Icon(
+                Icons.Outlined.GridView,
+                contentDescription = stringResource(R.string.open_grid_settings)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewShort() {
+    MigawkaTheme {
+        TopBar(
+            path = "/Photos/2023",
+            navigateToPath = {},
+            onButtonClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewLong() {
+    MigawkaTheme {
+        TopBar(
+            path = "/Photos/2023/very/long/subdirectoryname/path/to/another/dir",
+            navigateToPath = {},
+            onButtonClick = {}
+        )
+    }
+}
+
+
+@Composable
 fun FolderScreenGrid(
     modifier: Modifier = Modifier,
     entries: List<DirectoryEntryK>,
+    columnCount: Int = 3,
     onDirClick: (String) -> Unit = {},
     onImageClick: (String) -> Unit = {},
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 120.dp),
+        columns = GridCells.Fixed(columnCount),
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)

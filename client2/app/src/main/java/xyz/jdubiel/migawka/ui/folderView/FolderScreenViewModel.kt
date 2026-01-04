@@ -7,8 +7,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
@@ -16,6 +18,7 @@ import xyz.jdubiel.migawka.data.DirectoryEntryK
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.TimelineEntryK
+import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import xyz.jdubiel.migawka.data.sortedDirectoriesThenImagesByDateDesc
 
@@ -29,9 +32,15 @@ sealed interface EntriesState<out T> {
 class FolderScreenViewModel(
     private val path: String,
     private val imageRepository: ImageRepository,
-    private val remoteFileExplorer: RemoteFileExplorer
+    private val remoteFileExplorer: RemoteFileExplorer,
+    private val settingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
+    val galleryColumnCount: StateFlow<Int> = settingsRepository.galleryColumnCount.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
+    )
     private val _entries = MutableStateFlow<EntriesState<DirectoryEntryK>>(EntriesState.Empty)
     val entries: StateFlow<EntriesState<DirectoryEntryK>> = _entries.asStateFlow()
 
@@ -79,6 +88,12 @@ class FolderScreenViewModel(
         }
     }
 
+    fun setGalleryColumnCount(count: Int) {
+        viewModelScope.launch {
+            settingsRepository.setGalleryColumnCount(count)
+        }
+    }
+
     companion object {
         const val TAG = "FolderScreenViewModel"
     }
@@ -93,8 +108,15 @@ class FolderScreenViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val imageRepository = (application as MigawkaApplication).imageRepository
         val remoteFileExplorer = (application as MigawkaApplication).remoteFileExplorer
+        val settingsRepository = (application as MigawkaApplication).userSettingsRepository
+
         if (modelClass.isAssignableFrom(FolderScreenViewModel::class.java)) {
-            return FolderScreenViewModel(path, imageRepository, remoteFileExplorer) as T
+            return FolderScreenViewModel(
+                path,
+                imageRepository,
+                remoteFileExplorer,
+                settingsRepository
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
