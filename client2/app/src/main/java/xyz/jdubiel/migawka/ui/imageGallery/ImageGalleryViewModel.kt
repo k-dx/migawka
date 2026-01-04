@@ -39,6 +39,11 @@ class ImageGalleryViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
     )
+    val showOverlayIcons: StateFlow<Boolean> = settingsRepository.showOverlayIcons.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS
+    )
 
     private val _entriesWithHeaders = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
     val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = _entriesWithHeaders.asStateFlow()
@@ -85,6 +90,12 @@ class ImageGalleryViewModel(
     fun setGalleryColumnCount(count: UInt) {
         viewModelScope.launch {
             settingsRepository.setGalleryColumnCount(count)
+        }
+    }
+
+    fun setShowOverlayIcons(show: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setShowOverlayIcons(show)
         }
     }
 }

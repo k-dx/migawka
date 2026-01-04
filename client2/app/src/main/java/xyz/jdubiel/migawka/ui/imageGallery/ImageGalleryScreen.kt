@@ -69,6 +69,7 @@ fun ImageGalleryScreen(
     val indexingState by viewModel.localMediaIndexingState.collectAsStateWithLifecycle()
 
     val columnCount by viewModel.galleryColumnCount.collectAsState()
+    val showOverlayIcons by viewModel.showOverlayIcons.collectAsState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Log.d(TAG, "entries.size = ${entries.size} (including headers)")
@@ -134,6 +135,7 @@ fun ImageGalleryScreen(
                     onImageClick = onImageClick,
                     onGallerySettingsClick = { showBottomSheet = true },
                     columnCount = columnCount.toInt(),
+                    showOverlayIcons = showOverlayIcons,
                     modifier = modifier
                 )
             }
@@ -145,7 +147,9 @@ fun ImageGalleryScreen(
             columnOptions = Constants.columnGalleryViewOptions,
             onDismiss = { showBottomSheet = false },
             columnCount = columnCount,
-            setColumnCount = { viewModel.setGalleryColumnCount(it) }
+            setColumnCount = { viewModel.setGalleryColumnCount(it) },
+            showOverlayIcons = showOverlayIcons,
+            onShowOverlayIconsChange = { viewModel.setShowOverlayIcons(it) }
         )
     }
 }
@@ -171,7 +175,7 @@ fun ImageGrid(
     entries: List<ImageGalleryTimelineEntry>,
     onImageClick: (String) -> Unit,
     onGallerySettingsClick: () -> Unit,
-    showOverlayIcons: Boolean = true,
+    showOverlayIcons: Boolean,
     modifier: Modifier = Modifier,
     columnCount: Int = 3,
 ) {

@@ -59,4 +59,5 @@
     <string name="open_grid_settings">Otwórz ustawienia siatki</string>
     <string name="indexing_local">Katalogowanie lokalnych multimediów</string>
     <string name="media_on_remote_server">Zdjęcie na serwerze</string>
+    <string name="show_media_origin">Pokaż pochodzenie mediów</string>
 </resources>

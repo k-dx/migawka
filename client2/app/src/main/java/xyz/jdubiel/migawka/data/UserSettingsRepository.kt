@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -27,18 +28,22 @@ interface UserSettingsRepository {
     val serverAddress: Flow<String>
     val serverPort: Flow<Int>
     val galleryColumnCount: Flow<UInt>
+    val showOverlayIcons: Flow<Boolean>
     suspend fun setServerAddress(address: String)
     suspend fun setServerPort(port: Int)
     suspend fun setGalleryColumnCount(count: UInt)
+    suspend fun setShowOverlayIcons(show: Boolean)
     suspend fun getServerAddress(timeoutMs: Long = 5_000L): String
     suspend fun getServerPort(timeoutMs: Long = 5_000L): Int
     suspend fun getGalleryColumnCount(timeoutMs: Long = 5_000L): UInt
+    suspend fun getShowOverlayIcons(timeoutMs: Long = 5_000L): Boolean
 
 
     companion object {
         const val DEFAULT_SERVER_ADDRESS = "127.0.0.1"
         const val DEFAULT_SERVER_PORT = 50051
         const val DEFAULT_GALLERY_COLUMN_COUNT = 3u
+        const val DEFAULT_SHOW_OVERLAY_ICONS = true
     }
 }
 
@@ -50,10 +55,13 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
     private val _serverPort = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_PORT)
     private val _galleryColumnCount =
         MutableStateFlow<UInt>(UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT)
+    private val _showOverlayIcons =
+        MutableStateFlow(UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS)
 
     override val serverAddress: Flow<String> = _serverAddress
     override val serverPort: Flow<Int> = _serverPort
     override val galleryColumnCount: Flow<UInt> = _galleryColumnCount
+    override val showOverlayIcons: Flow<Boolean> = _showOverlayIcons
 
     override suspend fun setServerAddress(address: String) {
         _serverAddress.value = address
@@ -65,6 +73,10 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
 
     override suspend fun setGalleryColumnCount(count: UInt) {
         _galleryColumnCount.value = count
+    }
+
+    override suspend fun setShowOverlayIcons(show: Boolean) {
+        _showOverlayIcons.value = show
     }
 
     override suspend fun getServerAddress(timeoutMs: Long): String {
@@ -91,6 +103,14 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
             UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
         }
     }
+
+    override suspend fun getShowOverlayIcons(timeoutMs: Long): Boolean {
+        return try {
+            withTimeout(timeoutMs) { _showOverlayIcons.first() }
+        } catch (e: TimeoutCancellationException) {
+            UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS
+        }
+    }
 }
 
 /**
@@ -104,6 +124,7 @@ class PersistentUserSettingsRepository(
         private val SERVER_ADDRESS_KEY = stringPreferencesKey("server_address")
         private val SERVER_PORT_KEY = intPreferencesKey("server_port")
         private val GALLERY_COLUMN_COUNT_KEY = intPreferencesKey("gallery_column_count")
+        private val SHOW_OVERLAY_ICONS_KEY = booleanPreferencesKey("show_overlay_icons")
         const val TAG = "UserSettingsRepository"
     }
 
@@ -147,6 +168,20 @@ class PersistentUserSettingsRepository(
                 ?: UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT
         }
 
+    override val showOverlayIcons: Flow<Boolean> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            preferences[SHOW_OVERLAY_ICONS_KEY]
+                ?: UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS
+        }
+
 
     override suspend fun setServerAddress(address: String) {
         dataStore.edit { preferences ->
@@ -163,6 +198,12 @@ class PersistentUserSettingsRepository(
     override suspend fun setGalleryColumnCount(count: UInt) {
         dataStore.edit { preferences ->
             preferences[GALLERY_COLUMN_COUNT_KEY] = count.toInt()
+        }
+    }
+
+    override suspend fun setShowOverlayIcons(show: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SHOW_OVERLAY_ICONS_KEY] = show
         }
     }
 
@@ -195,6 +236,16 @@ class PersistentUserSettingsRepository(
         }
         if (result == null) {
             throw CancellationException("Timeout getting gallery column count after $timeoutMs ms")
+        }
+        return result
+    }
+
+    override suspend fun getShowOverlayIcons(timeoutMs: Long): Boolean {
+        val result = withTimeoutOrNull(timeoutMs) {
+            showOverlayIcons.first()
+        }
+        if (result == null) {
+            throw CancellationException("Timeout getting show overlay icons after $timeoutMs ms")
         }
         return result
     }
