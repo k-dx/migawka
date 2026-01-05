@@ -346,7 +346,9 @@ class MediaStoreImageProvider(
 
 
     /**
-     * Extracts the best date from the data available in MediaStore.
+     * Extracts the best date from the data available in MediaStore. This function may be slow
+     * due to querying the MediaStore, then opening the file (file operation is the slowest).
+     * Therefore it should be run on a background thread.
      */
     private fun queryDateTaken(uri: Uri): Instant {
         val projection = arrayOf(
@@ -368,7 +370,7 @@ class MediaStoreImageProvider(
                 dateAddedSec = cursor.getLong(dateAddedColumn).takeIf { it > 0 }
                 dateTakenMilliSec = cursor.getLong(dateTakenColumn).takeIf { it > 0 }
 
-                // parse EXIF (may be slow — TODO: consider dispatching to IO dispatcher)
+                // parse EXIF
                 try {
                     contentResolver.openInputStream(uri)?.use { input ->
                         // TODO: handle timezone from EXIF?

@@ -238,7 +238,6 @@ fun SingleMediaViewScreen(
     val topOverlayContent = @Composable {
         Column() {
             Text("${dateFormatter.format(creationDate)} ${timeFormatter.format(creationDate)}")
-            Text(hash.toString()) // TODO: remove me
 
             when (val state = viewModel.fullImageState.value) {
                 is FullImageUiState.Error -> {
