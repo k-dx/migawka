@@ -15,7 +15,7 @@
     <string name="save">Save</string>
     <string name="apply_changes">Apply changes</string>
     <string name="the_app_will_be_restarted_to_apply_the_changes">The app will be restarted to apply the changes.</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="id">ID</string>
     <string name="path">Path</string>
     <string name="creation_date">Creation Date</string>
@@ -41,7 +41,7 @@
     <string name="clear_internal_media_database">Clear internal media database</string>
     <string name="saved_to_gallery">Saved to gallery</string>
     <string name="fetching_error">Fetching error: %1$s</string>
-    <string name="saving_image_to_gallery">Saving image to gallery...</string>
+    <string name="saving_image_to_gallery">Saving image to gallery…</string>
     <string name="media_info">Media info</string>
     <string name="error">Error: %1$s</string>
     <string name="no_data">No data</string>

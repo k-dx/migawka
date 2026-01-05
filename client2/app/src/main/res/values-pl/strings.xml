@@ -39,7 +39,7 @@
     <string name="clear_internal_media_database">Wyczyść wewnętrzną bazę danych mediów</string>
     <string name="saved_to_gallery">Zapisano w galerii</string>
     <string name="fetching_error">Błąd pobierania: %1$s</string>
-    <string name="saving_image_to_gallery">Zapisywanie obrazu w galerii...</string>
+    <string name="saving_image_to_gallery">Zapisywanie obrazu w galerii…</string>
     <string name="media_info">Informacje o zdjęciu</string>
     <string name="error">Błąd: %1$s</string>
     <string name="no_data">Brak danych</string>
