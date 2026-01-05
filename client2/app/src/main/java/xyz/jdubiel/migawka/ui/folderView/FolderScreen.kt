@@ -10,16 +10,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -229,18 +233,20 @@ fun FolderScreenGrid(
     ) {
         items(
             count = entries.size,
-            key = { index -> entries[index].name }
+            key = { index -> entries[index].name },
+            span = { index ->
+                when (entries[index]) {
+                    is DirectoryEntryK.Directory -> GridItemSpan(maxLineSpan)
+                    else -> GridItemSpan(1)
+                }
+            }
         ) { index ->
-            val item = entries[index]
-            when (item) {
+            when (val item = entries[index]) {
                 is DirectoryEntryK.Directory -> {
                     Box(modifier = Modifier
-                        .aspectRatio(1f)
                         .clickable { onDirClick(item.name) }
-                        .background(color = Color(0xFFA89B32))) {
-                        Box(modifier = Modifier.padding(2.dp)) {
-                            Text(item.name)
-                        }
+                        .background(color = MaterialTheme.colorScheme.secondaryContainer)) {
+                        FolderRow(item.name)
                     }
                 }
                 is DirectoryEntryK.Image -> {
@@ -257,7 +263,36 @@ fun FolderScreenGrid(
     }
 }
 
+@Composable
+fun FolderRow(name: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Folder,
+            contentDescription = stringResource(R.string.folder),
+            modifier = Modifier
+                .padding(end = 6.dp)
+                .size(40.dp),
+            tint = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        Text(name, color = MaterialTheme.colorScheme.onSecondaryContainer)
+    }
+}
+
 @Preview(showBackground = true)
+@Composable
+fun FolderScreenGridPreviewLong() {
+    MigawkaTheme() {
+        FolderRow("fdsal fjdwlsa jfdsa hiofewj ajkls aiofdsak fkldsaj klfdshaio fhewioa kldsaj klfdsa")
+    }
+}
+
+@Preview//(showBackground = true)
 @Composable
 fun FolderScreenGridPreview() {
     val fakeEntries = listOf(
@@ -271,5 +306,7 @@ fun FolderScreenGridPreview() {
         DirectoryEntryK.Directory("2025"),
     )
 
-    FolderScreenGrid(entries = fakeEntries, onDirClick = {})
+    MigawkaTheme() {
+        FolderScreenGrid(entries = fakeEntries, onDirClick = {})
+    }
 }

@@ -62,4 +62,5 @@
     <string name="indexing_local">Indexing local media</string>
     <string name="media_on_remote_server">Media on remote server</string>
     <string name="show_media_origin">Show media origin</string>
+    <string name="folder">Folder</string>
 </resources>
