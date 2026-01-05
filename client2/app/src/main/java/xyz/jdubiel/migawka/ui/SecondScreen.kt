@@ -1,62 +1,73 @@
 package xyz.jdubiel.migawka.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import android.util.Log
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import xyz.jdubiel.migawka.ui.imageGallery.FastScroller
+import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import xyz.jdubiel.migawka.GetMediaItemRequest
+import xyz.jdubiel.migawka.MigawkaGrpcKt
 
+suspend fun get(stub: MigawkaGrpcKt.MigawkaCoroutineStub, request: GetMediaItemRequest) {
+    val response = stub.getThumbnail(request)
+
+}
 @Composable
 fun SecondScreen(modifier: Modifier = Modifier) {
-    val items = remember { (1..1000).toList() }
-    val gridState = rememberLazyGridState()
+    Column(modifier = modifier) {
+        Button(onClick = {
+            CoroutineScope(Dispatchers.IO).launch {
+                val id = "0a6d07f8121e5aca"
+                val serverAddress = "192.168.5.158"
+                Log.d("serverAddress", serverAddress)
+                val channel = ManagedChannelBuilder.forAddress(serverAddress, 50051)
+                    .usePlaintext()
+                    .build()
+                try {
+                    val stub = MigawkaGrpcKt.MigawkaCoroutineStub(channel)
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "First visible item: ${gridState.firstVisibleItemIndex}",
-                modifier = Modifier.padding(16.dp)
-            )
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                state = gridState,
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                items(count = items.size, key = { index -> items[index] }) { index ->
-                    Box(
-                        modifier = Modifier.padding(8.dp).background(MaterialTheme.colorScheme.secondary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "Item ${items[index]}")
+                    val request = GetMediaItemRequest.newBuilder()
+                        .setId(id)
+                        .build()
+
+                    val deferreds = (1..10).map {
+                        async {
+                            try {
+                                val response = stub.getThumbnail(request)
+                                Log.d("gRPC", "response $it: $response")
+                                response
+                            } catch (e: Exception) {
+                                Log.e("gRPC", "request $it failed: ${e.message}")
+                                null
+                            }
                     }
                 }
+                    val responses = deferreds.awaitAll()
+                    Log.d(
+                        "gRPC",
+                        "All done. Successful responses: ${responses.count { it != null }}"
+                    )
+                    responses.forEachIndexed { index, response ->
+                        assert(responses[0] == response)
+
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("SecondScreen", e.message ?: "Unknown error")
+                } finally {
+                    channel.shutdown()
             }
         }
-        FastScroller(
-            gridState = gridState,
-            label = { index -> "Item ${items[index]}" },
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth()
-                .align(Alignment.CenterEnd)
-                .padding(end = 4.dp)
-        )
+        }) {
+            Text(text = "send requests")
+    }
     }
 }
 
