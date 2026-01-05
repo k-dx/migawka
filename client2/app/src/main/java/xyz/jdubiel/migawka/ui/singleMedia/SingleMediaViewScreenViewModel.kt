@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.ui.singleMedia
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
@@ -153,11 +154,11 @@ class SingleMediaViewScreenViewModel(
     }
 
 //    fun getExifMetadata(id: Hash) = imageRepository.getExifMetadata(id)
-    fun getMetadata(id: Hash) {
+    fun getMetadata(context: Context, id: Hash) {
         _metadataState.value = MediaMetadataState.Loading
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
-                imageRepository.getMetadata(id)
+                imageRepository.getMetadata(context, id)
             }
             when (result) {
                 is GrpcResult.Success -> {

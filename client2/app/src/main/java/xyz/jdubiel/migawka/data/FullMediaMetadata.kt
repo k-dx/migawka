@@ -6,6 +6,7 @@ enum class MediaMetadata {
     ID,
     Path,
     CreationDate,
+    IsLocalIsRemote,
     Exif_DateTime,
     Exif_Make,
     Exif_Model,

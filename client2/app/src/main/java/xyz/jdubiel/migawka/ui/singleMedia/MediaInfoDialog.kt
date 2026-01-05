@@ -62,6 +62,7 @@ val tagToName = mapOf(
     MediaMetadata.ID to R.string.id,
     MediaMetadata.Path to R.string.path,
     MediaMetadata.CreationDate to R.string.creation_date,
+    MediaMetadata.IsLocalIsRemote to R.string.storage_location,
     MediaMetadata.Exif_DateTime to R.string.exif_datetime,
     MediaMetadata.Exif_Make to R.string.exif_make,
     MediaMetadata.Exif_Model to R.string.exif_model,

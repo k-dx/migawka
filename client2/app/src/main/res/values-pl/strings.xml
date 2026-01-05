@@ -61,4 +61,8 @@
     <string name="media_on_remote_server">Zdjęcie na serwerze</string>
     <string name="show_media_origin">Pokaż pochodzenie mediów</string>
     <string name="folder">Folder</string>
+    <string name="storage_location">Miejsce przechowywania</string>
+    <string name="on_device_and_server">Na urządzeniu i serwerze</string>
+    <string name="on_device">Na urządzeniu</string>
+    <string name="on_server">Na serwerze</string>
 </resources>

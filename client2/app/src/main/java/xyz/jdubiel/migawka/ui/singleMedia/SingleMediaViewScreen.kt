@@ -223,7 +223,7 @@ fun SingleMediaViewScreen(
             OutlinedIconButton(
                 onClick = {
                     showInfoDialog = true
-                    viewModel.getMetadata(entry.id)
+                    viewModel.getMetadata(context, entry.id)
                 },
                 modifier = Modifier.size(48.dp)
             ) {

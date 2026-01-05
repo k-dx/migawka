@@ -2,11 +2,13 @@ package xyz.jdubiel.migawka.data
 
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
+import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.io.File
 
@@ -127,7 +129,7 @@ class ImageRepository(
         contentResolver.update(uri, values, null, null)
     }
 
-    suspend fun getMetadata(id: Hash): GrpcResult<FullMediaMetadata> {
+    suspend fun getMetadata(context: Context, id: Hash): GrpcResult<FullMediaMetadata> {
         return when (val entry = entries[id]) {
             is TimelineEntryK.Local -> {
                 // annotate with ID if successful
@@ -137,6 +139,17 @@ class ImageRepository(
                         metadata[MediaMetadata.ID] = entry.id.toString()
                         // TODO: format date better
                         metadata[MediaMetadata.CreationDate] = entry.date.toString()
+
+                        if (entry.onRemote) {
+                            // TODO: this should not put actual strings into the metadata map,
+                            // just enums. Strings for display should be done in UI layer.
+                            metadata[MediaMetadata.IsLocalIsRemote] =
+                                context.getString(R.string.on_device_and_server)
+                        }
+                        else {
+                            metadata[MediaMetadata.IsLocalIsRemote] =
+                                context.getString(R.string.on_device)
+                        }
                         GrpcResult.Success(metadata)
                     }
                     is GrpcResult.Error -> {
@@ -145,7 +158,20 @@ class ImageRepository(
                 }
             }
             is TimelineEntryK.Remote -> {
-                remoteImageProvider.getMetadata(entry.id)
+                when (val data = remoteImageProvider.getMetadata(entry.id)) {
+                    is GrpcResult.Success -> {
+                        val metadata = data.data.toMutableMap()
+                        metadata[MediaMetadata.ID] = entry.id.toString()
+                        metadata[MediaMetadata.IsLocalIsRemote] =
+                            context.getString(R.string.on_server)
+                        GrpcResult.Success(metadata)
+                    }
+
+                    is GrpcResult.Error -> {
+                        data
+                    }
+                }
+
             }
             null -> {
                 GrpcResult.Error("Entry not found")

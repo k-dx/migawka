@@ -63,4 +63,8 @@
     <string name="media_on_remote_server">Media on remote server</string>
     <string name="show_media_origin">Show media origin</string>
     <string name="folder">Folder</string>
+    <string name="storage_location">Storage location</string>
+    <string name="on_device_and_server">On device and server</string>
+    <string name="on_device">On device</string>
+    <string name="on_server">On server</string>
 </resources>
