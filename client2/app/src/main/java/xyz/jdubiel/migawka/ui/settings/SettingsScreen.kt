@@ -165,110 +165,140 @@ fun SettingsContent(
 
     val databaseCleared by viewModel.databaseCleared.collectAsState()
 
-    Card(
-        modifier = modifier.padding(16.dp),
-        elevation = CardDefaults.elevatedCardElevation()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+    Column(modifier = modifier.padding(16.dp)) {
+        Text(
+            text = stringResource(R.string.settings),
+            style = MaterialTheme.typography.headlineLarge
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Card(
+
+            elevation = CardDefaults.elevatedCardElevation()
         ) {
-            Text(
-                text = stringResource(R.string.settings),
-                style = MaterialTheme.typography.titleSmall
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.server_settings),
+                    style = MaterialTheme.typography.titleSmall
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Section(
-                text = textAddress,
-                setText = { textAddress = it },
-                isTextValid = isAddressValid,
-                label = stringResource(R.string.settings_server_address_label),
-                placeholder = stringResource(R.string.settings_example_server_ip),
-                hintIfBlank = stringResource(R.string.settings_server_address_cannot_be_empty),
-                hintIfInvalid = stringResource(
-                    R.string.settings_enter_a_valid_host,
-                    stringResource(R.string.settings_example_server_ip)
-                ),
-                hintIfOk = stringResource(R.string.settings_saved_address, savedAddress)
-            )
+                Section(
+                    text = textAddress,
+                    setText = { textAddress = it },
+                    isTextValid = isAddressValid,
+                    label = stringResource(R.string.settings_server_address_label),
+                    placeholder = stringResource(R.string.settings_example_server_ip),
+                    hintIfBlank = stringResource(R.string.settings_server_address_cannot_be_empty),
+                    hintIfInvalid = stringResource(
+                        R.string.settings_enter_a_valid_host,
+                        stringResource(R.string.settings_example_server_ip)
+                    ),
+                    hintIfOk = stringResource(R.string.settings_saved_address, savedAddress)
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Section(
-                text = textPort,
-                setText = { textPort = it },
-                isTextValid = isPortValid,
-                label = stringResource(R.string.settings_server_port),
-                placeholder = stringResource(R.string.settings_example_port),
-                hintIfBlank = stringResource(R.string.settings_server_port_cannot_be_empty),
-                hintIfInvalid = stringResource(
-                    R.string.settings_enter_a_valid_port,
-                    stringResource(R.string.settings_example_port)
-                ),
-                hintIfOk = stringResource(R.string.settings_saved_port, savedPort)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Section(
-                text = textAuthToken ?: "",
-                setText = { textAuthToken = it },
-                isTextValid = true,
-                label = stringResource(R.string.settings_auth_token),
-                placeholder = null,
-                hintIfBlank = stringResource(R.string.settings_auth_token_cannot_be_empty),
-                hintIfInvalid = stringResource(
-                    R.string.settings_enter_a_valid_port,
-                    stringResource(R.string.settings_example_port)
-                ),
-                hintIfOk = stringResource(
-                    R.string.settings_saved_auth_token,
-                    savedAuthToken
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(
-                    onClick = {
-                        textAddress = savedAddress
-                        textPort = savedPort
-                    },
-                    enabled = isChanged
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = {
-                        viewModel.setServerAddress(textAddress.trim())
-                        viewModel.setServerPort(textPort.trim().toInt())
-                        viewModel.setAuthToken(textAuthToken.trim())
-                    },
-                    enabled = isAddressValid && isPortValid && isChanged
-                ) {
-                    Text(stringResource(R.string.save))
-                }
+                Section(
+                    text = textPort,
+                    setText = { textPort = it },
+                    isTextValid = isPortValid,
+                    label = stringResource(R.string.settings_server_port),
+                    placeholder = stringResource(R.string.settings_example_port),
+                    hintIfBlank = stringResource(R.string.settings_server_port_cannot_be_empty),
+                    hintIfInvalid = stringResource(
+                        R.string.settings_enter_a_valid_port,
+                        stringResource(R.string.settings_example_port)
+                    ),
+                    hintIfOk = stringResource(R.string.settings_saved_port, savedPort)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                Section(
+                    text = textAuthToken,
+                    setText = { textAuthToken = it },
+                    isTextValid = true,
+                    label = stringResource(R.string.settings_auth_token),
+                    placeholder = null,
+                    hintIfBlank = stringResource(R.string.settings_auth_token_cannot_be_empty),
+                    hintIfInvalid = stringResource(
+                        R.string.settings_enter_a_valid_port,
+                        stringResource(R.string.settings_example_port)
+                    ),
+                    hintIfOk = stringResource(
+                        R.string.settings_saved_auth_token,
+                        savedAuthToken
+                    ),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(
+                        onClick = {
+                            textAddress = savedAddress
+                            textPort = savedPort
+                        },
+                        enabled = isChanged
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.setServerAddress(textAddress.trim())
+                            viewModel.setServerPort(textPort.trim().toInt())
+                            viewModel.setAuthToken(textAuthToken.trim())
+                        },
+                        enabled = isAddressValid && isPortValid && isChanged
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+
+                }
+
 
             }
+        }
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    enabled = !databaseCleared,
-                    onClick = {
-                        viewModel.clearLocalMediaDatabase()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            elevation = CardDefaults.elevatedCardElevation()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.local_settings),
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        enabled = !databaseCleared,
+                        onClick = {
+                            viewModel.clearLocalMediaDatabase()
+                        }
+                    ) {
+                        Text(stringResource(R.string.clear_internal_media_database))
                     }
-                ) {
-                    Text(stringResource(R.string.clear_internal_media_database))
                 }
             }
         }

@@ -69,4 +69,6 @@
     <string name="settings_auth_token_cannot_be_empty">Token nie może być pusty</string>
     <string name="settings_saved_auth_token">Zapisany token: %1$s</string>
     <string name="settings_none">(brak)</string>
+    <string name="local_settings">Ustawienia lokalne</string>
+    <string name="server_settings">Ustawienia serwera</string>
 </resources>
