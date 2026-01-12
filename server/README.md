@@ -30,5 +30,9 @@ grpc/grpc.proto
 
 ```sh
 # replace mediadir with your photo directory
-go run . -mediadir="$HOME/migawka_media2" -loglevel="debug"
+go run . \
+-mediadir="$HOME/migawka_media2" \
+-loglevel="debug" \
+-tls-private-key="../certs/migawka_server.key.pem" \
+-tls-cert="../certs/migawka_server.crt"
 ```
