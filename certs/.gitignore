@@ -1,0 +1,7 @@
+CA.key.pem
+CN_CA.crt
+migawka_server.key.pem
+migawka_server.csr
+migawka_server.crt
+db.*
+newcerts/

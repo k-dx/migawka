@@ -1,0 +1,65 @@
+[ ca ] # openssl-ca uses this section
+default_ca = my_ca
+
+
+[ my_ca ]
+private_key     = CA.key.pem
+certificate     = CN_CA.crt
+dir             = .
+new_certs_dir   = $dir/newcerts
+database        = $dir/db.txt
+default_md      = sha256
+
+# The same as the -days option. The number of days to certify a certificate
+# for.
+default_days    = 365
+
+# Generate a large random number to use as the serial number.  This overrides
+# any option or configuration to use a serial number file.
+rand_serial     = yes
+# Alternatively use a serial from a file
+#serial          = $dir/serial         # serial no file
+
+
+# Don't add the email into cert DN
+email_in_dn     = no
+
+# This option defines the CA "policy" to use. This is a section in the
+# configuration file which decides which fields should be mandatory or match
+# the CA certificate. Check out the POLICY FORMAT section for more information.
+policy          = my_policy
+
+x509_extensions = v3_ca
+
+
+[ my_policy ]
+countryName            = supplied
+stateOrProvinceName    = supplied
+organizationName       = supplied
+commonName             = supplied
+
+
+[ v3_ca ]
+# https://docs.openssl.org/master/man1/openssl-verification-options/#basic-constraints
+# The basicConstraints extension CA flag is used to determine whether the
+# certificate can be used as a CA. If the CA flag is true then it is a CA, if
+# the CA flag is false then it is not a CA. All CAs should have the CA flag set
+# to true.
+#
+# If the basicConstraints extension is absent, which includes the case that it
+# is an X.509v1 certificate, then the certificate is considered to be a
+# "possible CA" and other extensions are checked according to the intended use
+# of the certificate. The treatment of certificates without basicConstraints as
+# a CA is presently supported, but this could change in the future.
+basicConstraints       = critical,CA:FALSE
+
+keyUsage               = critical, digitalSignature
+
+authorityKeyIdentifier = keyid:always,issuer
+
+subjectAltName         = @alt_names
+
+
+[ alt_names ]
+#DNS.1 = 192.168.5.158
+IP.1 = 192.168.5.158

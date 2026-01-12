@@ -1,0 +1,24 @@
+[ req ]
+distinguished_name = req_distinguished_name
+utf8               = yes
+prompt             = no
+req_extensions     = req_ext
+
+[ req_distinguished_name ]
+countryName            = PL
+stateOrProvinceName    = Dolny Śląsk
+localityName           = Wrocław
+organizationName       = Migawka App
+commonName             = 192.168.5.158
+
+[ req_ext ]
+basicConstraints = CA:FALSE
+
+# https://docs.openssl.org/master/man5/x509v3_config/#key-usage
+# Key usage is a multi-valued extension consisting of a list of names of the
+# permitted key usages. The defined values are: digitalSignature,
+# nonRepudiation (with an alternative name contentCommitment), keyEncipherment,
+# dataEncipherment, keyAgreement, keyCertSign, cRLSign, encipherOnly, and
+# decipherOnly.
+keyUsage = digitalSignature, keyEncipherment
+

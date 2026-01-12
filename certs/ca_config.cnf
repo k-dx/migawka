@@ -1,0 +1,45 @@
+[ req ]
+
+
+# This specifies the section containing the distinguished name fields to prompt
+# for when generating a certificate or certificate request. The format is
+# described in the next section.
+distinguished_name  = req_distinguished_name
+
+# If set to the value yes then field values to be interpreted as UTF8 strings,
+# by default they are interpreted as ASCII. This means that the field values,
+# whether prompted from a terminal or obtained from a configuration file, must
+# be valid UTF8 strings.
+utf8                = yes
+
+# https://docs.openssl.org/master/man1/openssl-req/#distinguished-name-and-attribute-section-format
+# If set to the value no this disables prompting of certificate fields and just
+# takes values from the config file directly. It also changes the expected
+# format of the distinguished_name and attributes sections.
+prompt              = no
+
+# https://docs.openssl.org/master/man1/openssl-req/#examples
+x509_extensions     = v3_ca
+
+[ req_distinguished_name ]
+countryName                 = PL
+stateOrProvinceName         = Dolny Śląsk
+localityName                = Wrocław
+organizationName            = JDubiel CA
+commonName                  = JDubiel CA
+
+[ v3_ca ]
+
+# Creates a unique identifier (hash of the public key) for the subject's public
+# key, aiding certificate chain validation.
+subjectKeyIdentifier=hash
+
+# Identifies the issuer's public key via keyid (from subjectKeyIdentifier),
+# issuer name, or serial number.
+authorityKeyIdentifier=keyid:always,issuer:always
+
+# Determinuje, czy certifikat jest CA (i można nim podpisywać inne), czy też
+# jest liściem. 'critical' oznacza, że trzeba uwzględnić to pole przy użyciu
+# certyfikatu.
+basicConstraints = critical, CA:true
+
