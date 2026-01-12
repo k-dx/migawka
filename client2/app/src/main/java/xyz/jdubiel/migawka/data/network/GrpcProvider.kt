@@ -14,7 +14,7 @@ class GrpcProvider(private val remoteEndpoint: IPEndpoint) {
         if (channel == null) {
             channel = ManagedChannelBuilder
                 .forAddress(remoteEndpoint.ip, remoteEndpoint.port)
-                .usePlaintext() // TODO: use TLS, not plaintext!
+                .useTransportSecurity()
                 .build()
         }
         return channel!!
