@@ -29,6 +29,7 @@ grpc/grpc.proto
 ### Running the server
 
 ```sh
+export CLIENT_TOKENS=first-secret-token,second-secret-token
 # replace mediadir with your photo directory
 go run . \
 -mediadir="$HOME/migawka_media2" \

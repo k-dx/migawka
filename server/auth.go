@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -9,6 +10,20 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+func loadTokens() []string {
+	s := os.Getenv("CLIENT_TOKENS")
+	tokens := strings.Split(s, ",")
+
+	var cleanedTokens []string
+	for _, token := range tokens {
+		trimmed := strings.TrimSpace(token)
+		if trimmed != "" {
+			cleanedTokens = append(cleanedTokens, trimmed)
+		}
+	}
+	return cleanedTokens
+}
 
 func validateToken(ctx context.Context) (context.Context, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -21,14 +36,16 @@ func validateToken(ctx context.Context) (context.Context, error) {
 		return nil, status.Errorf(codes.Unauthenticated, "authorization token is not provided")
 	}
 
-	accessToken := values[0]
-	token := strings.TrimPrefix(accessToken, "Bearer ")
+	requestToken := values[0]
 
-	if token != "my-secret-token" {
-		return nil, status.Errorf(codes.Unauthenticated, "token is invalid")
+	allowedTokens := loadTokens()
+	for _, allowedToken := range allowedTokens {
+		if requestToken == allowedToken {
+			return ctx, nil
+		}
 	}
 
-	return ctx, nil
+	return nil, status.Errorf(codes.Unauthenticated, "token is invalid")
 }
 
 // Intercepts unary RPCs

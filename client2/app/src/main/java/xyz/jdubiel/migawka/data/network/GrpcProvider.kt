@@ -15,7 +15,7 @@ class BearerTokenCredentials(private val token: String) : CallCredentials() {
             try {
                 val headers = Metadata()
                 val authKey = Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER)
-                headers.put(authKey, "Bearer $token")
+                headers.put(authKey, token)
                 applier.apply(headers)
             } catch (e: Throwable) {
                 applier.fail(Status.UNAUTHENTICATED.withCause(e))
@@ -43,7 +43,7 @@ class GrpcProvider(private val remoteEndpoint: IPEndpoint) {
     fun getMigawkaServiceStub(): MigawkaGrpcKt.MigawkaCoroutineStub {
         if (migawkaServiceStub == null) {
             migawkaServiceStub = MigawkaGrpcKt.MigawkaCoroutineStub(getChannel())
-                .withCallCredentials(BearerTokenCredentials("my-secret-token"))
+                .withCallCredentials(BearerTokenCredentials("first-secret-token"))
         }
         return migawkaServiceStub!!
     }
