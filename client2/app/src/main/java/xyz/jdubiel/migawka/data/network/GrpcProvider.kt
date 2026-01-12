@@ -24,7 +24,7 @@ class BearerTokenCredentials(private val token: String) : CallCredentials() {
     }
 }
 
-class GrpcProvider(private val remoteEndpoint: IPEndpoint) {
+class GrpcProvider(private val remoteEndpoint: IPEndpoint, private val token: String) {
     private var channel: ManagedChannel? = null
     private var migawkaServiceStub: MigawkaGrpcKt.MigawkaCoroutineStub? = null
 
@@ -43,7 +43,10 @@ class GrpcProvider(private val remoteEndpoint: IPEndpoint) {
     fun getMigawkaServiceStub(): MigawkaGrpcKt.MigawkaCoroutineStub {
         if (migawkaServiceStub == null) {
             migawkaServiceStub = MigawkaGrpcKt.MigawkaCoroutineStub(getChannel())
-                .withCallCredentials(BearerTokenCredentials("first-secret-token"))
+                .let {
+                    if (token != "") it.withCallCredentials(BearerTokenCredentials(token))
+                    else it
+                }
         }
         return migawkaServiceStub!!
     }

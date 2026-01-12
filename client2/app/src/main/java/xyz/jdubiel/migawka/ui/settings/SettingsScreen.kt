@@ -99,7 +99,7 @@ fun Section(
     setText: (String) -> Unit,
     isTextValid: Boolean,
     label: String,
-    placeholder: String,
+    placeholder: String?,
     hintIfBlank: String,
     hintIfInvalid: String,
     hintIfOk: String
@@ -108,7 +108,7 @@ fun Section(
         value = text,
         onValueChange = { setText(it) },
         label = { Text(label) },
-        placeholder = { Text(placeholder) },
+        placeholder = if (placeholder != null) { -> Text(placeholder) } else null,
         singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
         modifier = Modifier.fillMaxWidth()
@@ -141,9 +141,11 @@ fun SettingsContent(
 ) {
     val savedAddress by viewModel.serverAddress.collectAsState()
     val savedPort by viewModel.serverPort.map { it.toString(10) }.collectAsState("")
+    val savedAuthToken by viewModel.authToken.collectAsState()
 
     var textAddress by remember { mutableStateOf(savedAddress) }
     var textPort by remember { mutableStateOf(savedPort) }
+    var textAuthToken by remember { mutableStateOf(savedAuthToken) }
     // keep text synced when savedAddress changes externally
     LaunchedEffect(savedAddress) {
         if (savedAddress != textAddress) textAddress = savedAddress
@@ -151,11 +153,15 @@ fun SettingsContent(
     LaunchedEffect(savedPort) {
         if (savedPort != textPort)  textPort = savedPort
     }
+    LaunchedEffect(savedAuthToken) {
+        if (savedAuthToken != textAuthToken) textAuthToken = savedAuthToken
+    }
 
     val isAddressValid = remember(textAddress) { isValidServerAddress(textAddress) }
     val isPortValid = remember(textPort) { isValidServerPort(textPort) }
 
-    val isChanged = (textAddress != savedAddress) || (textPort != savedPort)
+    val isChanged =
+        (textAddress != savedAddress) || (textPort != savedPort) || (textAuthToken != savedAuthToken)
 
     val databaseCleared by viewModel.databaseCleared.collectAsState()
 
@@ -207,6 +213,25 @@ fun SettingsContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            Section(
+                text = textAuthToken ?: "",
+                setText = { textAuthToken = it },
+                isTextValid = true,
+                label = stringResource(R.string.settings_auth_token),
+                placeholder = null,
+                hintIfBlank = stringResource(R.string.settings_auth_token_cannot_be_empty),
+                hintIfInvalid = stringResource(
+                    R.string.settings_enter_a_valid_port,
+                    stringResource(R.string.settings_example_port)
+                ),
+                hintIfOk = stringResource(
+                    R.string.settings_saved_auth_token,
+                    savedAuthToken
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(
                     onClick = {
@@ -224,6 +249,7 @@ fun SettingsContent(
                     onClick = {
                         viewModel.setServerAddress(textAddress.trim())
                         viewModel.setServerPort(textPort.trim().toInt())
+                        viewModel.setAuthToken(textAuthToken.trim())
                     },
                     enabled = isAddressValid && isPortValid && isChanged
                 ) {

@@ -65,4 +65,8 @@
     <string name="on_device_and_server">Na urządzeniu i serwerze</string>
     <string name="on_device">Na urządzeniu</string>
     <string name="on_server">Na serwerze</string>
+    <string name="settings_auth_token">Token autentykacji</string>
+    <string name="settings_auth_token_cannot_be_empty">Token nie może być pusty</string>
+    <string name="settings_saved_auth_token">Zapisany token: %1$s</string>
+    <string name="settings_none">(brak)</string>
 </resources>

@@ -52,6 +52,12 @@ class SettingsScreenViewModel(
         initialValue = 0
     )
 
+    val authToken: StateFlow<String> = userSettingsRepository.authToken.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ""
+    )
+
     fun setServerAddress(serverAddress: String) {
         viewModelScope.launch {
             userSettingsRepository.setServerAddress(serverAddress)
@@ -65,6 +71,14 @@ class SettingsScreenViewModel(
         }
         _settingsModified.value = true
     }
+
+    fun setAuthToken(token: String) {
+        viewModelScope.launch {
+            userSettingsRepository.setAuthToken(token)
+        }
+        _settingsModified.value = true
+    }
+
 
     fun clearLocalMediaDatabase() {
         viewModelScope.launch(Dispatchers.IO) {

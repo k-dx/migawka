@@ -67,4 +67,8 @@
     <string name="on_device_and_server">On device and server</string>
     <string name="on_device">On device</string>
     <string name="on_server">On server</string>
+    <string name="settings_auth_token">Authentication token</string>
+    <string name="settings_auth_token_cannot_be_empty">Token cannot be empty</string>
+    <string name="settings_saved_auth_token">Saved token: %1$s</string>
+    <string name="settings_none">(none)</string>
 </resources>
