@@ -3,6 +3,8 @@ services:
     build: .
     ports:
       - "50051:50051"
-    command: ["./main", "--mediadir", "/media", "--loglevel", "debug"]
+      
+    command: ["./main", "--mediadir", "/media", "--loglevel", "info", "--tls-private-key", "/certs/migawka_server.key.pem", "--tls-cert", "/certs/migawka_server.crt"]
     volumes:
-      - /home/kuba/migawka_media2:/media
+      - /home/kuba/migawka_media3:/media
+      - /home/kuba/migawka/certs:/certs

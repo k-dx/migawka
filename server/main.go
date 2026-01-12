@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -47,6 +48,9 @@ func main() {
 	MEDIA_DIR_ARG := "mediadir"
 	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
 	generateThumbnailsOnStartup := flag.Bool("generate-thumbs-on-startup", false, "Generate missing thumbnails on startup")
+	INSECURE_noTLS := flag.Bool("insecure-no-tls", false, "Disable TLS - do not use in production!")
+	tlsServerPrivateKeyPath := flag.String("tls-private-key", "../certs/server_key.pem", "Path to TLS server private key")
+	tlsServerCertPath := flag.String("tls-cert", "../certs/server_cert.pem", "Path to TLS server certificate")
 
 	flag.Parse()
 
@@ -73,7 +77,19 @@ func main() {
 		log.Fatal().Msgf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	var creds credentials.TransportCredentials
+	if !(*INSECURE_noTLS) {
+		creds, err = credentials.NewServerTLSFromFile(*tlsServerCertPath, *tlsServerPrivateKeyPath)
+		if err != nil {
+			log.Fatal().Msgf("failed to create credentials for TLS: %v", err)
+			os.Exit(1)
+		}
+	} else {
+		log.Warn().Msg("TLS is disabled! Do not use in production!")
+		creds = nil
+	}
+
+	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	migawkaServer := CreateServer(mediaStore)
 
 	pb.RegisterMigawkaServer(grpcServer, migawkaServer)
