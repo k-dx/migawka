@@ -89,7 +89,11 @@ func main() {
 		creds = nil
 	}
 
-	grpcServer := grpc.NewServer(grpc.Creds(creds))
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(UnaryAuthInterceptor),
+		grpc.StreamInterceptor(StreamAuthInterceptor),
+		grpc.Creds(creds),
+	)
 	migawkaServer := CreateServer(mediaStore)
 
 	pb.RegisterMigawkaServer(grpcServer, migawkaServer)
