@@ -19,10 +19,15 @@ var (
 	port        = flag.Int("port", 50051, "The server port")
 )
 
-func initLogger(logLevel *string) {
+func initLogger(logLevel *string, logFormat *string) {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	// comment line below to disable pretty logging and log in JSON instead
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	if *logFormat == "console" {
+		// pretty console logging
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	} else {
+		// JSON logging
+		log.Logger = log.Output(os.Stdout)
+	}
 
 	// Set log level based on flag
 	switch *logLevel {
@@ -45,6 +50,7 @@ func initLogger(logLevel *string) {
 
 func main() {
 	logLevel := flag.String("loglevel", "warn", "Log level: debug, info, warn, error, fatal, panic")
+	logFormat := flag.String("logformat", "console", "Log format: console, json")
 	MEDIA_DIR_ARG := "mediadir"
 	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
 	generateThumbnailsOnStartup := flag.Bool("generate-thumbs-on-startup", false, "Generate missing thumbnails on startup")
@@ -62,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	initLogger(logLevel)
+	initLogger(logLevel, logFormat)
 
 	mediaStore, err := NewMediaStore(*mediaDirectory, Xx64Hasher{})
 	if err != nil {
