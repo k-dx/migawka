@@ -57,7 +57,7 @@ func main() {
 
 	MEDIA_DIR_ARG := "mediadir"
 	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
-	dbPath := flag.String("dbpath", "./migawka.db", "Path to the database file")
+	dbPath := flag.String("dbpath", "./migawka.sqlite", "Path to the database file")
 	generateThumbnailsOnStartup := flag.Bool("generate-thumbs-on-startup", false, "Generate missing thumbnails on startup")
 
 	INSECURE_noTLS := flag.Bool("insecure-no-tls", false, "Disable TLS - do not use in production!")
