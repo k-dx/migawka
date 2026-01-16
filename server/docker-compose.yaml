@@ -3,10 +3,11 @@ services:
     build: .
     ports:
       - "50051:50051"
-      
-    command: ["./main", "--mediadir", "/media", "--loglevel", "info", "--tls-private-key", "/certs/migawka_server.key.pem", "--tls-cert", "/certs/migawka_server.crt"]
+    command: sh -c "./main --mediadir /media --dbpath /db/migawka.db --loglevel info --tls-private-key /certs/migawka_server.key.pem --tls-cert /certs/migawka_server.crt 2>&1 | tee \"/logs/$(date).log\""
     volumes:
       - /home/kuba/migawka_media3:/media
       - /home/kuba/migawka/certs:/certs
+      - /home/kuba/migawka/server_logs:/logs
+      - /home/kuba/migawka/server_db:/db
     environment:
       - CLIENT_TOKENS=first-secret-token # TODO: should use Docker's secrets
