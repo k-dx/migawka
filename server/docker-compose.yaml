@@ -8,3 +8,5 @@ services:
     volumes:
       - /home/kuba/migawka_media3:/media
       - /home/kuba/migawka/certs:/certs
+    environment:
+      - CLIENT_TOKENS=first-secret-token # TODO: should use Docker's secrets
