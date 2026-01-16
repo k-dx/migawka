@@ -18,7 +18,6 @@ import (
 
 var (
 	file []byte = nil
-	port        = flag.Int("port", 50051, "The server port")
 )
 
 func initLogger(logLevel *string, logFormat *string) {
@@ -51,6 +50,8 @@ func initLogger(logLevel *string, logFormat *string) {
 }
 
 func main() {
+	port := flag.Int("port", 50051, "The server port")
+
 	logLevel := flag.String("loglevel", "warn", "Log level: debug, info, warn, error, fatal, panic")
 	logFormat := flag.String("logformat", "console", "Log format: console, json")
 
@@ -64,6 +65,11 @@ func main() {
 	tlsServerCertPath := flag.String("tls-cert", "../certs/server_cert.pem", "Path to TLS server certificate")
 
 	flag.Parse()
+
+	// Create a channel to listen for OS signals
+	stop := make(chan os.Signal, 1)
+	// notify about SIGINT and SIGTERM
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	if *mediaDirectory == "" {
 		fmt.Fprintf(os.Stderr, "\n")
@@ -120,11 +126,6 @@ func main() {
 	migawkaServer := CreateServer(mediaStore)
 
 	pb.RegisterMigawkaServer(grpcServer, migawkaServer)
-
-	// Create a channel to listen for OS signals
-	stop := make(chan os.Signal, 1)
-	// notify about SIGINT and SIGTERM
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	// Start the server in a goroutine so it doesn't block
 	go func() {

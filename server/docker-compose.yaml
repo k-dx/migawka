@@ -3,11 +3,21 @@ services:
     build: .
     ports:
       - "50051:50051"
-    command: sh -c "./main --mediadir /media --dbpath /db/migawka.db --loglevel info --tls-private-key /certs/migawka_server.key.pem --tls-cert /certs/migawka_server.crt 2>&1 | tee \"/logs/$(date).log\""
+      # It is important to use [ CMD ] form of `command` - it correctly sends
+      # signals to the process when container is stopped. Running as `sh -c CMD`
+      # will not allow for graceful shutdown!
+    command: [ "./main", 
+      "--mediadir", "/media",
+      "--dbpath", "/db/migawka.sqlite",
+      "--loglevel", "info",
+      "--tls-private-key", "/certs/migawka_server.key.pem",
+      "--tls-cert", "/certs/migawka_server.crt"
+    ]
     volumes:
       - /home/kuba/migawka_media3:/media
       - /home/kuba/migawka/certs:/certs
-      - /home/kuba/migawka/server_logs:/logs
-      - /home/kuba/migawka/server_db:/db
+      - /home/kuba/migawka_server/logs:/logs
+      - /home/kuba/migawka_server/db:/db
     environment:
-      - CLIENT_TOKENS=first-secret-token # TODO: should use Docker's secrets
+      # TODO: should use Docker's secrets
+      - CLIENT_TOKENS=first-secret-token,second-secret-token
