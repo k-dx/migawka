@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	pb "migawka-server/grpc"
 
@@ -82,7 +84,13 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create media store")
 	}
-	defer mediaStore.Close() // TODO: check if this is the right place to close
+	defer func() {
+		log.Debug().Msg("Closing media store")
+		err := mediaStore.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to close media store")
+		}
+	}()
 	if *generateThumbnailsOnStartup {
 		mediaStore.GenerateMissingThumbnails()
 	}
@@ -112,8 +120,26 @@ func main() {
 	migawkaServer := CreateServer(mediaStore)
 
 	pb.RegisterMigawkaServer(grpcServer, migawkaServer)
-	log.Info().Msgf("server listening at %v", lis.Addr())
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatal().Msgf("failed to serve: %v", err)
-	}
+
+	// Create a channel to listen for OS signals
+	stop := make(chan os.Signal, 1)
+	// notify about SIGINT and SIGTERM
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// Start the server in a goroutine so it doesn't block
+	go func() {
+		log.Info().Msgf("server listening at %v", lis.Addr())
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatal().Msgf("failed to serve: %v", err)
+		}
+	}()
+
+	// Block until we receive our signal.
+	sig := <-stop
+	log.Info().Msgf("Received signal: %v. Shutting down gracefully...", sig)
+
+	// GracefulStop allows active RPCs to finish before closing connections
+	grpcServer.GracefulStop()
+
+	log.Info().Msg("Server stopped.")
 }
