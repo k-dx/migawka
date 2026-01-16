@@ -26,6 +26,10 @@ func initOrOpenDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to reach database: %w", err)
+	}
+
 	const query = `
 	CREATE TABLE IF NOT EXISTS files (
 		id    INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,7 +87,6 @@ func (r *SqliteDBRepository) UpsertFileRecord(fileRecord FileRecord) error {
 	return nil
 }
 
-// TODO: use this!!!
 func (r *SqliteDBRepository) Close() error {
 	return r.db.Close()
 }
