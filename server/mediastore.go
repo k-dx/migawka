@@ -76,6 +76,8 @@ type MediaStore interface {
 	GetMediaDirectory() string
 	GetThumbnailDirectory() string
 
+	Close() error
+
 	GetMediaItemsCountForTest() int
 }
 
@@ -99,9 +101,10 @@ type mediaStoreImpl struct {
 	// only read after initialization, so no lock needed
 	items    map[Key]MediaItemMetadata
 	mediadir string
+	db       DBRepository
 }
 
-func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
+func NewMediaStore(path string, dbRepo DBRepository, hasher Hasher) (MediaStore, error) {
 	log.Debug().Msg("Creating new MediaStore")
 	thumbnaildir := filepath.Join(path, ".thumbnails")
 	ms := &mediaStoreImpl{
@@ -109,12 +112,21 @@ func NewMediaStore(path string, hasher Hasher) (MediaStore, error) {
 		thumbnailProvider: NewThumbnailProvider(thumbnaildir, hasher),
 		items:             make(map[Key]MediaItemMetadata),
 		mediadir:          path,
+		db:                dbRepo,
 	}
 	err := ms.loadMediaItems(path, thumbnaildir)
 	if err != nil {
 		return nil, err
 	}
 	return ms, nil
+}
+
+func (ms *mediaStoreImpl) Close() error {
+	err := ms.db.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close media store: %w", err)
+	}
+	return nil
 }
 
 func (ms *mediaStoreImpl) GetFullMetadata(id Hash) (MediaItemFullMetadata, error) {
@@ -347,7 +359,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	}
 
 	// TODO: change both to WalkDir for better performance with many files
-	// TODO: change both to follow symlinks
+	// TODO: symlinks support (consider security implications)
 
 	// walk through the directory and load media items
 	err := filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
@@ -387,38 +399,69 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 
 		// TODO: if we already have the file in the database and its
 		// modification time is unchanged, skip it
-
-		// Read file content
-		content, err := os.ReadFile(filePath)
+		fileRecord, err := ms.db.GetFileByPath(filePath)
 		if err != nil {
-			return fmt.Errorf("failed to read file %s: %w", filePath, err)
+			return fmt.Errorf("failed to get file from database: %w", err)
 		}
 
-		if !supportedMimeType(content) {
-			return nil
-		}
+		var hash Hash
+		var creationDatetime time.Time
+		if fileRecord != nil && fileRecord.ModifiedAt.Equal(info.ModTime()) {
+			// Read from database
 
-		hash := ms.Hasher.CalculateHash(content)
-
-		log.Debug().
-			Str("file", filePath).
-			Str("hash", hash.String()).
-			Msg("Loaded media item")
-
-		creatationDatetime, err := getExifCreationDate(content)
-		if err != nil {
+			// The file has not changed since we saved info about it in the
+			// database, so we can just load info from there
 			log.Debug().
 				Str("file", filePath).
-				Err(err).
-				Msg("Failed to get EXIF date, using file modification time instead")
-			creatationDatetime = info.ModTime()
+				Str("hash", fileRecord.Hash).
+				Msg("Loaded media item from database")
+
+			hash, err = ms.Hasher.HashFromString(fileRecord.Hash)
+			if err != nil {
+				return fmt.Errorf("failed to parse hash from database for file %s: %w", filePath, err)
+			}
+			creationDatetime = fileRecord.MediaCreationTime
+		} else {
+			// Read file content
+			content, err := os.ReadFile(filePath)
+			if err != nil {
+				return fmt.Errorf("failed to read file %s: %w", filePath, err)
+			}
+
+			if !supportedMimeType(content) {
+				return nil
+			}
+
+			hash = ms.Hasher.CalculateHash(content)
+
+			log.Debug().
+				Str("file", filePath).
+				Str("hash", hash.String()).
+				Msg("Loaded media item")
+
+			creationDatetime, err = getExifCreationDate(content)
+			if err != nil {
+				log.Debug().
+					Str("file", filePath).
+					Err(err).
+					Msg("Failed to get EXIF date, using file modification time instead")
+				creationDatetime = info.ModTime()
+			}
+
+			// Save to database
+			err = ms.db.UpsertFileRecord(FileRecord{
+				Filepath:          filePath,
+				Hash:              hash.String(),
+				ModifiedAt:        info.ModTime(),
+				MediaCreationTime: creationDatetime,
+			})
 		}
 
 		// Store in map
 		ms.items[ms.Hasher.HashToKey(hash)] = NewMediaItemMetadata(
 			hash,
 			filePath,
-			creatationDatetime,
+			creationDatetime,
 		)
 
 		if len(ms.items)%500 == 0 {

@@ -51,9 +51,12 @@ func initLogger(logLevel *string, logFormat *string) {
 func main() {
 	logLevel := flag.String("loglevel", "warn", "Log level: debug, info, warn, error, fatal, panic")
 	logFormat := flag.String("logformat", "console", "Log format: console, json")
+
 	MEDIA_DIR_ARG := "mediadir"
 	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
+	dbPath := flag.String("dbpath", "./migawka.db", "Path to the database file")
 	generateThumbnailsOnStartup := flag.Bool("generate-thumbs-on-startup", false, "Generate missing thumbnails on startup")
+
 	INSECURE_noTLS := flag.Bool("insecure-no-tls", false, "Disable TLS - do not use in production!")
 	tlsServerPrivateKeyPath := flag.String("tls-private-key", "../certs/server_key.pem", "Path to TLS server private key")
 	tlsServerCertPath := flag.String("tls-cert", "../certs/server_cert.pem", "Path to TLS server certificate")
@@ -70,10 +73,16 @@ func main() {
 
 	initLogger(logLevel, logFormat)
 
-	mediaStore, err := NewMediaStore(*mediaDirectory, Xx64Hasher{})
+	dbRepo, err := NewDBRepository(*dbPath)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create DB repository")
+	}
+
+	mediaStore, err := NewMediaStore(*mediaDirectory, dbRepo, Xx64Hasher{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create media store")
 	}
+	defer mediaStore.Close() // TODO: check if this is the right place to close
 	if *generateThumbnailsOnStartup {
 		mediaStore.GenerateMissingThumbnails()
 	}

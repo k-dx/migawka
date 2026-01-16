@@ -16,7 +16,7 @@ func TestMediaStore_loadMediaItems_shouldCreateThumbnailDirectory(t *testing.T) 
 		os.RemoveAll("./test")
 	})
 
-	_, err := NewMediaStore("./test", Sha256Hasher{})
+	_, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -32,7 +32,7 @@ func TestMediaStore_loadMediaItems_shouldLoadMediaItems(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestMediaStore_loadMediaItems_shouldGenerateThumbnails(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestMediaStore_loadMediaItems_shouldHandleExistingThumbnails(t *testing.T) 
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestMediaStore_GetThumbnailsBeforeTimestamp(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestMediaStore_GetMediaItem(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -203,7 +203,7 @@ func TestMediaStore_GetTimelineEntriesByPath(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -241,7 +241,7 @@ func TestMediaStore_GetTimelineEntriesByPath2(t *testing.T) {
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -280,7 +280,7 @@ func TestMediaStore_SymlinkedFiles(t *testing.T) {
 
 	// we want to ignore symlinks
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -298,7 +298,7 @@ func TestMediaStore_GetOptimizedMediaItem_ShouldCorrectlyHandleRotation(t *testi
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
@@ -330,7 +330,7 @@ func TestMediaStore_GetOptimizedMediaItem_ShouldCorrectlyHandleNoRotation(t *tes
 		os.RemoveAll("./test")
 	})
 
-	mediaStore, err := NewMediaStore("./test", Sha256Hasher{})
+	mediaStore, err := NewMediaStore("./test", NewMockDBRepository(), Sha256Hasher{})
 	if err != nil {
 		t.Fatalf("Failed to create media store: %v", err)
 	}
