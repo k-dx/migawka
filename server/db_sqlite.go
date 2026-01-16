@@ -13,7 +13,7 @@ type SqliteDBRepository struct {
 }
 
 func NewDBRepository(dbPath string) (DBRepository, error) {
-	db, err := initOrOpenDB("./migawka.db")
+	db, err := initOrOpenDB(dbPath)
 	if err != nil {
 		return nil, err
 	}
