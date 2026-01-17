@@ -8,8 +8,11 @@ import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.io.File
@@ -28,9 +31,50 @@ class ImageRepository(
 
     val localMediaIndexingState: StateFlow<IndexingState> = localImageProvider.indexingState
     private var entries: Map<Hash, TimelineEntryK> = mapOf()
+
+    private val remoteCache = MutableStateFlow<GrpcResult<List<TimelineEntryK.Remote>>?>(null)
+
+    suspend fun refreshRemote() {
+        val result = remoteImageProvider.getEntries()
+        remoteCache.value = result
+    }
+
     /**
      * @return entries that are both local and remote, unique by hash.
      */
+    fun getEntries_(): Flow<EntriesResult> = combine(
+        localImageProvider.getEntriesFlow(),
+        remoteCache
+    ) { localImages, remoteResult ->
+
+        // If remote hasn't loaded yet, we can still show local images
+        val remoteEntries = when (remoteResult) {
+            is GrpcResult.Success -> remoteResult.data
+            else -> emptyList()
+        }
+
+        // 2. Perform your merging logic
+        val remoteIds = remoteEntries.map { it.id }.toSet()
+        val localEntries = localImages.map {
+            TimelineEntryK.Local(
+                contentUri = it.contentUri,
+                id = it.hash,
+                date = it.date,
+                onRemote = remoteIds.contains(it.hash)
+            )
+        }
+
+        val mergedResults = mergeAndSort(localEntries, remoteEntries)
+
+        val err = remoteResult as? GrpcResult.Error
+
+        EntriesResult(mergedResults, err)
+    }.onStart {
+        // Trigger the first remote fetch automatically when the UI starts listening
+        if (remoteCache.value == null) {
+            refreshRemote()
+        }
+    }
     fun getEntries(): Flow<EntriesResult> = flow {
         coroutineScope {
         val localDeferred = async { localImageProvider.getEntries() }
@@ -56,6 +100,22 @@ class ImageRepository(
         }
         Log.d(TAG, "getEntries (before merge): local: ${localEntries.size}, remote: ${remoteEntries.size}")
 
+        val results = mergeAndSort(localEntries, remoteEntries)
+
+        val err = when(remoteResult) {
+            is GrpcResult.Success -> null
+            is GrpcResult.Error -> remoteResult
+        }
+
+        entries = results.map { it.id to it }.toMap()
+
+            emit(EntriesResult(results, err))
+        }
+    }
+    private fun mergeAndSort(
+        localEntries: List<TimelineEntryK.Local>,
+        remoteEntries: List<TimelineEntryK.Remote>
+    ): List<TimelineEntryK> {
         val results: MutableList<TimelineEntryK> = mutableListOf()
 
         // remove remote entries that we have locally
@@ -78,16 +138,7 @@ class ImageRepository(
                 results.add(remoteOnlyEntries[remoteOnlyEntriesIndex++])
             }
         }
-
-        val err = when(remoteResult) {
-            is GrpcResult.Success -> null
-            is GrpcResult.Error -> remoteResult
-        }
-
-        entries = results.map { it.id to it }.toMap()
-
-            emit(EntriesResult(results, err))
-        }
+        return results
     }
 
     suspend fun getRemoteOptimizedImage(id: Hash): GrpcResult<RemoteImage> {

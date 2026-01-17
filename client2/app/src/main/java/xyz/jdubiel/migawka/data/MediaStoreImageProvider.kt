@@ -14,6 +14,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -143,6 +144,9 @@ class MediaStoreImageProvider(
     }
 
     override suspend fun getEntries(): List<LocalImage> = getImages(Int.MAX_VALUE, Instant.now())
+    override fun getEntriesFlow(): Flow<List<LocalImage>> {
+        TODO("Not yet implemented")
+    }
 
     private fun getEntriesFromMediaStore(uriList: List<Uri>): Set<Uri> {
         val contentResolver = context.contentResolver

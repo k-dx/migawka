@@ -119,7 +119,7 @@ class RemoteImageProvider(private val stub: MigawkaGrpcKt.MigawkaCoroutineStub) 
 
     }
 
-    suspend fun getEntries(): GrpcResult<List<TimelineEntryK>> {
+    suspend fun getEntries(): GrpcResult<List<TimelineEntryK.Remote>> {
         try {
             val results = mutableListOf<TimelineEntryK.Remote>()
             val request = TimelineEntriesRequest.newBuilder()
