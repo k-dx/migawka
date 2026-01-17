@@ -1,20 +1,17 @@
 package xyz.jdubiel.migawka.ui.imageGallery
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xyz.jdubiel.migawka.MigawkaApplication
+import xyz.jdubiel.migawka.data.EntriesResult
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.IndexingState
 import xyz.jdubiel.migawka.data.TimelineEntryK
@@ -27,7 +24,7 @@ import java.time.temporal.ChronoUnit
 
 class ImageGalleryViewModel(
     application: Application,
-    private val imageRepository: ImageRepository,
+    imageRepository: ImageRepository,
     private val settingsRepository: UserSettingsRepository
 ) :
     AndroidViewModel(application) {
@@ -45,47 +42,44 @@ class ImageGalleryViewModel(
         initialValue = UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS
     )
 
-    private val _entriesWithHeaders = MutableStateFlow<List<ImageGalleryTimelineEntry>>(emptyList())
-    val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = _entriesWithHeaders.asStateFlow()
+    val entriesResult: StateFlow<EntriesResult> = imageRepository.getEntries()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = EntriesResult(entries = emptyList(), err = null)
+        )
 
-    private val _entries = MutableStateFlow<List<TimelineEntryK>>(emptyList())
-    val entries: StateFlow<List<TimelineEntryK>> = _entries.asStateFlow()
+    val entries: StateFlow<List<TimelineEntryK>> = entriesResult.map { r ->
+        r.entries.sortedByDescending { it.date }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
-    private val _fetchErr = MutableStateFlow<GrpcResult.Error?>(null)
-    val fetchErr: StateFlow<GrpcResult.Error?> = _fetchErr.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            val timeline = withContext(Dispatchers.IO) {
-                Log.d("ImageGalleryViewModel", "loading entries")
-                val (raw, err) = imageRepository.getEntries()
-                _fetchErr.value = err
-                Log.d("ImageGalleryViewModel", "entries loaded")
-
-                // ensure desired order: newest first
-                val sorted = raw.sortedByDescending { it.date }
-
-                // set entries
-                _entries.value = sorted
-
-                // set entriesWithHeaders
-                val result = mutableListOf<ImageGalleryTimelineEntry>()
-                var lastMonthYear: Instant? = null
-                for (entry in sorted) {
-                    val monthYear = getStartOfMonth(entry.date)
-                    if (monthYear != lastMonthYear) {
-                        result.add(ImageGalleryTimelineEntry.Header(date = monthYear))
-                        lastMonthYear = monthYear
-                    }
-                    result.add(ImageGalleryTimelineEntry.ImageItem(entry))
-                }
-                result
+    val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = entries.map { sortedEntries ->
+        val result = mutableListOf<ImageGalleryTimelineEntry>()
+        var lastMonthYear: Instant? = null
+        for (entry in sortedEntries) {
+            val monthYear = getStartOfMonth(entry.date)
+            if (monthYear != lastMonthYear) {
+                result.add(ImageGalleryTimelineEntry.Header(date = monthYear))
+                lastMonthYear = monthYear
             }
-            _entriesWithHeaders.value = timeline
-
-            Log.d("ImageGalleryViewModel", "loaded ${timeline.size} entries")
+            result.add(ImageGalleryTimelineEntry.ImageItem(entry))
         }
-    }
+        result
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val fetchErr: StateFlow<GrpcResult.Error?> = entriesResult.map { r -> r.err }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     fun setGalleryColumnCount(count: UInt) {
         viewModelScope.launch {

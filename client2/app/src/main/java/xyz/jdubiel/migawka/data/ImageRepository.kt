@@ -7,7 +7,9 @@ import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.io.File
@@ -29,7 +31,8 @@ class ImageRepository(
     /**
      * @return entries that are both local and remote, unique by hash.
      */
-    suspend fun getEntries(): EntriesResult = coroutineScope {
+    fun getEntries(): Flow<EntriesResult> = flow {
+        coroutineScope {
         val localDeferred = async { localImageProvider.getEntries() }
         val remoteDeferred = async { remoteImageProvider.getEntries() }
 
@@ -83,7 +86,8 @@ class ImageRepository(
 
         entries = results.map { it.id to it }.toMap()
 
-        return@coroutineScope EntriesResult(results, err)
+            emit(EntriesResult(results, err))
+        }
     }
 
     suspend fun getRemoteOptimizedImage(id: Hash): GrpcResult<RemoteImage> {
