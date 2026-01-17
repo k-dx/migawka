@@ -38,29 +38,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.map
 import xyz.jdubiel.migawka.R
-import java.util.regex.Pattern
 
-// TODO: move validation to UserSettingsRepository
-fun isIpv4OrIpv4Port(input: String): Boolean {
-    // IPv4 octet 0-255
-    val octet = "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)"
-    // full IPv4 address
-    val ipv4 = "$octet\\.$octet\\.$octet\\.$octet"
-    // port 0-65535
-    val port = "(?:6553[0-5]|655[0-2]\\d|65[0-4]\\d{2}|6[0-4]\\d{3}|[1-5]\\d{4}|[1-9]\\d{0,3}|0)"
-    // either just IPv4 or IPv4:PORT
-    val pattern = Pattern.compile("^($ipv4)(?::($port))?$")
-    return pattern.matcher(input).matches()
-}
 
 fun isValidServerPort(input: String): Boolean {
     val port = input.toIntOrNull(10) ?: return false
     return port in 0..65535
 }
 
-// Validation: non-empty and basic URI/host validation
+// Validation: only check if non-empty, since this could be any hostname or IP address
 fun isValidServerAddress(input: String): Boolean {
-    return isIpv4OrIpv4Port(input)
+    return !input.trim().isEmpty()
 }
 
 @Composable
