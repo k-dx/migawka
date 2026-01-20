@@ -14,7 +14,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,16 +48,34 @@ class MediaStoreImageProvider(
     private val context: Context,
     private val contentResolver: ContentResolver,
     private val db: ILocalMediaRepository,
-    scope: CoroutineScope,
-    dataStore: DataStore<Preferences>
+    private val scope: CoroutineScope,
+    private val dataStore: DataStore<Preferences>
 ) : LocalImageProvider {
-
-    // TODO: add logic to observe newly added photos, after initialization
 
     private val _indexingState = MutableStateFlow<IndexingState>(IndexingState.Idle)
     override val indexingState: StateFlow<IndexingState> = _indexingState.asStateFlow()
 
-    val initializationJob = scope.launch(Dispatchers.IO) {
+    private var syncJob: Job? = null
+
+    private fun ensureSynced(): Job {
+        val currentJob = syncJob
+        // If already running or completed, return it
+        if (currentJob != null && currentJob.isActive) return currentJob
+
+        // Otherwise, start it (this handles the "initial" start and any necessary restarts)
+        return scope.launch(Dispatchers.IO) {
+            Log.d(TAG, "performing sync Room <--> MediaStore")
+            performSync()
+        }.also { syncJob = it }
+    }
+
+    /**
+     * Sync the Room database with the MediaStore.
+     */
+    private suspend fun performSync() {
+        // The _indexingState is updated by the indexMediaStore function. Perhaps it could also
+        // (defensively) be updated in this function, but does not have to.
+
         val prefs = dataStore.data.first()
         var lastKnownModifiedGeneration = prefs[LocalImageDataStoreKeys.LAST_MODIFIED_GENERATION] ?: -1
         var lastKnownMediaStoreVersion = prefs[LocalImageDataStoreKeys.DB_MEDIA_STORE_VERSION] ?: ""
@@ -90,7 +108,7 @@ class MediaStoreImageProvider(
     }
 
     override suspend fun getImages(count: Int, imagesBefore: Instant): List<LocalImage> {
-        initializationJob.join() // Wait for init to finish before returning data
+        ensureSynced().join() // Wait for init to finish before returning data
 
         // Use withContext to ensure this IO-heavy operation runs on a background thread.
         return withContext(Dispatchers.IO) {
@@ -144,9 +162,6 @@ class MediaStoreImageProvider(
     }
 
     override suspend fun getEntries(): List<LocalImage> = getImages(Int.MAX_VALUE, Instant.now())
-    override fun getEntriesFlow(): Flow<List<LocalImage>> {
-        TODO("Not yet implemented")
-    }
 
     private fun getEntriesFromMediaStore(uriList: List<Uri>): Set<Uri> {
         val contentResolver = context.contentResolver
@@ -186,7 +201,7 @@ class MediaStoreImageProvider(
     }
 
     override suspend fun getImage(id: Hash): LocalImage {
-        initializationJob.join() // Wait for init to finish before returning data
+        ensureSynced().join() // Wait for init to finish before returning data
 
         // query the database
         val dbEntry = db.getByHash(id)

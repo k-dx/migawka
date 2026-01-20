@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -20,7 +19,6 @@ import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.MediaMetadata
 import xyz.jdubiel.migawka.data.RemoteFullImage
 import xyz.jdubiel.migawka.data.RemoteImage
-import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.network.GrpcResult
 
 sealed interface FullImageUiState {
@@ -46,17 +44,8 @@ sealed interface MediaMetadataState {
 
 class SingleMediaViewScreenViewModel(
     private val imageRepository: ImageRepository,
-    val entries: List<TimelineEntryK>,
-    initialImageId: Hash
 ) :
     ViewModel() {
-
-    // pager state should survive config changes with viewModel
-    private val _currentPage = mutableIntStateOf(let {
-        val index = entries.indexOfFirst { it.id == initialImageId }
-        if (index == -1) 0 else index
-    })
-    val currentPage: State<Int> = _currentPage
 
     // single full-image slot and metadata about which page it belongs to
     private val _fullImageState =
@@ -69,12 +58,6 @@ class SingleMediaViewScreenViewModel(
 
     private val _metadataState = mutableStateOf<MediaMetadataState>(MediaMetadataState.Empty)
     val metadataState: State<MediaMetadataState> = _metadataState
-
-
-    init {
-        Log.d(TAG, "entries size = ${entries.size}")
-        Log.d(TAG, "initialImageId = $initialImageId")
-    }
 
     /**
      * Fetches the "full" (higher resolution) image for the given page.
@@ -119,7 +102,6 @@ class SingleMediaViewScreenViewModel(
 
     fun setCurrentPage(page: Int) {
         Log.d(TAG, "onPageChange: $page")
-        _currentPage.intValue = page
         _downloadState.value = DownloadState.Empty
     }
 
@@ -153,7 +135,6 @@ class SingleMediaViewScreenViewModel(
         }
     }
 
-//    fun getExifMetadata(id: Hash) = imageRepository.getExifMetadata(id)
     fun getMetadata(context: Context, id: Hash) {
         _metadataState.value = MediaMetadataState.Loading
         viewModelScope.launch {
@@ -180,8 +161,6 @@ class SingleMediaViewScreenViewModel(
 
 class SingleMediaViewScreenForTimelineViewModelFactory(
     private val application: Application,
-    private val entries: List<TimelineEntryK>,
-    private val initialImageId: Hash,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -190,8 +169,6 @@ class SingleMediaViewScreenForTimelineViewModelFactory(
             val imageRepository = (application as MigawkaApplication).imageRepository
             return SingleMediaViewScreenViewModel(
                 imageRepository,
-                entries,
-                initialImageId
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

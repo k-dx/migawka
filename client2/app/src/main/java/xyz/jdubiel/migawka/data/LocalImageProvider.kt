@@ -1,7 +1,6 @@
 package xyz.jdubiel.migawka.data
 
 import android.net.Uri
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import xyz.jdubiel.migawka.data.network.GrpcResult
 import java.time.Instant
@@ -33,6 +32,5 @@ interface LocalImageProvider {
      * Fetches a list of local images from the MediaStore.
      */
     suspend fun getEntries(): List<LocalImage>
-    fun getEntriesFlow(): Flow<List<LocalImage>>
     fun extractExifMetadata(uri: Uri): GrpcResult<Map<MediaMetadata, String>>
 }

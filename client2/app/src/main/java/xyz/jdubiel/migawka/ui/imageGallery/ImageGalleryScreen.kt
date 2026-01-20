@@ -64,8 +64,9 @@ fun ImageGalleryScreen(
     modifier: Modifier = Modifier,
     viewModel: ImageGalleryViewModel
 ) {
-    val entries by viewModel.entriesWithHeaders.collectAsState()
-    val fetchErr by viewModel.fetchErr.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val entries = uiState.entriesWithHeaders
+    val fetchErr = uiState.error
     val indexingState by viewModel.localMediaIndexingState.collectAsStateWithLifecycle()
 
     val columnCount by viewModel.galleryColumnCount.collectAsState()
@@ -107,7 +108,9 @@ fun ImageGalleryScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-                Text(text = "${stringResource(R.string.indexing_local)} : ${state.processedCount * 100 / state.totalCount}%")
+                val progress = if (state.totalCount == 0) 0
+                else state.processedCount * 100 / state.totalCount
+                Text(text = "${stringResource(R.string.indexing_local)} : ${progress}%")
             }
         }
         is IndexingState.Error -> {

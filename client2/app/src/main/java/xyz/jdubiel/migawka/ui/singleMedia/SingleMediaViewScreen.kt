@@ -54,6 +54,7 @@ import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.Utils
+import xyz.jdubiel.migawka.data.Hash
 import xyz.jdubiel.migawka.data.TimelineEntryK
 import xyz.jdubiel.migawka.data.coil3.GrpcThumbnail
 import xyz.jdubiel.migawka.findActivity
@@ -77,15 +78,33 @@ val timeFormatter: DateTimeFormatter = DateTimeFormatter
 @Composable
 fun SingleMediaViewScreen(
     viewModel: SingleMediaViewScreenViewModel,
+    entries: List<TimelineEntryK>,
+    initialMediaId: Hash,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val view = LocalView.current
     val activity = view.context.findActivity()
 
-    val entries = viewModel.entries
+    if (entries.isEmpty()) {
+        Log.e("SingleMediaViewScreen", "entries is empty")
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                stringResource(R.string.empty_photo_list_error_message),
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        return
+    }
+
+    val initialPage =
+        entries.indexOfFirst { it.id == initialMediaId }.let { if (it == -1) 0 else it }
     val pagerState = rememberPagerState(
-        initialPage = viewModel.currentPage.value,
+        initialPage = initialPage,
         pageCount = { entries.size }
     )
 

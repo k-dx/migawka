@@ -1,6 +1,7 @@
 package xyz.jdubiel.migawka.ui.imageGallery
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.MigawkaApplication
-import xyz.jdubiel.migawka.data.EntriesResult
 import xyz.jdubiel.migawka.data.ImageRepository
 import xyz.jdubiel.migawka.data.IndexingState
 import xyz.jdubiel.migawka.data.TimelineEntryK
@@ -21,6 +21,11 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
+data class GalleryUiState(
+    val entries: List<TimelineEntryK> = emptyList(),
+    val entriesWithHeaders: List<ImageGalleryTimelineEntry> = emptyList(),
+    val error: GrpcResult.Error? = null
+)
 
 class ImageGalleryViewModel(
     application: Application,
@@ -42,22 +47,23 @@ class ImageGalleryViewModel(
         initialValue = UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS
     )
 
-    val entriesResult: StateFlow<EntriesResult> = imageRepository.getEntries()
+    // Using a single StateFlow here so that .collectAsStateWithLifecycle() in composable
+    // can correctly unsubscribe when app goes to background for more than `stopTimeoutMillis`
+    // milliseconds, so it will trigger a refresh if the user comes back.
+    val uiState: StateFlow<GalleryUiState> = imageRepository.getEntries()
+        .map { result ->
+            val sortedEntries = result.entries.sortedByDescending { it.date }
+            val headers = transformToHeaders(sortedEntries)
+            GalleryUiState(entries = sortedEntries, entriesWithHeaders = headers, error = result.err)
+        }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = EntriesResult(entries = emptyList(), err = null)
+            started = SharingStarted.WhileSubscribed(2_000),
+            initialValue = GalleryUiState()
         )
+        .also { Log.d("refresh", "uiState with entries refreshed")}
 
-    val entries: StateFlow<List<TimelineEntryK>> = entriesResult.map { r ->
-        r.entries.sortedByDescending { it.date }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    val entriesWithHeaders: StateFlow<List<ImageGalleryTimelineEntry>> = entries.map { sortedEntries ->
+    private fun transformToHeaders(sortedEntries: List<TimelineEntryK>): List<ImageGalleryTimelineEntry> {
         val result = mutableListOf<ImageGalleryTimelineEntry>()
         var lastMonthYear: Instant? = null
         for (entry in sortedEntries) {
@@ -68,18 +74,8 @@ class ImageGalleryViewModel(
             }
             result.add(ImageGalleryTimelineEntry.ImageItem(entry))
         }
-        result
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    val fetchErr: StateFlow<GrpcResult.Error?> = entriesResult.map { r -> r.err }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
+        return result
+    }
 
     fun setGalleryColumnCount(count: UInt) {
         viewModelScope.launch {

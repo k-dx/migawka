@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
@@ -180,19 +180,21 @@ fun MigawkaNavHost(
                             )
                         )
 
-                    val entriesState by topFolderScreenViewModel.mediaEntries.collectAsState()
+                    val entriesState by topFolderScreenViewModel.mediaEntries.collectAsStateWithLifecycle()
 
                     when (val state = entriesState) {
                         is EntriesState.Success -> {
                             val vm: SingleMediaViewScreenViewModel = viewModel(
                                 factory = SingleMediaViewScreenForTimelineViewModelFactory(
                                     LocalContext.current.applicationContext as Application,
-                                    state.data,
-                                    initialImageId = hasher.fromString(initialMediaId)
                                 )
                             )
 
-                            SingleMediaViewScreen(viewModel = vm)
+                            SingleMediaViewScreen(
+                                viewModel = vm,
+                                entries = state.data,
+                                initialMediaId = hasher.fromString(initialMediaId)
+                            )
                         }
 
                         else -> {
@@ -220,15 +222,20 @@ fun MigawkaNavHost(
                     "initialMediaId = $initialMediaId"
                 )
 
+                val uiState by imageGalleryViewModel.uiState.collectAsStateWithLifecycle()
+                val entries = uiState.entries
+
                 val vm: SingleMediaViewScreenViewModel = viewModel(
                     factory = SingleMediaViewScreenForTimelineViewModelFactory(
                         LocalContext.current.applicationContext as Application,
-                        imageGalleryViewModel.entries.collectAsState().value,
-                        initialImageId = hasher.fromString(initialMediaId)
                     )
                 )
 
-                SingleMediaViewScreen(viewModel = vm)
+                SingleMediaViewScreen(
+                    viewModel = vm,
+                    entries = entries,
+                    initialMediaId = hasher.fromString(initialMediaId)
+                )
             }
 
             composable<MigawkaScreen.Menu> {
