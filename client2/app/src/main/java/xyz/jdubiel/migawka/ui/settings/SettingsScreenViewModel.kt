@@ -18,11 +18,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.data.LocalImageDataStoreKeys
+import xyz.jdubiel.migawka.data.SyncManager
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 
 class SettingsScreenViewModel(
     private val userSettingsRepository: UserSettingsRepository,
-    private val localImageProviderDataStore: DataStore<Preferences>
+    private val localImageProviderDataStore: DataStore<Preferences>,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _settingsModified = MutableStateFlow(false)
@@ -91,6 +93,14 @@ class SettingsScreenViewModel(
         _settingsModified.value = true
     }
 
+    fun scheduleSync() {
+        syncManager.scheduleDailyWork(20, 20)
+    }
+
+    fun cancelSync() {
+        syncManager.cancelDailyWork()
+    }
+
     companion object {
         // Factory for creating SettingsScreenViewModel. It uses the userSettingsRepository that
         // has been injected into MigawkaApplication.
@@ -99,7 +109,8 @@ class SettingsScreenViewModel(
                 val application = (this[APPLICATION_KEY] as MigawkaApplication)
                 val settingsRepository = application.userSettingsRepository
                 val localImageProviderDataStore = application.localImageProviderDataStore_
-                SettingsScreenViewModel(settingsRepository, localImageProviderDataStore)
+                val syncManager = application.syncManager
+                SettingsScreenViewModel(settingsRepository, localImageProviderDataStore, syncManager)
             }
         }
     }

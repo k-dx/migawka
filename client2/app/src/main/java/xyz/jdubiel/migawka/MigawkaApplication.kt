@@ -22,6 +22,7 @@ import xyz.jdubiel.migawka.data.MediaStoreImageProvider
 import xyz.jdubiel.migawka.data.PersistentUserSettingsRepository
 import xyz.jdubiel.migawka.data.RemoteFileExplorer
 import xyz.jdubiel.migawka.data.RemoteImageProvider
+import xyz.jdubiel.migawka.data.SyncManager
 import xyz.jdubiel.migawka.data.UserSettingsRepository
 import xyz.jdubiel.migawka.data.Xx64Hasher
 import xyz.jdubiel.migawka.data.coil3.GrpcFetcher
@@ -56,6 +57,7 @@ class MigawkaApplication : Application(), SingletonImageLoader.Factory {
     lateinit var localImageProvider: LocalImageProvider
     lateinit var remoteImageProvider: RemoteImageProvider
     lateinit var localImageProviderDataStore_: DataStore<Preferences>
+    lateinit var syncManager: SyncManager
 
 
     // SupervisorJob ensures a failure in one task doesn't cancel the whole scope
@@ -102,6 +104,8 @@ class MigawkaApplication : Application(), SingletonImageLoader.Factory {
         )
 
         remoteFileExplorer = RemoteFileExplorer(grpcProvider.getMigawkaServiceStub())
+
+        syncManager = SyncManager(this)
     }
 
     override fun onTerminate() {

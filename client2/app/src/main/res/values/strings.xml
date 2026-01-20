@@ -73,4 +73,5 @@
     <string name="settings_none">(none)</string>
     <string name="local_settings">Local settings</string>
     <string name="server_settings">Server settings</string>
+    <string name="synchronization">Synchronization</string>
 </resources>
