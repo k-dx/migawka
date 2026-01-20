@@ -26,7 +26,7 @@ class SyncManager(private val context: Context) {
         val initialDelay = dueDate.timeInMillis - currentDate.timeInMillis
 
         val dailyWorkRequest = PeriodicWorkRequestBuilder<SyncWorker>(24, TimeUnit.HOURS)
-            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            //.setInitialDelay(initialDelay, TimeUnit.MILLISECONDS) // Comment this for testing
 //            .setConstraints(
 //                Constraints.Builder()
 //                    .setRequiredNetworkType(NetworkType.CONNECTED) // Optional: only run if online

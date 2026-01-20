@@ -20,9 +20,30 @@ service Migawka {
   rpc GetFullMediaItem(GetMediaItemRequest) returns (GetMediaItemResponse);
   rpc GetFileList(GetFileListRequest) returns (GetFileListResponse);
   rpc GetFullMetadata(FullMetadataRequest) returns (FullMetadataReply);
+
+  // Client-side stream: Client sends many messages, Server returns one response
+  rpc UploadPhotos(stream UploadRequest) returns (UploadResponse);
 }
 
+message UploadRequest {
+  oneof request {
+    UploadMetadata metadata = 1;
+    bytes chunk = 2;
+  }
+}
 
+message UploadMetadata {
+  string id = 1;
+  string creation_time = 2;
+  bytes content = 3;
+  string filename = 4;
+
+  int32 total_photos = 5;
+}
+
+message UploadResponse {
+  Status status = 1;
+}
 
 message Status {
   int32 code = 1;
