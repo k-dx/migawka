@@ -8,7 +8,6 @@ import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import xyz.jdubiel.migawka.R
@@ -29,13 +28,6 @@ class ImageRepository(
 
     val localMediaIndexingState: StateFlow<IndexingState> = localImageProvider.indexingState
     private var entries: Map<Hash, TimelineEntryK> = mapOf()
-
-    private val remoteCache = MutableStateFlow<GrpcResult<List<TimelineEntryK.Remote>>?>(null)
-
-    suspend fun refreshRemote() {
-        val result = remoteImageProvider.getEntries()
-        remoteCache.value = result
-    }
 
     /**
      * @return entries that are both local and remote, unique by hash.
