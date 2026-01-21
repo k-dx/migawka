@@ -408,11 +408,13 @@ func (s *server) UploadPhotos(stream pb.Migawka_UploadPhotosServer) error {
 				file.Close()
 				file = nil
 			}
+			log.Info().Msg("UploadPhotos completed")
 			return stream.SendAndClose(&pb.UploadResponse{
 				Status: pb.NewStatus(200, "OK"),
 			})
 		}
 		if err != nil {
+			log.Error().Err(err).Msg("Failed to receive upload stream")
 			return err
 		}
 
@@ -421,11 +423,11 @@ func (s *server) UploadPhotos(stream pb.Migawka_UploadPhotosServer) error {
 			log.Error().Err(err).Msg("Failed to get uploads directory")
 			return err
 		}
+
 		getPathGivenBasename := func(basename string) string {
 			return filepath.Join(uploadsDir, basename+".jpg")
 		}
 
-		// Handle the "oneof" request types
 		switch x := req.Request.(type) {
 		case *pb.UploadRequest_Metadata:
 			// Close previous file if multiple photos are sent in one stream
@@ -480,6 +482,9 @@ func (s *server) UploadPhotos(stream pb.Migawka_UploadPhotosServer) error {
 			}
 			// Write chunk to disk
 			if _, err := file.Write(x.Chunk); err != nil {
+				log.Error().Err(err).
+					Str("filename", getPathGivenBasename(fileName)).
+					Msg("Failed to write chunk to file")
 				return err
 			}
 		}
