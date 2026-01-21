@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/h2non/bimg"
@@ -101,8 +102,9 @@ type mediaStoreImpl struct {
 	Hasher            Hasher
 	thumbnailProvider ThumbnailProvider
 
-	// only read after initialization, so no lock needed
 	items    map[Key]MediaItemMetadata
+	itemsMtx sync.RWMutex
+
 	mediadir string
 	db       DBRepository
 }
@@ -134,7 +136,9 @@ func (ms *mediaStoreImpl) Close() error {
 
 func (ms *mediaStoreImpl) GetFullMetadata(id Hash) (MediaItemFullMetadata, error) {
 
+	ms.itemsMtx.RLock()
 	item, ok := ms.items[ms.Hasher.HashToKey(id)]
+	ms.itemsMtx.RUnlock()
 	if !ok {
 		return MediaItemFullMetadata{}, fmt.Errorf("media item with given id not found")
 	}
@@ -216,7 +220,10 @@ func (ms *mediaStoreImpl) GetHasher() Hasher {
 }
 
 func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id Hash) (time.Time, error) {
+	ms.itemsMtx.RLock()
 	item, ok := ms.items[ms.Hasher.HashToKey(id)]
+	ms.itemsMtx.RUnlock()
+
 	if !ok {
 		return time.Time{}, fmt.Errorf("media item with given id not found")
 	}
@@ -226,6 +233,8 @@ func (ms *mediaStoreImpl) GetCreationTimeOfMediaItem(id Hash) (time.Time, error)
 func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uint) ([]Thumbnail, error) {
 	// for safety, cap count to number of items. If we have more items in memory
 	// than uint can represent, something is very wrong anyway.
+
+	ms.itemsMtx.RLock()
 	if count > uint(len(ms.items)) {
 		count = uint(len(ms.items))
 	}
@@ -248,6 +257,7 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 			})
 		}
 	}
+	ms.itemsMtx.RUnlock()
 
 	// sort by date descending
 	sort.Slice(idsByDate, func(i, j int) bool {
@@ -267,7 +277,9 @@ func (ms *mediaStoreImpl) GetThumbnailsBeforeTimestamp(date time.Time, count uin
 }
 
 func (ms *mediaStoreImpl) GetFullMediaItem(id Hash) (MediaItem, error) {
+	ms.itemsMtx.RLock()
 	item, ok := ms.items[ms.Hasher.HashToKey(id)]
+	ms.itemsMtx.RUnlock()
 	if !ok {
 		return MediaItem{}, fmt.Errorf("media item with given id not found")
 	}
@@ -478,6 +490,7 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		}
 
 		// Store in map
+		ms.itemsMtx.Lock()
 		ms.items[ms.Hasher.HashToKey(hash)] = NewMediaItemMetadata(
 			hash,
 			filePath,
@@ -487,12 +500,14 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 		if len(ms.items)%500 == 0 {
 			log.Info().Int("count", len(ms.items)).Msg("Loaded media items so far")
 		}
+		ms.itemsMtx.Unlock()
 
 		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load media items: %w", err)
 	}
+
 	log.Debug().Int("count", len(ms.items)).Msg("Loaded media items")
 
 	return nil
@@ -598,6 +613,7 @@ func (ms *mediaStoreImpl) GetTimelineEntriesByPath(pathRelativeToMediadir string
 	filenames := make([]string, 0)
 
 	absPath := filepath.Join(ms.mediadir, pathRelativeToMediadir)
+	ms.itemsMtx.RLock()
 	for key, item := range ms.items {
 		dirOfItem := filepath.Dir(item.Path)
 
@@ -610,15 +626,18 @@ func (ms *mediaStoreImpl) GetTimelineEntriesByPath(pathRelativeToMediadir string
 			filenames = append(filenames, filename)
 		}
 	}
+	ms.itemsMtx.RUnlock()
 
 	return results, filenames, nil
 }
 
 func (ms *mediaStoreImpl) GenerateMissingThumbnails() {
+	ms.itemsMtx.RLock()
 	idsWithPath := make([]IdWithPath, 0, len(ms.items))
 	for id, item := range ms.items {
 		idsWithPath = append(idsWithPath, IdWithPath{ID: id, Path: item.Path})
 	}
+	ms.itemsMtx.RUnlock()
 	log.Info().Msg("Generating missing thumbnails")
 	err := ms.thumbnailProvider.GenerateMissingThumbnails(idsWithPath)
 	if err != nil {
@@ -627,7 +646,9 @@ func (ms *mediaStoreImpl) GenerateMissingThumbnails() {
 }
 
 func (ms *mediaStoreImpl) GetThumbnailByID(id Hash) (Thumbnail, error) {
+	ms.itemsMtx.RLock()
 	item, ok := ms.items[ms.Hasher.HashToKey(id)]
+	ms.itemsMtx.RUnlock()
 	if !ok {
 		return Thumbnail{}, fmt.Errorf("media item with given id not found")
 	}
@@ -637,6 +658,8 @@ func (ms *mediaStoreImpl) GetThumbnailByID(id Hash) (Thumbnail, error) {
 }
 
 func (ms *mediaStoreImpl) GetTimelineEntries() ([]TimelineEntry, error) {
+	ms.itemsMtx.RLock()
+	defer ms.itemsMtx.RUnlock()
 	entries := make([]TimelineEntry, 0, len(ms.items))
 
 	for id, item := range ms.items {
@@ -651,5 +674,7 @@ func (ms *mediaStoreImpl) GetTimelineEntries() ([]TimelineEntry, error) {
 
 // In mediastore_test.go or mediastore.go
 func (ms *mediaStoreImpl) GetMediaItemsCountForTest() int {
+	ms.itemsMtx.RLock()
+	defer ms.itemsMtx.RUnlock()
 	return len(ms.items)
 }
