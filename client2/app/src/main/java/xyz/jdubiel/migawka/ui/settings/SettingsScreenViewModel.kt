@@ -20,6 +20,7 @@ import xyz.jdubiel.migawka.MigawkaApplication
 import xyz.jdubiel.migawka.data.LocalImageDataStoreKeys
 import xyz.jdubiel.migawka.data.SyncManager
 import xyz.jdubiel.migawka.data.UserSettingsRepository
+import java.time.LocalTime
 
 class SettingsScreenViewModel(
     private val userSettingsRepository: UserSettingsRepository,
@@ -93,8 +94,8 @@ class SettingsScreenViewModel(
         _settingsModified.value = true
     }
 
-    fun scheduleSync() {
-        syncManager.scheduleDailyWork(20, 20)
+    fun scheduleSync(targetTime: LocalTime, unmeteredConnectionOnly: Boolean, chargingOnly: Boolean) {
+        syncManager.scheduleDailyWork(targetTime, unmeteredConnectionOnly, chargingOnly)
     }
 
     fun cancelSync() {

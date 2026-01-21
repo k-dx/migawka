@@ -24,12 +24,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +52,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.map
 import xyz.jdubiel.migawka.R
+import xyz.jdubiel.migawka.ui.singleMedia.locale
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 
 fun isValidServerPort(input: String): Boolean {
@@ -287,48 +293,24 @@ fun SettingsContent(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.local_settings),
-                    style = MaterialTheme.typography.titleSmall
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        enabled = !databaseCleared,
-                        onClick = {
-                            viewModel.clearLocalMediaDatabase()
-                        }
-                    ) {
-                        Text(stringResource(R.string.clear_internal_media_database))
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Card(
-            elevation = CardDefaults.elevatedCardElevation()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
                     text = stringResource(R.string.synchronization),
                     style = MaterialTheme.typography.titleSmall
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                var showTimePicker by remember { mutableStateOf(false) }
                 // TODO: use dataStore to store this
                 var isSyncEnabled by remember { mutableStateOf(false) }
+                var onlyUnmeteredConnections by remember { mutableStateOf(true) }
+                var onlyWhenCharging by remember { mutableStateOf(false) }
+                var savedTime by remember { mutableStateOf(LocalTime.of(2, 0)) }
+
                 val timePickerState = rememberTimePickerState(
                     initialHour = 2,
                     initialMinute = 0
                 )
+
                 val context = LocalContext.current
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
@@ -379,7 +361,7 @@ fun SettingsContent(
                             }
                             
                             if (isSyncEnabled) {
-                                viewModel.scheduleSync()
+                                viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
                             } else {
                                 viewModel.cancelSync()
                             }
@@ -388,83 +370,110 @@ fun SettingsContent(
                 }
 
                 if (isSyncEnabled) {
+                    if (showTimePicker) {
+                        val onDismiss = { showTimePicker = false }
+                        val onConfirm = {
+                            savedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                            viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
+                            showTimePicker = false
+                        }
+                        AlertDialog(
+                            onDismissRequest = onDismiss,
+                            dismissButton = {
+                                TextButton(onClick = { onDismiss() }) {
+                                    Text("Dismiss")
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { onConfirm() }) {
+                                    Text("OK")
+                                }
+                            },
+                            text = { TimePicker(state = timePickerState) }
+                        )
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // TODO: display in dialog box
-//                Box(modifier = Modifier.alpha(if (isSyncEnabled) 1f else 0.3f)) {
-//                    TimePicker(state = timePickerState)
-//                }
-                        Text("Everyday at XX:YY")
+                        val formatter: DateTimeFormatter = DateTimeFormatter
+                            .ofLocalizedTime(FormatStyle.SHORT)
+                            .withLocale(locale)
+                        Text("Everyday at ${savedTime.format(formatter)}")
 
-                        Button(onClick = {}) {
+                        Button(onClick = { showTimePicker = true }) {
                             Text("Set time")
                         }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Only unmetered connections")
+
+                        Checkbox(
+                            checked = onlyUnmeteredConnections,
+                            onCheckedChange = {
+                                onlyUnmeteredConnections = it
+                                viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
+                            }
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Only when charging")
+
+                        Checkbox(
+                            checked = onlyWhenCharging,
+                            onCheckedChange = {
+                                onlyWhenCharging = it
+                                viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            elevation = CardDefaults.elevatedCardElevation()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.local_settings),
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        enabled = !databaseCleared,
+                        onClick = {
+                            viewModel.clearLocalMediaDatabase()
+                        }
+                    ) {
+                        Text(stringResource(R.string.clear_internal_media_database))
                     }
                 }
             }
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun SyncSchedulerScreen() {
-//    var isSyncEnabled by remember { mutableStateOf(false) }
-//
-//    // Initialize time picker state (defaults to 8:00 AM)
-//    val timePickerState = rememberTimePickerState(
-//        initialHour = 2,
-//        initialMinute = 0
-//    )
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(24.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        // 1. Toggle Header
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.SpaceBetween
-//        ) {
-//            Text(text = "Daily Sync", style = MaterialTheme.typography.headlineSmall)
-//            Switch(
-//                checked = isSyncEnabled,
-//                onCheckedChange = { isSyncEnabled = it }
-//            )
-//        }
-//
-//        Spacer(modifier = Modifier.height(32.dp))
-//
-//        // 2. Time Picker (UI is dimmed/disabled if sync is off)
-//        Box(modifier = Modifier.alpha(if (isSyncEnabled) 1f else 0.3f)) {
-//            TimePicker(state = timePickerState)
-//        }
-//
-//        Spacer(modifier = Modifier.weight(1f))
-//
-//        // 3. Save Button
-//        Button(
-//            onClick = {
-//                if (isSyncEnabled) {
-//                    // Call your WorkManager function here
-//                    // scheduleDailyWork(timePickerState.hour, timePickerState.minute)
-//                } else {
-//                    // Cancel WorkManager tasks
-//                }
-//            },
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text("Save Sync Settings")
-//        }
-//    }
-//}
 
 @Composable
 fun SettingsScreen(

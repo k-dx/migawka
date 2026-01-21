@@ -2,21 +2,24 @@ package xyz.jdubiel.migawka.data
 
 import android.content.Context
 import android.util.Log
+import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.text.SimpleDateFormat
+import java.time.LocalTime
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class SyncManager(private val context: Context) {
-    fun scheduleDailyWork(targetHour: Int, targetMinute: Int) {
+    fun scheduleDailyWork(targetTime: LocalTime, unmeteredConnectionOnly: Boolean, chargingOnly: Boolean) {
         val currentDate = Calendar.getInstance()
         val dueDate = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, targetHour)
-            set(Calendar.MINUTE, targetMinute)
+            set(Calendar.HOUR_OF_DAY, targetTime.hour)
+            set(Calendar.MINUTE, targetTime.minute)
             set(Calendar.SECOND, 0)
             if (before(currentDate)) {
                 add(Calendar.HOUR_OF_DAY, 24) // Schedule for tomorrow if time already passed
@@ -25,13 +28,21 @@ class SyncManager(private val context: Context) {
 
         val initialDelay = dueDate.timeInMillis - currentDate.timeInMillis
 
+        val constraints = Constraints.Builder()
+        if (unmeteredConnectionOnly) {
+            constraints.setRequiredNetworkType(NetworkType.UNMETERED)
+        } else {
+            constraints.setRequiredNetworkType(NetworkType.CONNECTED)
+        }
+        if (chargingOnly) {
+            constraints.setRequiresCharging(true)
+        } else {
+            constraints.setRequiresBatteryNotLow(true)
+        }
+
         val dailyWorkRequest = PeriodicWorkRequestBuilder<SyncWorker>(24, TimeUnit.HOURS)
-            //.setInitialDelay(initialDelay, TimeUnit.MILLISECONDS) // Comment this for testing
-//            .setConstraints(
-//                Constraints.Builder()
-//                    .setRequiredNetworkType(NetworkType.CONNECTED) // Optional: only run if online
-//                    .build()
-//            )
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS) // Comment this for testing
+            .setConstraints(constraints.build())
             .build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -40,7 +51,7 @@ class SyncManager(private val context: Context) {
             dailyWorkRequest
         )
 
-        Log.i(TAG, "Daily sync scheduled for $targetHour:$targetMinute (${formatDate(dueDate)})")
+        Log.i(TAG, "Daily sync scheduled\n\ttarget time = ${targetTime} (${formatDate(dueDate)})\n\tUnmetered: $unmeteredConnectionOnly\n\tCharging only: $chargingOnly")
     }
 
     fun cancelDailyWork() {
