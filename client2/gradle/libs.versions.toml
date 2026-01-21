@@ -8,6 +8,7 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
 composeBom = "2024.09.00"
+lz4Java = "1.8.0"
 preference = "1.2.1"
 navigationCompose = "2.9.5"
 coilCompose = "3.2.0"
@@ -20,6 +21,7 @@ protobufLite = "3.25.1"
 javaxAnnotation = "1.3.2"
 exifinterface = "1.4.1"
 materialIconsExtended = "1.7.8"
+roomRuntime = "2.8.4"
 serialization = "1.9.0"
 zoomable = "2.9.0"
 material3 = "1.4.0"
@@ -29,6 +31,9 @@ workTesting = "2.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -54,6 +59,7 @@ grpc-protobuf-lite = { group = "io.grpc", name = "grpc-protobuf-lite", version.r
 grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpc" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 # Protobuf Lite Library
+lz4-java = { module = "org.lz4:lz4-java", version.ref = "lz4Java" }
 protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobufLite" }
 # Javax Annotation API
 javax-annotation-api = { group = "javax.annotation", name = "javax.annotation-api", version.ref = "javaxAnnotation" }

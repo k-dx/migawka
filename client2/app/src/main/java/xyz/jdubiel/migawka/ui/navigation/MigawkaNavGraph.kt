@@ -88,7 +88,7 @@ fun MigawkaNavHost(
                 MigawkaNavigationBar(navController)
             }
         }
-    ) { innerPadding -> // TODO: this is a bit ugly
+    ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = MigawkaScreen.Gallery,

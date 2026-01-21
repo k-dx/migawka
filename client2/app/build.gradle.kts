@@ -114,17 +114,14 @@ dependencies {
     implementation(libs.grpc.kotlin.stub)
     implementation(libs.javax.annotation.api)
     implementation(libs.protobuf.javalite)
-    implementation("org.lz4:lz4-java:1.8.0") // TODO
-
+    implementation(libs.lz4.java)
 
     // Room
-    // TODO: change to libs.*
-    implementation("androidx.room:room-runtime:2.8.4")
-    ksp("androidx.room:room-compiler:2.8.4")
-    implementation("androidx.room:room-ktx:2.8.4")
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 
     implementation(libs.kotlinx.serialization.json)
 
-//    implementation("net.engawapg.lib:zoomable:2.9.0")
     implementation(libs.zoomable)
 }
