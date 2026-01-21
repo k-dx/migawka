@@ -61,6 +61,30 @@ class SettingsScreenViewModel(
         initialValue = ""
     )
 
+    val syncEnabled: StateFlow<Boolean> = userSettingsRepository.syncEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_SYNC_ENABLED
+    )
+
+    val syncTime: StateFlow<LocalTime> = userSettingsRepository.syncTime.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_SYNC_TIME
+    )
+
+    val syncWhenChargingOnly: StateFlow<Boolean> = userSettingsRepository.syncWhenChargingOnly.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_SYNC_WHEN_CHARGING_ONLY
+    )
+
+    val syncOverUnmeteredOnly: StateFlow<Boolean> = userSettingsRepository.syncOverUnmeteredOnly.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_SYNC_OVER_UNMETERED_ONLY
+    )
+
     fun setServerAddress(serverAddress: String) {
         viewModelScope.launch {
             userSettingsRepository.setServerAddress(serverAddress)
@@ -92,6 +116,30 @@ class SettingsScreenViewModel(
         }
         _databaseCleared.value = true
         _settingsModified.value = true
+    }
+
+    fun setSyncEnabled(syncEnabled: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setSyncEnabled(syncEnabled)
+        }
+    }
+
+    fun setSyncTime(targetTime: LocalTime) {
+        viewModelScope.launch {
+            userSettingsRepository.setSyncTime(targetTime)
+        }
+    }
+
+    fun setSyncWhenChargingOnly(syncWhenChargingOnly: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setSyncWhenChargingOnly(syncWhenChargingOnly)
+        }
+    }
+
+    fun setSyncOverUnmeteredOnly(syncOverUnmeteredOnly: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setSyncOverUnmeteredOnly(syncOverUnmeteredOnly)
+        }
     }
 
     fun scheduleSync(targetTime: LocalTime, unmeteredConnectionOnly: Boolean, chargingOnly: Boolean) {

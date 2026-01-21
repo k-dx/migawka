@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import java.time.LocalTime
 import kotlin.coroutines.cancellation.CancellationException
 
 // This is an interface so we can inject any implementation that adheres to this
@@ -30,16 +31,26 @@ interface UserSettingsRepository {
     val authToken: Flow<String>
     val galleryColumnCount: Flow<UInt>
     val showOverlayIcons: Flow<Boolean>
+    val syncEnabled: Flow<Boolean>
+    val syncTime: Flow<LocalTime>
+    val syncOverUnmeteredOnly: Flow<Boolean>
+    val syncWhenChargingOnly: Flow<Boolean>
+
     suspend fun setServerAddress(address: String)
     suspend fun setServerPort(port: Int)
     suspend fun setAuthToken(token: String)
     suspend fun setGalleryColumnCount(count: UInt)
     suspend fun setShowOverlayIcons(show: Boolean)
+
     suspend fun getServerAddress(timeoutMs: Long = 5_000L): String
     suspend fun getServerPort(timeoutMs: Long = 5_000L): Int
     suspend fun getAuthToken(timeoutMs: Long = 5_000L): String
     suspend fun getGalleryColumnCount(timeoutMs: Long = 5_000L): UInt
     suspend fun getShowOverlayIcons(timeoutMs: Long = 5_000L): Boolean
+    suspend fun setSyncEnabled(sync: Boolean)
+    suspend fun setSyncTime(time: LocalTime)
+    suspend fun setSyncOverUnmeteredOnly(syncOverUnmeteredOnly: Boolean)
+    suspend fun setSyncWhenChargingOnly(syncWhenChargingOnly: Boolean)
 
 
     companion object {
@@ -48,6 +59,10 @@ interface UserSettingsRepository {
         const val DEFAULT_GALLERY_COLUMN_COUNT = 3u
         const val DEFAULT_SHOW_OVERLAY_ICONS = true
         const val DEFAULT_AUTH_TOKEN = ""
+        const val DEFAULT_SYNC_ENABLED = false
+        val DEFAULT_SYNC_TIME = LocalTime.of(2, 0)
+        const val DEFAULT_SYNC_OVER_UNMETERED_ONLY = true
+        const val DEFAULT_SYNC_WHEN_CHARGING_ONLY = true
     }
 }
 
@@ -62,12 +77,24 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
         MutableStateFlow<UInt>(UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT)
     private val _showOverlayIcons =
         MutableStateFlow(UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS)
+    private val _syncEnabled =
+        MutableStateFlow(UserSettingsRepository.DEFAULT_SYNC_ENABLED)
+    private val _syncTime =
+        MutableStateFlow(UserSettingsRepository.DEFAULT_SYNC_TIME)
+    private val _syncOverUnmeteredOnly =
+        MutableStateFlow(UserSettingsRepository.DEFAULT_SYNC_OVER_UNMETERED_ONLY)
+    private val _syncWhenChargingOnly =
+        MutableStateFlow(UserSettingsRepository.DEFAULT_SYNC_WHEN_CHARGING_ONLY)
 
     override val serverAddress: Flow<String> = _serverAddress
     override val serverPort: Flow<Int> = _serverPort
     override val authToken: Flow<String> = _authToken
     override val galleryColumnCount: Flow<UInt> = _galleryColumnCount
     override val showOverlayIcons: Flow<Boolean> = _showOverlayIcons
+    override val syncEnabled: Flow<Boolean> = _syncEnabled
+    override val syncTime: Flow<LocalTime> = _syncTime
+    override val syncOverUnmeteredOnly: Flow<Boolean> = _syncOverUnmeteredOnly
+    override val syncWhenChargingOnly: Flow<Boolean> = _syncWhenChargingOnly
 
     override suspend fun setServerAddress(address: String) {
         _serverAddress.value = address
@@ -87,6 +114,22 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
 
     override suspend fun setShowOverlayIcons(show: Boolean) {
         _showOverlayIcons.value = show
+    }
+
+    override suspend fun setSyncEnabled(sync: Boolean) {
+        _syncEnabled.value = sync
+    }
+
+    override suspend fun setSyncTime(time: LocalTime) {
+        _syncTime.value = time
+    }
+
+    override suspend fun setSyncOverUnmeteredOnly(syncOverUnmeteredOnly: Boolean) {
+        _syncOverUnmeteredOnly.value = syncOverUnmeteredOnly
+    }
+
+    override suspend fun setSyncWhenChargingOnly(syncWhenChargingOnly: Boolean) {
+        _syncWhenChargingOnly.value = syncWhenChargingOnly
     }
 
     override suspend fun getServerAddress(timeoutMs: Long): String {
@@ -145,6 +188,10 @@ class PersistentUserSettingsRepository(
         private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
         private val GALLERY_COLUMN_COUNT_KEY = intPreferencesKey("gallery_column_count")
         private val SHOW_OVERLAY_ICONS_KEY = booleanPreferencesKey("show_overlay_icons")
+        private val SYNC_ENABLED_KEY = booleanPreferencesKey("sync_enabled")
+        private val SYNC_TIME_KEY = stringPreferencesKey("sync_time")
+        private val SYNC_OVER_UNMETERED_ONLY_KEY = booleanPreferencesKey("sync_over_unmetered_only")
+        private val SYNC_WHEN_CHARGING_ONLY_KEY = booleanPreferencesKey("sync_when_charging_only")
         const val TAG = "UserSettingsRepository"
     }
 
@@ -215,6 +262,65 @@ class PersistentUserSettingsRepository(
                 ?: UserSettingsRepository.DEFAULT_SHOW_OVERLAY_ICONS
         }
 
+    override val syncEnabled: Flow<Boolean> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            preferences[SYNC_ENABLED_KEY]
+                ?: UserSettingsRepository.DEFAULT_SYNC_ENABLED
+        }
+
+    override val syncTime: Flow<LocalTime> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            val s = preferences[SYNC_TIME_KEY]
+            if (s != null) {
+                LocalTime.parse(s)
+            } else {
+                UserSettingsRepository.DEFAULT_SYNC_TIME
+            }
+        }
+
+    override val syncOverUnmeteredOnly: Flow<Boolean> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            preferences[SYNC_OVER_UNMETERED_ONLY_KEY]
+                ?: UserSettingsRepository.DEFAULT_SYNC_OVER_UNMETERED_ONLY
+        }
+
+    override val syncWhenChargingOnly: Flow<Boolean> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            preferences[SYNC_WHEN_CHARGING_ONLY_KEY]
+                ?: UserSettingsRepository.DEFAULT_SYNC_WHEN_CHARGING_ONLY
+        }
 
     override suspend fun setServerAddress(address: String) {
         dataStore.edit { preferences ->
@@ -243,6 +349,30 @@ class PersistentUserSettingsRepository(
     override suspend fun setShowOverlayIcons(show: Boolean) {
         dataStore.edit { preferences ->
             preferences[SHOW_OVERLAY_ICONS_KEY] = show
+        }
+    }
+
+    override suspend fun setSyncEnabled(sync: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SYNC_ENABLED_KEY] = sync
+        }
+    }
+
+    override suspend fun setSyncTime(time: LocalTime) {
+        dataStore.edit { preferences ->
+            preferences[SYNC_TIME_KEY] = time.toString()
+        }
+    }
+
+    override suspend fun setSyncOverUnmeteredOnly(syncOverUnmeteredOnly: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SYNC_OVER_UNMETERED_ONLY_KEY] = syncOverUnmeteredOnly
+        }
+    }
+
+    override suspend fun setSyncWhenChargingOnly(syncWhenChargingOnly: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SYNC_WHEN_CHARGING_ONLY_KEY] = syncWhenChargingOnly
         }
     }
 

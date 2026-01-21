@@ -299,17 +299,19 @@ fun SettingsContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                var showTimePicker by remember { mutableStateOf(false) }
-                // TODO: use dataStore to store this
-                var isSyncEnabled by remember { mutableStateOf(false) }
-                var onlyUnmeteredConnections by remember { mutableStateOf(true) }
-                var onlyWhenCharging by remember { mutableStateOf(false) }
-                var savedTime by remember { mutableStateOf(LocalTime.of(2, 0)) }
-
+                var showTimePicker by rememberSaveable { mutableStateOf(false) }
+                val isSyncEnabled by viewModel.syncEnabled.collectAsState()
+                val onlyUnmeteredConnections by viewModel.syncOverUnmeteredOnly.collectAsState()
+                val onlyWhenCharging by viewModel.syncWhenChargingOnly.collectAsState()
+                val savedTime by viewModel.syncTime.collectAsState()
                 val timePickerState = rememberTimePickerState(
                     initialHour = 2,
                     initialMinute = 0
                 )
+                LaunchedEffect(savedTime) {
+                    timePickerState.hour = savedTime.hour
+                    timePickerState.minute = savedTime.minute
+                }
 
                 val context = LocalContext.current
                 val permissionLauncher = rememberLauncherForActivityResult(
@@ -317,14 +319,14 @@ fun SettingsContent(
                 ) { isGranted ->
                     // If user denies permission, turn the switch back off
                     if (!isGranted) {
-                        isSyncEnabled = false
+                        viewModel.setSyncEnabled(false)
                         Toast.makeText(
                             context,
                             "Permission denied. Sync not enabled.",
                             Toast.LENGTH_LONG
                         ).show()
                     } else {
-                        isSyncEnabled = true
+                        viewModel.setSyncEnabled(true)
                     }
                 }
 
@@ -348,7 +350,7 @@ fun SettingsContent(
                                     )
 
                                     if (status == PackageManager.PERMISSION_GRANTED) {
-                                        isSyncEnabled = true
+                                        viewModel.setSyncEnabled(true)
                                     } else {
                                         // Trigger the system dialog
                                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -357,7 +359,7 @@ fun SettingsContent(
                                     }
                                 }
                             } else {
-                                isSyncEnabled = false
+                                viewModel.setSyncEnabled(false)
                             }
                             
                             if (isSyncEnabled) {
@@ -373,8 +375,9 @@ fun SettingsContent(
                     if (showTimePicker) {
                         val onDismiss = { showTimePicker = false }
                         val onConfirm = {
-                            savedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
-                            viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
+                            val time = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                            viewModel.setSyncTime(time)
+                            viewModel.scheduleSync(time, onlyUnmeteredConnections, onlyWhenCharging)
                             showTimePicker = false
                         }
                         AlertDialog(
@@ -418,8 +421,8 @@ fun SettingsContent(
                         Checkbox(
                             checked = onlyUnmeteredConnections,
                             onCheckedChange = {
-                                onlyUnmeteredConnections = it
-                                viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
+                                viewModel.setSyncOverUnmeteredOnly(it)
+                                viewModel.scheduleSync(savedTime, it, onlyWhenCharging)
                             }
                         )
                     }
@@ -434,8 +437,8 @@ fun SettingsContent(
                         Checkbox(
                             checked = onlyWhenCharging,
                             onCheckedChange = {
-                                onlyWhenCharging = it
-                                viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
+                                viewModel.setSyncWhenChargingOnly(it)
+                                viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, it)
                             }
                         )
                     }
