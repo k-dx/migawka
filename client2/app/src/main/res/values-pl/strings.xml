@@ -81,4 +81,7 @@
     <string name="only_when_charging">Tylko podczas ładowania</string>
     <string name="uploaded_photos">Przesłano %1$d zdjęć</string>
     <string name="sync_complete">Synchronizacja zakończona</string>
+    <string name="about">O aplikacji</string>
+    <string name="about_content">Migawka - zdalna galeria i synchronizacja zdjęć</string>
+    <string name="version">Wersja: %1$s</string>
 </resources>

@@ -34,6 +34,7 @@ import xyz.jdubiel.migawka.ui.folderView.FolderScreenViewModelFactory
 import xyz.jdubiel.migawka.ui.imageGallery.Gallery
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModel
 import xyz.jdubiel.migawka.ui.imageGallery.ImageGalleryViewModelFactory
+import xyz.jdubiel.migawka.ui.menu.AboutScreen
 import xyz.jdubiel.migawka.ui.menu.MenuScreen
 import xyz.jdubiel.migawka.ui.settings.SettingsScreen
 import xyz.jdubiel.migawka.ui.singleMedia.SingleMediaViewScreen
@@ -62,6 +63,9 @@ sealed interface MigawkaScreen {
     @Serializable
     data class SingleMediaViewForFolder(val path: String, val initialMediaId: String) :
         MigawkaScreen
+
+    @Serializable
+    data object About : MigawkaScreen
 }
 
 @Composable
@@ -242,8 +246,15 @@ fun MigawkaNavHost(
                 MenuScreen(
                     modifier = Modifier.padding(innerPadding),
                     onSecondScreenButtonClick = { navController.navigate(MigawkaScreen.Second) },
-                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings) }
+                    onSettingsButtonClick = { navController.navigate(MigawkaScreen.Settings) },
+                    onNavigateToAbout = {
+                        navController.navigate(MigawkaScreen.About)
+                    }
                 )
+            }
+
+            composable<MigawkaScreen.About> {
+                AboutScreen(modifier = Modifier.padding(innerPadding))
             }
         }
     }

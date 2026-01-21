@@ -1,9 +1,14 @@
 package xyz.jdubiel.migawka.ui.menu
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,22 +23,34 @@ import xyz.jdubiel.migawka.ui.theme.MigawkaTheme
 fun MenuScreen(
     onSecondScreenButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     modifier: Modifier
 ) {
-    Box(modifier = modifier.padding(horizontal = 8.dp)) {
-        Column() {
-            Text(
-                stringResource(R.string.menu),
-                    style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-                )
-            Button(onClick = { onSettingsButtonClick() }) {
-                Text(text = stringResource(R.string.settings))
-            }
-            Button(onClick = { onSecondScreenButtonClick() }) {
-                Text(text = "Second screen")
-            }
-        }
+    Column(modifier = modifier.padding(16.dp)) {
+        Text(
+            stringResource(R.string.menu),
+                style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings)) },
+            leadingContent = { Icon(Icons.Default.Settings, contentDescription = null) },
+            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+            modifier = Modifier.clickable { onSettingsButtonClick() }
+        )
+
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.about)) },
+            leadingContent = { Icon(Icons.Default.Info, contentDescription = null) },
+            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+            modifier = Modifier.clickable { onNavigateToAbout() }
+        )
+
+        // Used for development purposes
+//        Button(onClick = { onSecondScreenButtonClick() }) {
+//            Text(text = "Second screen")
+//        }
     }
 }
 
@@ -44,6 +61,7 @@ fun MenuScreenPreview() {
         MenuScreen(
             onSecondScreenButtonClick = {},
             onSettingsButtonClick = {},
+            onNavigateToAbout = {},
             modifier = Modifier
         )
     }
