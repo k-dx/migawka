@@ -396,7 +396,7 @@ func (s *server) UploadPhotos(stream pb.Migawka_UploadPhotosServer) error {
 	var file *os.File
 	var fileName string
 
-	// defer s.mediaStore.RefreshAfterUpload() // TODO
+	defer s.mediaStore.RefreshAfterUpload()
 
 	for {
 		// Receive the next message from the stream

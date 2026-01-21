@@ -58,7 +58,7 @@ func main() {
 	MEDIA_DIR_ARG := "mediadir"
 	mediaDirectory := flag.String(MEDIA_DIR_ARG, "", "Path to media directory (required), cannot contain tilde (~)")
 	dbPath := flag.String("dbpath", "./migawka.sqlite", "Path to the database file")
-	generateThumbnailsOnStartup := flag.Bool("generate-thumbs-on-startup", false, "Generate missing thumbnails on startup")
+	generateThumbnailsOnDemand := flag.Bool("generate-thumbs-on-demand", true, "Generate missing thumbnails on demand")
 
 	INSECURE_noTLS := flag.Bool("insecure-no-tls", false, "Disable TLS - do not use in production!")
 	tlsServerPrivateKeyPath := flag.String("tls-private-key", "../certs/server_key.pem", "Path to TLS server private key")
@@ -86,7 +86,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to create DB repository")
 	}
 
-	mediaStore, err := NewMediaStore(*mediaDirectory, dbRepo, Xx64Hasher{})
+	mediaStore, err := NewMediaStore(*mediaDirectory, dbRepo, Xx64Hasher{}, *generateThumbnailsOnDemand)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create media store")
 	}
@@ -97,9 +97,6 @@ func main() {
 			log.Error().Err(err).Msg("Failed to close media store")
 		}
 	}()
-	if *generateThumbnailsOnStartup {
-		mediaStore.GenerateMissingThumbnails()
-	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {

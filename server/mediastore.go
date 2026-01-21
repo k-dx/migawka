@@ -80,6 +80,8 @@ type MediaStore interface {
 	// Return the absolute path to uploads directory, creating it if necessary
 	GetUploadsDirectory() (string, error)
 
+	RefreshAfterUpload() error
+
 	Close() error
 
 	GetMediaItemsCountForTest() int
@@ -99,8 +101,9 @@ type Hasher interface {
 }
 
 type mediaStoreImpl struct {
-	Hasher            Hasher
-	thumbnailProvider ThumbnailProvider
+	Hasher                     Hasher
+	thumbnailProvider          ThumbnailProvider
+	generateThumbnailsOnDemand bool
 
 	items    map[Key]MediaItemMetadata
 	itemsMtx sync.RWMutex
@@ -109,7 +112,7 @@ type mediaStoreImpl struct {
 	db       DBRepository
 }
 
-func NewMediaStore(path string, dbRepo DBRepository, hasher Hasher) (MediaStore, error) {
+func NewMediaStore(path string, dbRepo DBRepository, hasher Hasher, generateThumbnailsOnDemand bool) (MediaStore, error) {
 	log.Debug().Msg("Creating new MediaStore")
 	thumbnaildir := filepath.Join(path, ".thumbnails")
 	ms := &mediaStoreImpl{
@@ -123,6 +126,7 @@ func NewMediaStore(path string, dbRepo DBRepository, hasher Hasher) (MediaStore,
 	if err != nil {
 		return nil, err
 	}
+	ms.generateThumbnailsOnDemand = generateThumbnailsOnDemand
 	return ms, nil
 }
 
@@ -393,6 +397,8 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 	// TODO: change both to WalkDir for better performance with many files
 	// TODO: symlinks support (consider security implications)
 
+	loadedItems := make([]MediaItemMetadata, 0)
+
 	// walk through the directory and load media items
 	err := filepath.Walk(mediaPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -489,27 +495,52 @@ func (ms *mediaStoreImpl) loadMediaItems(mediaPath string, thumbnailPath string)
 			})
 		}
 
-		// Store in map
-		ms.itemsMtx.Lock()
-		ms.items[ms.Hasher.HashToKey(hash)] = NewMediaItemMetadata(
+		// Store loaded item in list
+		loadedItems = append(loadedItems, NewMediaItemMetadata(
 			hash,
 			filePath,
 			creationDatetime,
-		)
+		))
 
-		if len(ms.items)%500 == 0 {
-			log.Info().Int("count", len(ms.items)).Msg("Loaded media items so far")
+		if len(loadedItems)%500 == 0 {
+			log.Info().Int("count", len(loadedItems)).Msg("Loaded media items so far")
 		}
-		ms.itemsMtx.Unlock()
 
 		return nil
 	})
+
+	ms.itemsMtx.Lock()
+	// Store in map
+	for _, item := range loadedItems {
+		key := ms.Hasher.HashToKey(item.ID)
+		if _, exists := ms.items[key]; !exists {
+			ms.items[key] = NewMediaItemMetadata(
+				item.ID,
+				item.Path,
+				item.CreationTime,
+			)
+		}
+	}
+	ms.itemsMtx.Unlock()
+
 	if err != nil {
 		return fmt.Errorf("failed to load media items: %w", err)
 	}
 
 	log.Debug().Int("count", len(ms.items)).Msg("Loaded media items")
 
+	return nil
+}
+
+func (ms *mediaStoreImpl) RefreshAfterUpload() error {
+	log.Info().Msg("Refreshing media store after upload")
+	err := ms.loadMediaItems(ms.mediadir, ms.thumbnailProvider.GetThumbnailDirectory())
+	if err != nil {
+		return fmt.Errorf("failed to refresh media store after upload: %w", err)
+	}
+	if !ms.generateThumbnailsOnDemand {
+		ms.GenerateMissingThumbnails()
+	}
 	return nil
 }
 
