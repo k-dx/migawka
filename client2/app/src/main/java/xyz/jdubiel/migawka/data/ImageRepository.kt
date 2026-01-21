@@ -29,18 +29,39 @@ class ImageRepository(
     val localMediaIndexingState: StateFlow<IndexingState> = localImageProvider.indexingState
     private var entries: Map<Hash, TimelineEntryK> = mapOf()
 
+    suspend fun getLocalOnlyEntries(): List<LocalImage> {
+        val x = _getEntries()
+
+        if (x.err != null) {
+            return emptyList()
+        }
+
+        return x.entries.filterIsInstance<TimelineEntryK.Local>()
+            .filter { !it.onRemote }
+            .map { LocalImage(contentUri = it.contentUri, date = it.date, hash = it.id) }
+    }
+
     /**
      * @return entries that are both local and remote, unique by hash.
      */
     fun getEntries(): Flow<EntriesResult> = flow {
         coroutineScope {
+            val x = _getEntries()
+
+            entries = x.entries.map { it.id to it }.toMap()
+
+            emit(x)
+        }
+    }
+
+    private suspend fun _getEntries(): EntriesResult = coroutineScope {
         val localDeferred = async { localImageProvider.getEntries() }
         val remoteDeferred = async { remoteImageProvider.getEntries() }
 
         val localImages = localDeferred.await()
         val remoteResult = remoteDeferred.await()
 
-        val remoteEntries = when(remoteResult) {
+        val remoteEntries = when (remoteResult) {
             is GrpcResult.Success -> remoteResult.data
             is GrpcResult.Error -> emptyList()
         }
@@ -55,19 +76,19 @@ class ImageRepository(
                 onRemote = remoteIds.contains(it.hash)
             )
         }
-        Log.d(TAG, "getEntries (before merge): local: ${localEntries.size}, remote: ${remoteEntries.size}")
+        Log.d(
+            TAG,
+            "getEntries (before merge): local: ${localEntries.size}, remote: ${remoteEntries.size}"
+        )
 
         val results = mergeAndSort(localEntries, remoteEntries)
 
-        val err = when(remoteResult) {
+        val err = when (remoteResult) {
             is GrpcResult.Success -> null
             is GrpcResult.Error -> remoteResult
         }
 
-        entries = results.map { it.id to it }.toMap()
-
-            emit(EntriesResult(results, err))
-        }
+        return@coroutineScope EntriesResult(results, err)
     }
     private fun mergeAndSort(
         localEntries: List<TimelineEntryK.Local>,

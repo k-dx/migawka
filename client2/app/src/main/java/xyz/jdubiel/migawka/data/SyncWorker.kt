@@ -19,12 +19,11 @@ import java.time.format.DateTimeFormatter
 class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     private val grpcProvider = (context as MigawkaApplication).grpcProvider
     private val stub = grpcProvider.getMigawkaServiceStub()
-    private val localImageProvider = (context as MigawkaApplication).localImageProvider
+    private val imageRepository = (context as MigawkaApplication).imageRepository
 
     override suspend fun doWork(): Result {
         Log.d(TAG, "starting worker")
-        val photoUris: List<LocalImage> = localImageProvider.getEntries().take(3)
-
+        val photoUris: List<LocalImage> = imageRepository.getLocalOnlyEntries()
         return try {
             val uploadFlow = flow {
                 photoUris.forEach { localImage ->
@@ -61,7 +60,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
 
             if (response.status.code == 200) {
                 Log.d(TAG, "sync complete")
-                sendNotification("Daily Sync Complete", "OK")
+                sendNotification("Media Sync Complete", "Uploaded ${photoUris.size} photos")
                 Result.success()
             } else {
                 Result.retry()
