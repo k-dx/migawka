@@ -74,4 +74,13 @@
     <string name="local_settings">Local settings</string>
     <string name="server_settings">Server settings</string>
     <string name="synchronization">Synchronization</string>
+    <string name="permission_denied_sync_not_enabled">Permission denied. Sync not enabled.</string>
+    <string name="sync_photos_to_the_server">Sync photos to the server</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="everyday_at">Everyday at %1$s</string>
+    <string name="set_time">Set time</string>
+    <string name="only_unmetered_connections">Only unmetered connections</string>
+    <string name="only_when_charging">Only when charging</string>
+    <string name="uploaded_photos">Uploaded %1$d photos</string>
+    <string name="sync_complete">Sync Complete</string>
 </resources>

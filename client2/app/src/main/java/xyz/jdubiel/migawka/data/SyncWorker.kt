@@ -11,12 +11,13 @@ import androidx.work.WorkerParameters
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.flow
 import xyz.jdubiel.migawka.MigawkaApplication
+import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.UploadMetadata
 import xyz.jdubiel.migawka.UploadRequest
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class SyncWorker(private val context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     private val grpcProvider = (context as MigawkaApplication).grpcProvider
     private val stub = grpcProvider.getMigawkaServiceStub()
     private val imageRepository = (context as MigawkaApplication).imageRepository
@@ -60,7 +61,9 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
 
             if (response.status.code == 200) {
                 Log.d(TAG, "sync complete")
-                sendNotification("Media Sync Complete", "Uploaded ${photoUris.size} photos")
+                sendNotification(
+                    context.getString(R.string.sync_complete),
+                    context.getString(R.string.uploaded_photos, photoUris.size))
                 Result.success()
             } else {
                 Result.retry()

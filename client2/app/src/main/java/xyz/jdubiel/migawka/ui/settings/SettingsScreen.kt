@@ -322,7 +322,7 @@ fun SettingsContent(
                         viewModel.setSyncEnabled(false)
                         Toast.makeText(
                             context,
-                            "Permission denied. Sync not enabled.",
+                            context.getString(R.string.permission_denied_sync_not_enabled),
                             Toast.LENGTH_LONG
                         ).show()
                     } else {
@@ -335,7 +335,7 @@ fun SettingsContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Sync photos to the server")
+                    Text(stringResource(R.string.sync_photos_to_the_server))
 
                     Switch(
                         checked = isSyncEnabled,
@@ -352,19 +352,13 @@ fun SettingsContent(
                                     if (status == PackageManager.PERMISSION_GRANTED) {
                                         viewModel.setSyncEnabled(true)
                                     } else {
-                                        // Trigger the system dialog
                                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                        // Note: We don't set isSyncEnabled = true yet.
                                         // We wait for the launcher result above.
                                     }
                                 }
-                            } else {
-                                viewModel.setSyncEnabled(false)
-                            }
-                            
-                            if (isSyncEnabled) {
                                 viewModel.scheduleSync(savedTime, onlyUnmeteredConnections, onlyWhenCharging)
                             } else {
+                                viewModel.setSyncEnabled(false)
                                 viewModel.cancelSync()
                             }
                         }
@@ -384,12 +378,12 @@ fun SettingsContent(
                             onDismissRequest = onDismiss,
                             dismissButton = {
                                 TextButton(onClick = { onDismiss() }) {
-                                    Text("Dismiss")
+                                    Text(stringResource(R.string.dismiss))
                                 }
                             },
                             confirmButton = {
                                 TextButton(onClick = { onConfirm() }) {
-                                    Text("OK")
+                                    Text(stringResource(R.string.ok))
                                 }
                             },
                             text = { TimePicker(state = timePickerState) }
@@ -404,10 +398,10 @@ fun SettingsContent(
                         val formatter: DateTimeFormatter = DateTimeFormatter
                             .ofLocalizedTime(FormatStyle.SHORT)
                             .withLocale(locale)
-                        Text("Everyday at ${savedTime.format(formatter)}")
+                        Text(stringResource(R.string.everyday_at, savedTime.format(formatter)))
 
                         Button(onClick = { showTimePicker = true }) {
-                            Text("Set time")
+                            Text(stringResource(R.string.set_time))
                         }
                     }
 
@@ -416,7 +410,7 @@ fun SettingsContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Only unmetered connections")
+                        Text(stringResource(R.string.only_unmetered_connections))
 
                         Checkbox(
                             checked = onlyUnmeteredConnections,
@@ -432,7 +426,7 @@ fun SettingsContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Only when charging")
+                        Text(stringResource(R.string.only_when_charging))
 
                         Checkbox(
                             checked = onlyWhenCharging,

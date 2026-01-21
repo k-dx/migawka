@@ -71,4 +71,14 @@
     <string name="settings_none">(brak)</string>
     <string name="local_settings">Ustawienia lokalne</string>
     <string name="server_settings">Ustawienia serwera</string>
+    <string name="synchronization">Synchronizacja</string>
+    <string name="permission_denied_sync_not_enabled">Odmówiono uprawnień. Nie włączono synchronizacji.</string>
+    <string name="sync_photos_to_the_server">Synchronizuj zdjęcia</string>
+    <string name="dismiss">Anuluj</string>
+    <string name="everyday_at">Codziennie o %1$s</string>
+    <string name="set_time">Ustaw czas</string>
+    <string name="only_unmetered_connections">Tylko połączenia beztaryfowe</string>
+    <string name="only_when_charging">Tylko podczas ładowania</string>
+    <string name="uploaded_photos">Przesłano %1$d zdjęć</string>
+    <string name="sync_complete">Synchronizacja zakończona</string>
 </resources>
