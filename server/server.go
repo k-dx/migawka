@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"io"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -386,4 +389,99 @@ func GetStatusMap() map[ExifTag]pb.MetadataKey {
 		WhiteBalance: pb.MetadataKey_Exif_WhiteBalance,
 	}
 	return m
+}
+
+func (s *server) UploadPhotos(stream pb.Migawka_UploadPhotosServer) error {
+	log.Info().Msg("UploadPhotos")
+	var file *os.File
+	var fileName string
+
+	// defer s.mediaStore.RefreshAfterUpload() // TODO
+
+	for {
+		// Receive the next message from the stream
+		req, err := stream.Recv()
+
+		// Check if the stream is finished
+		if err == io.EOF {
+			if file != nil {
+				file.Close()
+				file = nil
+			}
+			return stream.SendAndClose(&pb.UploadResponse{
+				Status: pb.NewStatus(200, "OK"),
+			})
+		}
+		if err != nil {
+			return err
+		}
+
+		uploadsDir, err := s.mediaStore.GetUploadsDirectory()
+		if (err) != nil {
+			log.Error().Err(err).Msg("Failed to get uploads directory")
+			return err
+		}
+		getPathGivenBasename := func(basename string) string {
+			return filepath.Join(uploadsDir, basename+".jpg")
+		}
+
+		// Handle the "oneof" request types
+		switch x := req.Request.(type) {
+		case *pb.UploadRequest_Metadata:
+			// Close previous file if multiple photos are sent in one stream
+			if file != nil {
+				file.Close()
+				file = nil
+			}
+
+			creationDate := x.Metadata.CreationTime
+			parsedTime, err := time.Parse(time.RFC3339, creationDate)
+			if err != nil {
+				// Fallback: use hash as filename
+				fileName = "unknown_date_" + x.Metadata.Id
+
+				log.Warn().Err(err).
+					Str("creation_date (received)", creationDate).
+					Msg("Invalid creation date format for file with filename: " + fileName)
+			} else {
+				fileName = parsedTime.Format("2006-01-02_15-04-05")
+			}
+
+			// To avoid overwriting files, add a counter if file already exists
+			originalFileName := fileName
+			counter := 1
+			for {
+				if _, err := os.Stat(getPathGivenBasename(fileName)); os.IsNotExist(err) {
+					break
+				}
+				fileName = originalFileName + "_" + strconv.Itoa(counter)
+				counter++
+			}
+
+			log.Debug().
+				Str("creation_time (received)", creationDate).
+				Str("hash (received)", x.Metadata.Id).
+				Str("filename (computed)", getPathGivenBasename(fileName)).
+				Msgf("Receiving file upload")
+
+			f, err := os.Create(getPathGivenBasename(fileName))
+			if err != nil {
+				log.Error().Err(err).
+					Str("filename", getPathGivenBasename(fileName)).
+					Msg("Failed to create file")
+				return err
+			}
+			file = f
+
+		case *pb.UploadRequest_Chunk:
+			if file == nil {
+				log.Warn().Msg("Received chunk before metadata!")
+				continue
+			}
+			// Write chunk directly to disk (Memory efficient)
+			if _, err := file.Write(x.Chunk); err != nil {
+				return err
+			}
+		}
+	}
 }

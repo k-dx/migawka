@@ -76,6 +76,9 @@ type MediaStore interface {
 	GetMediaDirectory() string
 	GetThumbnailDirectory() string
 
+	// Return the absolute path to uploads directory, creating it if necessary
+	GetUploadsDirectory() (string, error)
+
 	Close() error
 
 	GetMediaItemsCountForTest() int
@@ -189,6 +192,23 @@ func (ms *mediaStoreImpl) GetMediaDirectory() string {
 
 func (ms *mediaStoreImpl) GetThumbnailDirectory() string {
 	return ms.thumbnailProvider.GetThumbnailDirectory()
+}
+
+func (ms *mediaStoreImpl) GetUploadsDirectory() (string, error) {
+	path, err := filepath.Abs(filepath.Join(ms.mediadir, "uploads"))
+	if err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			log.Error().Err(err).
+				Str("path", path).
+				Msg("Failed to create uploads directory")
+			return "", err
+		}
+	}
+	return path, nil
 }
 
 func (ms *mediaStoreImpl) GetHasher() Hasher {

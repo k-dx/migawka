@@ -146,7 +146,209 @@ func (x DirectoryEntry_FileType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DirectoryEntry_FileType.Descriptor instead.
 func (DirectoryEntry_FileType) EnumDescriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{15, 0}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{18, 0}
+}
+
+type UploadRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Request:
+	//
+	//	*UploadRequest_Metadata
+	//	*UploadRequest_Chunk
+	Request       isUploadRequest_Request `protobuf_oneof:"request"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadRequest) Reset() {
+	*x = UploadRequest{}
+	mi := &file_grpc_grpc_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadRequest) ProtoMessage() {}
+
+func (x *UploadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadRequest.ProtoReflect.Descriptor instead.
+func (*UploadRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *UploadRequest) GetRequest() isUploadRequest_Request {
+	if x != nil {
+		return x.Request
+	}
+	return nil
+}
+
+func (x *UploadRequest) GetMetadata() *UploadMetadata {
+	if x != nil {
+		if x, ok := x.Request.(*UploadRequest_Metadata); ok {
+			return x.Metadata
+		}
+	}
+	return nil
+}
+
+func (x *UploadRequest) GetChunk() []byte {
+	if x != nil {
+		if x, ok := x.Request.(*UploadRequest_Chunk); ok {
+			return x.Chunk
+		}
+	}
+	return nil
+}
+
+type isUploadRequest_Request interface {
+	isUploadRequest_Request()
+}
+
+type UploadRequest_Metadata struct {
+	Metadata *UploadMetadata `protobuf:"bytes,1,opt,name=metadata,proto3,oneof"`
+}
+
+type UploadRequest_Chunk struct {
+	Chunk []byte `protobuf:"bytes,2,opt,name=chunk,proto3,oneof"`
+}
+
+func (*UploadRequest_Metadata) isUploadRequest_Request() {}
+
+func (*UploadRequest_Chunk) isUploadRequest_Request() {}
+
+type UploadMetadata struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	CreationTime  string                 `protobuf:"bytes,2,opt,name=creation_time,json=creationTime,proto3" json:"creation_time,omitempty"`
+	Content       []byte                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	Filename      string                 `protobuf:"bytes,4,opt,name=filename,proto3" json:"filename,omitempty"`
+	TotalPhotos   int32                  `protobuf:"varint,5,opt,name=total_photos,json=totalPhotos,proto3" json:"total_photos,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadMetadata) Reset() {
+	*x = UploadMetadata{}
+	mi := &file_grpc_grpc_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadMetadata) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadMetadata) ProtoMessage() {}
+
+func (x *UploadMetadata) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadMetadata.ProtoReflect.Descriptor instead.
+func (*UploadMetadata) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UploadMetadata) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UploadMetadata) GetCreationTime() string {
+	if x != nil {
+		return x.CreationTime
+	}
+	return ""
+}
+
+func (x *UploadMetadata) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *UploadMetadata) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
+func (x *UploadMetadata) GetTotalPhotos() int32 {
+	if x != nil {
+		return x.TotalPhotos
+	}
+	return 0
+}
+
+type UploadResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        *Status                `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadResponse) Reset() {
+	*x = UploadResponse{}
+	mi := &file_grpc_grpc_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadResponse) ProtoMessage() {}
+
+func (x *UploadResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_grpc_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadResponse.ProtoReflect.Descriptor instead.
+func (*UploadResponse) Descriptor() ([]byte, []int) {
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UploadResponse) GetStatus() *Status {
+	if x != nil {
+		return x.Status
+	}
+	return nil
 }
 
 type Status struct {
@@ -159,7 +361,7 @@ type Status struct {
 
 func (x *Status) Reset() {
 	*x = Status{}
-	mi := &file_grpc_grpc_proto_msgTypes[0]
+	mi := &file_grpc_grpc_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -171,7 +373,7 @@ func (x *Status) String() string {
 func (*Status) ProtoMessage() {}
 
 func (x *Status) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[0]
+	mi := &file_grpc_grpc_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -184,7 +386,7 @@ func (x *Status) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Status.ProtoReflect.Descriptor instead.
 func (*Status) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{0}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Status) GetCode() int32 {
@@ -211,7 +413,7 @@ type HelloRequest struct {
 
 func (x *HelloRequest) Reset() {
 	*x = HelloRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[1]
+	mi := &file_grpc_grpc_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -223,7 +425,7 @@ func (x *HelloRequest) String() string {
 func (*HelloRequest) ProtoMessage() {}
 
 func (x *HelloRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[1]
+	mi := &file_grpc_grpc_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -236,7 +438,7 @@ func (x *HelloRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HelloRequest.ProtoReflect.Descriptor instead.
 func (*HelloRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{1}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *HelloRequest) GetName() string {
@@ -256,7 +458,7 @@ type HelloReply struct {
 
 func (x *HelloReply) Reset() {
 	*x = HelloReply{}
-	mi := &file_grpc_grpc_proto_msgTypes[2]
+	mi := &file_grpc_grpc_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -268,7 +470,7 @@ func (x *HelloReply) String() string {
 func (*HelloReply) ProtoMessage() {}
 
 func (x *HelloReply) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[2]
+	mi := &file_grpc_grpc_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -281,7 +483,7 @@ func (x *HelloReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HelloReply.ProtoReflect.Descriptor instead.
 func (*HelloReply) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{2}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *HelloReply) GetMessage() string {
@@ -301,7 +503,7 @@ type FileUploadRequest struct {
 
 func (x *FileUploadRequest) Reset() {
 	*x = FileUploadRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[3]
+	mi := &file_grpc_grpc_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -313,7 +515,7 @@ func (x *FileUploadRequest) String() string {
 func (*FileUploadRequest) ProtoMessage() {}
 
 func (x *FileUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[3]
+	mi := &file_grpc_grpc_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -326,7 +528,7 @@ func (x *FileUploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileUploadRequest.ProtoReflect.Descriptor instead.
 func (*FileUploadRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{3}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *FileUploadRequest) GetFilename() string {
@@ -352,7 +554,7 @@ type FileUploadReply struct {
 
 func (x *FileUploadReply) Reset() {
 	*x = FileUploadReply{}
-	mi := &file_grpc_grpc_proto_msgTypes[4]
+	mi := &file_grpc_grpc_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -364,7 +566,7 @@ func (x *FileUploadReply) String() string {
 func (*FileUploadReply) ProtoMessage() {}
 
 func (x *FileUploadReply) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[4]
+	mi := &file_grpc_grpc_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -377,7 +579,7 @@ func (x *FileUploadReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileUploadReply.ProtoReflect.Descriptor instead.
 func (*FileUploadReply) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{4}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *FileUploadReply) GetMessage() string {
@@ -396,7 +598,7 @@ type FileDownloadRequest struct {
 
 func (x *FileDownloadRequest) Reset() {
 	*x = FileDownloadRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[5]
+	mi := &file_grpc_grpc_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -408,7 +610,7 @@ func (x *FileDownloadRequest) String() string {
 func (*FileDownloadRequest) ProtoMessage() {}
 
 func (x *FileDownloadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[5]
+	mi := &file_grpc_grpc_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -421,7 +623,7 @@ func (x *FileDownloadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileDownloadRequest.ProtoReflect.Descriptor instead.
 func (*FileDownloadRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{5}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *FileDownloadRequest) GetFilename() string {
@@ -442,7 +644,7 @@ type FileDownloadReply struct {
 
 func (x *FileDownloadReply) Reset() {
 	*x = FileDownloadReply{}
-	mi := &file_grpc_grpc_proto_msgTypes[6]
+	mi := &file_grpc_grpc_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -454,7 +656,7 @@ func (x *FileDownloadReply) String() string {
 func (*FileDownloadReply) ProtoMessage() {}
 
 func (x *FileDownloadReply) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[6]
+	mi := &file_grpc_grpc_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -467,7 +669,7 @@ func (x *FileDownloadReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileDownloadReply.ProtoReflect.Descriptor instead.
 func (*FileDownloadReply) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{6}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *FileDownloadReply) GetFilename() string {
@@ -504,7 +706,7 @@ type Thumbnail struct {
 
 func (x *Thumbnail) Reset() {
 	*x = Thumbnail{}
-	mi := &file_grpc_grpc_proto_msgTypes[7]
+	mi := &file_grpc_grpc_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -516,7 +718,7 @@ func (x *Thumbnail) String() string {
 func (*Thumbnail) ProtoMessage() {}
 
 func (x *Thumbnail) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[7]
+	mi := &file_grpc_grpc_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -529,7 +731,7 @@ func (x *Thumbnail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Thumbnail.ProtoReflect.Descriptor instead.
 func (*Thumbnail) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{7}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Thumbnail) GetId() string {
@@ -565,7 +767,7 @@ type ThumbnailsTimestampRequest struct {
 
 func (x *ThumbnailsTimestampRequest) Reset() {
 	*x = ThumbnailsTimestampRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[8]
+	mi := &file_grpc_grpc_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -577,7 +779,7 @@ func (x *ThumbnailsTimestampRequest) String() string {
 func (*ThumbnailsTimestampRequest) ProtoMessage() {}
 
 func (x *ThumbnailsTimestampRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[8]
+	mi := &file_grpc_grpc_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -590,7 +792,7 @@ func (x *ThumbnailsTimestampRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThumbnailsTimestampRequest.ProtoReflect.Descriptor instead.
 func (*ThumbnailsTimestampRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{8}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ThumbnailsTimestampRequest) GetTimestamp() string {
@@ -617,7 +819,7 @@ type ThumbnailsTimestampResponse struct {
 
 func (x *ThumbnailsTimestampResponse) Reset() {
 	*x = ThumbnailsTimestampResponse{}
-	mi := &file_grpc_grpc_proto_msgTypes[9]
+	mi := &file_grpc_grpc_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +831,7 @@ func (x *ThumbnailsTimestampResponse) String() string {
 func (*ThumbnailsTimestampResponse) ProtoMessage() {}
 
 func (x *ThumbnailsTimestampResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[9]
+	mi := &file_grpc_grpc_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +844,7 @@ func (x *ThumbnailsTimestampResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThumbnailsTimestampResponse.ProtoReflect.Descriptor instead.
 func (*ThumbnailsTimestampResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{9}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ThumbnailsTimestampResponse) GetStatus() *Status {
@@ -668,7 +870,7 @@ type GetMediaItemRequest struct {
 
 func (x *GetMediaItemRequest) Reset() {
 	*x = GetMediaItemRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[10]
+	mi := &file_grpc_grpc_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -680,7 +882,7 @@ func (x *GetMediaItemRequest) String() string {
 func (*GetMediaItemRequest) ProtoMessage() {}
 
 func (x *GetMediaItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[10]
+	mi := &file_grpc_grpc_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -693,7 +895,7 @@ func (x *GetMediaItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMediaItemRequest.ProtoReflect.Descriptor instead.
 func (*GetMediaItemRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{10}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetMediaItemRequest) GetId() string {
@@ -716,7 +918,7 @@ type MediaItem struct {
 
 func (x *MediaItem) Reset() {
 	*x = MediaItem{}
-	mi := &file_grpc_grpc_proto_msgTypes[11]
+	mi := &file_grpc_grpc_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -728,7 +930,7 @@ func (x *MediaItem) String() string {
 func (*MediaItem) ProtoMessage() {}
 
 func (x *MediaItem) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[11]
+	mi := &file_grpc_grpc_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -741,7 +943,7 @@ func (x *MediaItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MediaItem.ProtoReflect.Descriptor instead.
 func (*MediaItem) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{11}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MediaItem) GetId() string {
@@ -782,7 +984,7 @@ type GetMediaItemResponse struct {
 
 func (x *GetMediaItemResponse) Reset() {
 	*x = GetMediaItemResponse{}
-	mi := &file_grpc_grpc_proto_msgTypes[12]
+	mi := &file_grpc_grpc_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -794,7 +996,7 @@ func (x *GetMediaItemResponse) String() string {
 func (*GetMediaItemResponse) ProtoMessage() {}
 
 func (x *GetMediaItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[12]
+	mi := &file_grpc_grpc_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -807,7 +1009,7 @@ func (x *GetMediaItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMediaItemResponse.ProtoReflect.Descriptor instead.
 func (*GetMediaItemResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{12}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetMediaItemResponse) GetStatus() *Status {
@@ -833,7 +1035,7 @@ type GetFileListRequest struct {
 
 func (x *GetFileListRequest) Reset() {
 	*x = GetFileListRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[13]
+	mi := &file_grpc_grpc_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -845,7 +1047,7 @@ func (x *GetFileListRequest) String() string {
 func (*GetFileListRequest) ProtoMessage() {}
 
 func (x *GetFileListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[13]
+	mi := &file_grpc_grpc_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -858,7 +1060,7 @@ func (x *GetFileListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFileListRequest.ProtoReflect.Descriptor instead.
 func (*GetFileListRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{13}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetFileListRequest) GetPath() string {
@@ -878,7 +1080,7 @@ type GetFileListResponse struct {
 
 func (x *GetFileListResponse) Reset() {
 	*x = GetFileListResponse{}
-	mi := &file_grpc_grpc_proto_msgTypes[14]
+	mi := &file_grpc_grpc_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -890,7 +1092,7 @@ func (x *GetFileListResponse) String() string {
 func (*GetFileListResponse) ProtoMessage() {}
 
 func (x *GetFileListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[14]
+	mi := &file_grpc_grpc_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -903,7 +1105,7 @@ func (x *GetFileListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFileListResponse.ProtoReflect.Descriptor instead.
 func (*GetFileListResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{14}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetFileListResponse) GetStatus() *Status {
@@ -932,7 +1134,7 @@ type DirectoryEntry struct {
 
 func (x *DirectoryEntry) Reset() {
 	*x = DirectoryEntry{}
-	mi := &file_grpc_grpc_proto_msgTypes[15]
+	mi := &file_grpc_grpc_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -944,7 +1146,7 @@ func (x *DirectoryEntry) String() string {
 func (*DirectoryEntry) ProtoMessage() {}
 
 func (x *DirectoryEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[15]
+	mi := &file_grpc_grpc_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -957,7 +1159,7 @@ func (x *DirectoryEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DirectoryEntry.ProtoReflect.Descriptor instead.
 func (*DirectoryEntry) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{15}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *DirectoryEntry) GetType() DirectoryEntry_FileType {
@@ -993,7 +1195,7 @@ type TimelineEntry struct {
 
 func (x *TimelineEntry) Reset() {
 	*x = TimelineEntry{}
-	mi := &file_grpc_grpc_proto_msgTypes[16]
+	mi := &file_grpc_grpc_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1005,7 +1207,7 @@ func (x *TimelineEntry) String() string {
 func (*TimelineEntry) ProtoMessage() {}
 
 func (x *TimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[16]
+	mi := &file_grpc_grpc_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1018,7 +1220,7 @@ func (x *TimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimelineEntry.ProtoReflect.Descriptor instead.
 func (*TimelineEntry) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{16}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *TimelineEntry) GetId() string {
@@ -1043,7 +1245,7 @@ type TimelineEntriesRequest struct {
 
 func (x *TimelineEntriesRequest) Reset() {
 	*x = TimelineEntriesRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[17]
+	mi := &file_grpc_grpc_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1055,7 +1257,7 @@ func (x *TimelineEntriesRequest) String() string {
 func (*TimelineEntriesRequest) ProtoMessage() {}
 
 func (x *TimelineEntriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[17]
+	mi := &file_grpc_grpc_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1068,7 +1270,7 @@ func (x *TimelineEntriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimelineEntriesRequest.ProtoReflect.Descriptor instead.
 func (*TimelineEntriesRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{17}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{20}
 }
 
 type TimelineEntriesResponse struct {
@@ -1081,7 +1283,7 @@ type TimelineEntriesResponse struct {
 
 func (x *TimelineEntriesResponse) Reset() {
 	*x = TimelineEntriesResponse{}
-	mi := &file_grpc_grpc_proto_msgTypes[18]
+	mi := &file_grpc_grpc_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1093,7 +1295,7 @@ func (x *TimelineEntriesResponse) String() string {
 func (*TimelineEntriesResponse) ProtoMessage() {}
 
 func (x *TimelineEntriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[18]
+	mi := &file_grpc_grpc_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1106,7 +1308,7 @@ func (x *TimelineEntriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimelineEntriesResponse.ProtoReflect.Descriptor instead.
 func (*TimelineEntriesResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{18}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TimelineEntriesResponse) GetStatus() *Status {
@@ -1132,7 +1334,7 @@ type FullMetadataRequest struct {
 
 func (x *FullMetadataRequest) Reset() {
 	*x = FullMetadataRequest{}
-	mi := &file_grpc_grpc_proto_msgTypes[19]
+	mi := &file_grpc_grpc_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1144,7 +1346,7 @@ func (x *FullMetadataRequest) String() string {
 func (*FullMetadataRequest) ProtoMessage() {}
 
 func (x *FullMetadataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[19]
+	mi := &file_grpc_grpc_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1157,7 +1359,7 @@ func (x *FullMetadataRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FullMetadataRequest.ProtoReflect.Descriptor instead.
 func (*FullMetadataRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{19}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *FullMetadataRequest) GetId() string {
@@ -1178,7 +1380,7 @@ type FullMetadataReply struct {
 
 func (x *FullMetadataReply) Reset() {
 	*x = FullMetadataReply{}
-	mi := &file_grpc_grpc_proto_msgTypes[20]
+	mi := &file_grpc_grpc_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1190,7 +1392,7 @@ func (x *FullMetadataReply) String() string {
 func (*FullMetadataReply) ProtoMessage() {}
 
 func (x *FullMetadataReply) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_grpc_proto_msgTypes[20]
+	mi := &file_grpc_grpc_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1203,7 +1405,7 @@ func (x *FullMetadataReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FullMetadataReply.ProtoReflect.Descriptor instead.
 func (*FullMetadataReply) Descriptor() ([]byte, []int) {
-	return file_grpc_grpc_proto_rawDescGZIP(), []int{20}
+	return file_grpc_grpc_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *FullMetadataReply) GetStatus() *Status {
@@ -1224,7 +1426,19 @@ var File_grpc_grpc_proto protoreflect.FileDescriptor
 
 const file_grpc_grpc_proto_rawDesc = "" +
 	"\n" +
-	"\x0fgrpc/grpc.proto\"6\n" +
+	"\x0fgrpc/grpc.proto\"a\n" +
+	"\rUploadRequest\x12-\n" +
+	"\bmetadata\x18\x01 \x01(\v2\x0f.UploadMetadataH\x00R\bmetadata\x12\x16\n" +
+	"\x05chunk\x18\x02 \x01(\fH\x00R\x05chunkB\t\n" +
+	"\arequest\"\x9e\x01\n" +
+	"\x0eUploadMetadata\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12#\n" +
+	"\rcreation_time\x18\x02 \x01(\tR\fcreationTime\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\fR\acontent\x12\x1a\n" +
+	"\bfilename\x18\x04 \x01(\tR\bfilename\x12!\n" +
+	"\ftotal_photos\x18\x05 \x01(\x05R\vtotalPhotos\"1\n" +
+	"\x0eUploadResponse\x12\x1f\n" +
+	"\x06status\x18\x01 \x01(\v2\a.StatusR\x06status\"6\n" +
 	"\x06Status\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\"\n" +
@@ -1312,7 +1526,7 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\x02ID\x10\n" +
 	"\x12\b\n" +
 	"\x04Path\x10\v\x12\x10\n" +
-	"\fCreationDate\x10\f2\x80\x05\n" +
+	"\fCreationDate\x10\f2\xb3\x05\n" +
 	"\aMigawka\x12(\n" +
 	"\bSayHello\x12\r.HelloRequest\x1a\v.HelloReply\"\x00\x122\n" +
 	"\n" +
@@ -1324,7 +1538,8 @@ const file_grpc_grpc_proto_rawDesc = "" +
 	"\fGetThumbnail\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x12?\n" +
 	"\x10GetFullMediaItem\x12\x14.GetMediaItemRequest\x1a\x15.GetMediaItemResponse\x128\n" +
 	"\vGetFileList\x12\x13.GetFileListRequest\x1a\x14.GetFileListResponse\x12;\n" +
-	"\x0fGetFullMetadata\x12\x14.FullMetadataRequest\x1a\x12.FullMetadataReplyB,\n" +
+	"\x0fGetFullMetadata\x12\x14.FullMetadataRequest\x1a\x12.FullMetadataReply\x121\n" +
+	"\fUploadPhotos\x12\x0e.UploadRequest\x1a\x0f.UploadResponse(\x01B,\n" +
 	"\x13xyz.jdubiel.migawkaP\x01Z\x13migawka-server/grpcb\x06proto3"
 
 var (
@@ -1340,71 +1555,78 @@ func file_grpc_grpc_proto_rawDescGZIP() []byte {
 }
 
 var file_grpc_grpc_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_grpc_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_grpc_grpc_proto_goTypes = []any{
 	(MetadataKey)(0),                    // 0: MetadataKey
 	(DirectoryEntry_FileType)(0),        // 1: DirectoryEntry.FileType
-	(*Status)(nil),                      // 2: Status
-	(*HelloRequest)(nil),                // 3: HelloRequest
-	(*HelloReply)(nil),                  // 4: HelloReply
-	(*FileUploadRequest)(nil),           // 5: FileUploadRequest
-	(*FileUploadReply)(nil),             // 6: FileUploadReply
-	(*FileDownloadRequest)(nil),         // 7: FileDownloadRequest
-	(*FileDownloadReply)(nil),           // 8: FileDownloadReply
-	(*Thumbnail)(nil),                   // 9: Thumbnail
-	(*ThumbnailsTimestampRequest)(nil),  // 10: ThumbnailsTimestampRequest
-	(*ThumbnailsTimestampResponse)(nil), // 11: ThumbnailsTimestampResponse
-	(*GetMediaItemRequest)(nil),         // 12: GetMediaItemRequest
-	(*MediaItem)(nil),                   // 13: MediaItem
-	(*GetMediaItemResponse)(nil),        // 14: GetMediaItemResponse
-	(*GetFileListRequest)(nil),          // 15: GetFileListRequest
-	(*GetFileListResponse)(nil),         // 16: GetFileListResponse
-	(*DirectoryEntry)(nil),              // 17: DirectoryEntry
-	(*TimelineEntry)(nil),               // 18: TimelineEntry
-	(*TimelineEntriesRequest)(nil),      // 19: TimelineEntriesRequest
-	(*TimelineEntriesResponse)(nil),     // 20: TimelineEntriesResponse
-	(*FullMetadataRequest)(nil),         // 21: FullMetadataRequest
-	(*FullMetadataReply)(nil),           // 22: FullMetadataReply
-	nil,                                 // 23: FullMetadataReply.ValuesEntry
+	(*UploadRequest)(nil),               // 2: UploadRequest
+	(*UploadMetadata)(nil),              // 3: UploadMetadata
+	(*UploadResponse)(nil),              // 4: UploadResponse
+	(*Status)(nil),                      // 5: Status
+	(*HelloRequest)(nil),                // 6: HelloRequest
+	(*HelloReply)(nil),                  // 7: HelloReply
+	(*FileUploadRequest)(nil),           // 8: FileUploadRequest
+	(*FileUploadReply)(nil),             // 9: FileUploadReply
+	(*FileDownloadRequest)(nil),         // 10: FileDownloadRequest
+	(*FileDownloadReply)(nil),           // 11: FileDownloadReply
+	(*Thumbnail)(nil),                   // 12: Thumbnail
+	(*ThumbnailsTimestampRequest)(nil),  // 13: ThumbnailsTimestampRequest
+	(*ThumbnailsTimestampResponse)(nil), // 14: ThumbnailsTimestampResponse
+	(*GetMediaItemRequest)(nil),         // 15: GetMediaItemRequest
+	(*MediaItem)(nil),                   // 16: MediaItem
+	(*GetMediaItemResponse)(nil),        // 17: GetMediaItemResponse
+	(*GetFileListRequest)(nil),          // 18: GetFileListRequest
+	(*GetFileListResponse)(nil),         // 19: GetFileListResponse
+	(*DirectoryEntry)(nil),              // 20: DirectoryEntry
+	(*TimelineEntry)(nil),               // 21: TimelineEntry
+	(*TimelineEntriesRequest)(nil),      // 22: TimelineEntriesRequest
+	(*TimelineEntriesResponse)(nil),     // 23: TimelineEntriesResponse
+	(*FullMetadataRequest)(nil),         // 24: FullMetadataRequest
+	(*FullMetadataReply)(nil),           // 25: FullMetadataReply
+	nil,                                 // 26: FullMetadataReply.ValuesEntry
 }
 var file_grpc_grpc_proto_depIdxs = []int32{
-	2,  // 0: ThumbnailsTimestampResponse.status:type_name -> Status
-	9,  // 1: ThumbnailsTimestampResponse.thumbnails:type_name -> Thumbnail
-	2,  // 2: GetMediaItemResponse.status:type_name -> Status
-	13, // 3: GetMediaItemResponse.mediaItem:type_name -> MediaItem
-	2,  // 4: GetFileListResponse.status:type_name -> Status
-	17, // 5: GetFileListResponse.entries:type_name -> DirectoryEntry
-	1,  // 6: DirectoryEntry.type:type_name -> DirectoryEntry.FileType
-	18, // 7: DirectoryEntry.media:type_name -> TimelineEntry
-	2,  // 8: TimelineEntriesResponse.status:type_name -> Status
-	18, // 9: TimelineEntriesResponse.entries:type_name -> TimelineEntry
-	2,  // 10: FullMetadataReply.status:type_name -> Status
-	23, // 11: FullMetadataReply.values:type_name -> FullMetadataReply.ValuesEntry
-	3,  // 12: Migawka.SayHello:input_type -> HelloRequest
-	5,  // 13: Migawka.UploadFile:input_type -> FileUploadRequest
-	7,  // 14: Migawka.DownloadFile:input_type -> FileDownloadRequest
-	10, // 15: Migawka.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
-	19, // 16: Migawka.GetTimelineEntries:input_type -> TimelineEntriesRequest
-	12, // 17: Migawka.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
-	12, // 18: Migawka.GetThumbnail:input_type -> GetMediaItemRequest
-	12, // 19: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
-	15, // 20: Migawka.GetFileList:input_type -> GetFileListRequest
-	21, // 21: Migawka.GetFullMetadata:input_type -> FullMetadataRequest
-	4,  // 22: Migawka.SayHello:output_type -> HelloReply
-	6,  // 23: Migawka.UploadFile:output_type -> FileUploadReply
-	8,  // 24: Migawka.DownloadFile:output_type -> FileDownloadReply
-	11, // 25: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
-	20, // 26: Migawka.GetTimelineEntries:output_type -> TimelineEntriesResponse
-	14, // 27: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
-	14, // 28: Migawka.GetThumbnail:output_type -> GetMediaItemResponse
-	14, // 29: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
-	16, // 30: Migawka.GetFileList:output_type -> GetFileListResponse
-	22, // 31: Migawka.GetFullMetadata:output_type -> FullMetadataReply
-	22, // [22:32] is the sub-list for method output_type
-	12, // [12:22] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	3,  // 0: UploadRequest.metadata:type_name -> UploadMetadata
+	5,  // 1: UploadResponse.status:type_name -> Status
+	5,  // 2: ThumbnailsTimestampResponse.status:type_name -> Status
+	12, // 3: ThumbnailsTimestampResponse.thumbnails:type_name -> Thumbnail
+	5,  // 4: GetMediaItemResponse.status:type_name -> Status
+	16, // 5: GetMediaItemResponse.mediaItem:type_name -> MediaItem
+	5,  // 6: GetFileListResponse.status:type_name -> Status
+	20, // 7: GetFileListResponse.entries:type_name -> DirectoryEntry
+	1,  // 8: DirectoryEntry.type:type_name -> DirectoryEntry.FileType
+	21, // 9: DirectoryEntry.media:type_name -> TimelineEntry
+	5,  // 10: TimelineEntriesResponse.status:type_name -> Status
+	21, // 11: TimelineEntriesResponse.entries:type_name -> TimelineEntry
+	5,  // 12: FullMetadataReply.status:type_name -> Status
+	26, // 13: FullMetadataReply.values:type_name -> FullMetadataReply.ValuesEntry
+	6,  // 14: Migawka.SayHello:input_type -> HelloRequest
+	8,  // 15: Migawka.UploadFile:input_type -> FileUploadRequest
+	10, // 16: Migawka.DownloadFile:input_type -> FileDownloadRequest
+	13, // 17: Migawka.GetThumbnailsBeforeTimestamp:input_type -> ThumbnailsTimestampRequest
+	22, // 18: Migawka.GetTimelineEntries:input_type -> TimelineEntriesRequest
+	15, // 19: Migawka.GetOptimizedMediaItem:input_type -> GetMediaItemRequest
+	15, // 20: Migawka.GetThumbnail:input_type -> GetMediaItemRequest
+	15, // 21: Migawka.GetFullMediaItem:input_type -> GetMediaItemRequest
+	18, // 22: Migawka.GetFileList:input_type -> GetFileListRequest
+	24, // 23: Migawka.GetFullMetadata:input_type -> FullMetadataRequest
+	2,  // 24: Migawka.UploadPhotos:input_type -> UploadRequest
+	7,  // 25: Migawka.SayHello:output_type -> HelloReply
+	9,  // 26: Migawka.UploadFile:output_type -> FileUploadReply
+	11, // 27: Migawka.DownloadFile:output_type -> FileDownloadReply
+	14, // 28: Migawka.GetThumbnailsBeforeTimestamp:output_type -> ThumbnailsTimestampResponse
+	23, // 29: Migawka.GetTimelineEntries:output_type -> TimelineEntriesResponse
+	17, // 30: Migawka.GetOptimizedMediaItem:output_type -> GetMediaItemResponse
+	17, // 31: Migawka.GetThumbnail:output_type -> GetMediaItemResponse
+	17, // 32: Migawka.GetFullMediaItem:output_type -> GetMediaItemResponse
+	19, // 33: Migawka.GetFileList:output_type -> GetFileListResponse
+	25, // 34: Migawka.GetFullMetadata:output_type -> FullMetadataReply
+	4,  // 35: Migawka.UploadPhotos:output_type -> UploadResponse
+	25, // [25:36] is the sub-list for method output_type
+	14, // [14:25] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_grpc_grpc_proto_init() }
@@ -1412,13 +1634,17 @@ func file_grpc_grpc_proto_init() {
 	if File_grpc_grpc_proto != nil {
 		return
 	}
+	file_grpc_grpc_proto_msgTypes[0].OneofWrappers = []any{
+		(*UploadRequest_Metadata)(nil),
+		(*UploadRequest_Chunk)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_grpc_grpc_proto_rawDesc), len(file_grpc_grpc_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   22,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

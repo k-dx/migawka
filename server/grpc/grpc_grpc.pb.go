@@ -29,6 +29,7 @@ const (
 	Migawka_GetFullMediaItem_FullMethodName             = "/Migawka/GetFullMediaItem"
 	Migawka_GetFileList_FullMethodName                  = "/Migawka/GetFileList"
 	Migawka_GetFullMetadata_FullMethodName              = "/Migawka/GetFullMetadata"
+	Migawka_UploadPhotos_FullMethodName                 = "/Migawka/UploadPhotos"
 )
 
 // MigawkaClient is the client API for Migawka service.
@@ -48,6 +49,8 @@ type MigawkaClient interface {
 	GetFullMediaItem(ctx context.Context, in *GetMediaItemRequest, opts ...grpc.CallOption) (*GetMediaItemResponse, error)
 	GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error)
 	GetFullMetadata(ctx context.Context, in *FullMetadataRequest, opts ...grpc.CallOption) (*FullMetadataReply, error)
+	// Client-side stream: Client sends many messages, Server returns one response
+	UploadPhotos(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadResponse], error)
 }
 
 type migawkaClient struct {
@@ -158,6 +161,19 @@ func (c *migawkaClient) GetFullMetadata(ctx context.Context, in *FullMetadataReq
 	return out, nil
 }
 
+func (c *migawkaClient) UploadPhotos(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Migawka_ServiceDesc.Streams[0], Migawka_UploadPhotos_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[UploadRequest, UploadResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Migawka_UploadPhotosClient = grpc.ClientStreamingClient[UploadRequest, UploadResponse]
+
 // MigawkaServer is the server API for Migawka service.
 // All implementations must embed UnimplementedMigawkaServer
 // for forward compatibility.
@@ -175,6 +191,8 @@ type MigawkaServer interface {
 	GetFullMediaItem(context.Context, *GetMediaItemRequest) (*GetMediaItemResponse, error)
 	GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error)
 	GetFullMetadata(context.Context, *FullMetadataRequest) (*FullMetadataReply, error)
+	// Client-side stream: Client sends many messages, Server returns one response
+	UploadPhotos(grpc.ClientStreamingServer[UploadRequest, UploadResponse]) error
 	mustEmbedUnimplementedMigawkaServer()
 }
 
@@ -214,6 +232,9 @@ func (UnimplementedMigawkaServer) GetFileList(context.Context, *GetFileListReque
 }
 func (UnimplementedMigawkaServer) GetFullMetadata(context.Context, *FullMetadataRequest) (*FullMetadataReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFullMetadata not implemented")
+}
+func (UnimplementedMigawkaServer) UploadPhotos(grpc.ClientStreamingServer[UploadRequest, UploadResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method UploadPhotos not implemented")
 }
 func (UnimplementedMigawkaServer) mustEmbedUnimplementedMigawkaServer() {}
 func (UnimplementedMigawkaServer) testEmbeddedByValue()                 {}
@@ -416,6 +437,13 @@ func _Migawka_GetFullMetadata_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Migawka_UploadPhotos_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MigawkaServer).UploadPhotos(&grpc.GenericServerStream[UploadRequest, UploadResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Migawka_UploadPhotosServer = grpc.ClientStreamingServer[UploadRequest, UploadResponse]
+
 // Migawka_ServiceDesc is the grpc.ServiceDesc for Migawka service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -464,6 +492,12 @@ var Migawka_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Migawka_GetFullMetadata_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "UploadPhotos",
+			Handler:       _Migawka_UploadPhotos_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "grpc/grpc.proto",
 }
