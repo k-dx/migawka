@@ -1,9 +1,14 @@
 package xyz.jdubiel.migawka.ui.settings
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.map
@@ -323,6 +329,22 @@ fun SettingsContent(
                     initialHour = 2,
                     initialMinute = 0
                 )
+                val context = LocalContext.current
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    // If user denies permission, turn the switch back off
+                    if (!isGranted) {
+                        isSyncEnabled = false
+                        Toast.makeText(
+                            context,
+                            "Permission denied. Sync not enabled.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        isSyncEnabled = true
+                    }
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -333,8 +355,29 @@ fun SettingsContent(
 
                     Switch(
                         checked = isSyncEnabled,
-                        onCheckedChange = {
-                            isSyncEnabled = it
+                        onCheckedChange = { checked ->
+                            if (checked) {
+                                // Pre-Android 13, permission is granted at install time
+                                // Check if we need to ask for permission (Android 13+)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    val status = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    )
+
+                                    if (status == PackageManager.PERMISSION_GRANTED) {
+                                        isSyncEnabled = true
+                                    } else {
+                                        // Trigger the system dialog
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        // Note: We don't set isSyncEnabled = true yet.
+                                        // We wait for the launcher result above.
+                                    }
+                                }
+                            } else {
+                                isSyncEnabled = false
+                            }
+                            
                             if (isSyncEnabled) {
                                 viewModel.scheduleSync()
                             } else {

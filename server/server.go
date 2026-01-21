@@ -478,7 +478,7 @@ func (s *server) UploadPhotos(stream pb.Migawka_UploadPhotosServer) error {
 				log.Warn().Msg("Received chunk before metadata!")
 				continue
 			}
-			// Write chunk directly to disk (Memory efficient)
+			// Write chunk to disk
 			if _, err := file.Write(x.Chunk); err != nil {
 				return err
 			}
