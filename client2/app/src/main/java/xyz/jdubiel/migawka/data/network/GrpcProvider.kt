@@ -24,17 +24,23 @@ class BearerTokenCredentials(private val token: String) : CallCredentials() {
     }
 }
 
-class GrpcProvider(private val remoteEndpoint: IPEndpoint, private val token: String) {
+class GrpcProvider(private val remoteEndpoint: IPEndpoint, private val token: String, private val tlsDisabled: Boolean) {
     private var channel: ManagedChannel? = null
     private var migawkaServiceStub: MigawkaGrpcKt.MigawkaCoroutineStub? = null
 
     @Synchronized
     fun getChannel(): ManagedChannel {
         if (channel == null) {
-            channel = ManagedChannelBuilder
+            var c = ManagedChannelBuilder
                 .forAddress(remoteEndpoint.ip, remoteEndpoint.port)
-                .useTransportSecurity()
-                .build()
+
+            if (tlsDisabled) {
+                c.usePlaintext()
+            } else {
+                c.useTransportSecurity()
+            }
+
+            channel = c.build()
         }
         return channel!!
     }

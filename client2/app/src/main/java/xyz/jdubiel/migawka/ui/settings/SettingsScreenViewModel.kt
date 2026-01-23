@@ -85,6 +85,12 @@ class SettingsScreenViewModel(
         initialValue = UserSettingsRepository.DEFAULT_SYNC_OVER_UNMETERED_ONLY
     )
 
+    val isTLSDisabled: StateFlow<Boolean> = userSettingsRepository.isTLSDisabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserSettingsRepository.DEFAULT_TLS_DISABLED
+    )
+
     fun setServerAddress(serverAddress: String) {
         viewModelScope.launch {
             userSettingsRepository.setServerAddress(serverAddress)
@@ -102,6 +108,13 @@ class SettingsScreenViewModel(
     fun setAuthToken(token: String) {
         viewModelScope.launch {
             userSettingsRepository.setAuthToken(token)
+        }
+        _settingsModified.value = true
+    }
+
+    fun setTLSDisabled(isTLSDisabled: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setTLSDisabled(isTLSDisabled)
         }
         _settingsModified.value = true
     }

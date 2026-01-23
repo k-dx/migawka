@@ -29,6 +29,7 @@ interface UserSettingsRepository {
     val serverAddress: Flow<String>
     val serverPort: Flow<Int>
     val authToken: Flow<String>
+    val isTLSDisabled: Flow<Boolean>
     val galleryColumnCount: Flow<UInt>
     val showOverlayIcons: Flow<Boolean>
     val syncEnabled: Flow<Boolean>
@@ -39,12 +40,14 @@ interface UserSettingsRepository {
     suspend fun setServerAddress(address: String)
     suspend fun setServerPort(port: Int)
     suspend fun setAuthToken(token: String)
+    suspend fun setTLSDisabled(isTLSDisabled: Boolean)
     suspend fun setGalleryColumnCount(count: UInt)
     suspend fun setShowOverlayIcons(show: Boolean)
 
     suspend fun getServerAddress(timeoutMs: Long = 5_000L): String
     suspend fun getServerPort(timeoutMs: Long = 5_000L): Int
     suspend fun getAuthToken(timeoutMs: Long = 5_000L): String
+    suspend fun isTLSDisabled(timeoutMs: Long = 5_000L): Boolean
     suspend fun getGalleryColumnCount(timeoutMs: Long = 5_000L): UInt
     suspend fun getShowOverlayIcons(timeoutMs: Long = 5_000L): Boolean
     suspend fun setSyncEnabled(sync: Boolean)
@@ -63,6 +66,7 @@ interface UserSettingsRepository {
         val DEFAULT_SYNC_TIME = LocalTime.of(2, 0)
         const val DEFAULT_SYNC_OVER_UNMETERED_ONLY = true
         const val DEFAULT_SYNC_WHEN_CHARGING_ONLY = true
+        const val DEFAULT_TLS_DISABLED = false
     }
 }
 
@@ -73,6 +77,7 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
     private val _serverAddress = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_ADDRESS)
     private val _serverPort = MutableStateFlow(UserSettingsRepository.DEFAULT_SERVER_PORT)
     private val _authToken = MutableStateFlow<String>("")
+    private val _tlsDisabled = MutableStateFlow(UserSettingsRepository.DEFAULT_TLS_DISABLED)
     private val _galleryColumnCount =
         MutableStateFlow<UInt>(UserSettingsRepository.DEFAULT_GALLERY_COLUMN_COUNT)
     private val _showOverlayIcons =
@@ -89,6 +94,7 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
     override val serverAddress: Flow<String> = _serverAddress
     override val serverPort: Flow<Int> = _serverPort
     override val authToken: Flow<String> = _authToken
+    override val isTLSDisabled: Flow<Boolean> = _tlsDisabled
     override val galleryColumnCount: Flow<UInt> = _galleryColumnCount
     override val showOverlayIcons: Flow<Boolean> = _showOverlayIcons
     override val syncEnabled: Flow<Boolean> = _syncEnabled
@@ -106,6 +112,10 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
 
     override suspend fun setAuthToken(token: String) {
         _authToken.value = token
+    }
+
+    override suspend fun setTLSDisabled(isTLSDisabled: Boolean) {
+        _tlsDisabled.value = isTLSDisabled
     }
 
     override suspend fun setGalleryColumnCount(count: UInt) {
@@ -158,6 +168,15 @@ class InMemoryUserSettingsRepository : UserSettingsRepository {
         }
     }
 
+    override suspend fun isTLSDisabled(timeoutMs: Long): Boolean {
+        return try {
+            withTimeout(timeoutMs) { _tlsDisabled.first() }
+        } catch (e: TimeoutCancellationException) {
+            // return current value (fallback) or default; choose default here
+            UserSettingsRepository.DEFAULT_TLS_DISABLED
+        }
+    }
+
     override suspend fun getGalleryColumnCount(timeoutMs: Long): UInt {
         return try {
             withTimeout(timeoutMs) { _galleryColumnCount.first() }
@@ -186,6 +205,7 @@ class PersistentUserSettingsRepository(
         private val SERVER_ADDRESS_KEY = stringPreferencesKey("server_address")
         private val SERVER_PORT_KEY = intPreferencesKey("server_port")
         private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
+        private val TLS_DISABLED_KEY = booleanPreferencesKey("tls_disabled")
         private val GALLERY_COLUMN_COUNT_KEY = intPreferencesKey("gallery_column_count")
         private val SHOW_OVERLAY_ICONS_KEY = booleanPreferencesKey("show_overlay_icons")
         private val SYNC_ENABLED_KEY = booleanPreferencesKey("sync_enabled")
@@ -232,6 +252,20 @@ class PersistentUserSettingsRepository(
         }
         .map { preferences ->
             preferences[AUTH_TOKEN_KEY] ?: UserSettingsRepository.DEFAULT_AUTH_TOKEN
+        }
+
+    override val isTLSDisabled: Flow<Boolean> = dataStore.data
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            preferences[TLS_DISABLED_KEY]
+                ?: UserSettingsRepository.DEFAULT_TLS_DISABLED
         }
 
     override val galleryColumnCount: Flow<UInt> = dataStore.data
@@ -340,6 +374,12 @@ class PersistentUserSettingsRepository(
         }
     }
 
+    override suspend fun setTLSDisabled(isTLSDisabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[TLS_DISABLED_KEY] = isTLSDisabled
+        }
+    }
+
     override suspend fun setGalleryColumnCount(count: UInt) {
         dataStore.edit { preferences ->
             preferences[GALLERY_COLUMN_COUNT_KEY] = count.toInt()
@@ -402,6 +442,16 @@ class PersistentUserSettingsRepository(
     override suspend fun getAuthToken(timeoutMs: Long): String {
         val result = withTimeoutOrNull(timeoutMs) {
             authToken.first()
+        }
+        if (result == null) {
+            throw CancellationException("Timeout getting auth token after $timeoutMs ms")
+        }
+        return result
+    }
+
+    override suspend fun isTLSDisabled(timeoutMs: Long): Boolean {
+        val result = withTimeoutOrNull(timeoutMs) {
+            isTLSDisabled.first()
         }
         if (result == null) {
             throw CancellationException("Timeout getting auth token after $timeoutMs ms")

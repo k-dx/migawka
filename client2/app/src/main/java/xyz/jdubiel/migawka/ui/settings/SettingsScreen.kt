@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import xyz.jdubiel.migawka.R
 import xyz.jdubiel.migawka.ui.singleMedia.locale
@@ -107,7 +108,8 @@ fun Section(
     placeholder: String?,
     hintIfBlank: String,
     hintIfInvalid: String,
-    hintIfOk: String
+    hintIfOk: String,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = text,
@@ -116,7 +118,8 @@ fun Section(
         placeholder = if (placeholder != null) { -> Text(placeholder) } else null,
         singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        enabled = enabled
     )
 
     Spacer(modifier = Modifier.height(8.dp))
@@ -170,6 +173,9 @@ fun SettingsContent(
         (textAddress != savedAddress) || (textPort != savedPort) || (textAuthToken != savedAuthToken)
 
     val databaseCleared by viewModel.databaseCleared.collectAsState()
+
+    val isTLSDisabled by viewModel.isTLSDisabled.collectAsState()
+
     val scrollState = rememberScrollState()
 
     Column(modifier = modifier
@@ -245,6 +251,7 @@ fun SettingsContent(
                         R.string.settings_saved_auth_token,
                         savedAuthToken
                     ),
+                    enabled = !isTLSDisabled
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -274,11 +281,7 @@ fun SettingsContent(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-
-
                 }
-
-
             }
         }
 
@@ -466,6 +469,40 @@ fun SettingsContent(
                     ) {
                         Text(stringResource(R.string.clear_internal_media_database))
                     }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            elevation = CardDefaults.elevatedCardElevation()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.danger_zone),
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(stringResource(R.string.insecure_disable_tls))
+
+                    Switch(
+                        checked = isTLSDisabled,
+                        onCheckedChange = { checked ->
+                            viewModel.setTLSDisabled(checked)
+                        }
+                    )
                 }
             }
         }

@@ -78,7 +78,12 @@ class MigawkaApplication : Application(), SingletonImageLoader.Factory {
         }
         val endpoint = IPEndpoint(serverAddress, serverPort)
         val authToken = runBlocking { userSettingsRepository.getAuthToken() }
-        grpcProvider = GrpcProvider(endpoint, authToken)
+        val isTLSDisabled = runBlocking { userSettingsRepository.isTLSDisabled() }
+        grpcProvider = GrpcProvider(
+            remoteEndpoint = endpoint,
+            token = authToken,
+            tlsDisabled = isTLSDisabled
+        )
 
 
         Log.d("gRPC", "server address is $serverAddress:$serverPort")
