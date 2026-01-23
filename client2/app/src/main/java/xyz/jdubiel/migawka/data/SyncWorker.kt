@@ -66,9 +66,11 @@ class SyncWorker(private val context: Context, params: WorkerParameters) : Corou
                     context.getString(R.string.uploaded_photos, photoUris.size))
                 Result.success()
             } else {
+                Log.d(TAG, "sync failed, server responded with code ${response.status.code}")
                 Result.retry()
             }
         } catch (e: Exception) {
+            Log.d(TAG, "sync failed, exception: $e")
             Result.retry()
         } finally {
 //            channel.shutdown() // not needed as it will happen in onTerminate()
