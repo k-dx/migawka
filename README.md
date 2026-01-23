@@ -3,10 +3,10 @@
 An application for photo browsing and synchronization.
 
 <div>
-    <img src="./assets/screenshots/gallery.png" style="max-width: 24%"/>
-    <img src="./assets/screenshots/gallery_settings.png" style="max-width: 24%"/>
-    <img src="./assets/screenshots/folders.png" style="max-width: 24%"/>
-    <img src="./assets/screenshots/single_photo.png" style="max-width: 24%"/>
+    <img src="./assets/screenshots/gallery.png" style="width: 24%"/>
+    <img src="./assets/screenshots/gallery_settings.png" style="width: 24%"/>
+    <img src="./assets/screenshots/folders.png" style="width: 24%"/>
+    <img src="./assets/screenshots/single_photo.png" style="width: 24%"/>
 <div>
 
 ## Client
