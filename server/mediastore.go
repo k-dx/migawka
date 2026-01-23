@@ -127,6 +127,9 @@ func NewMediaStore(path string, dbRepo DBRepository, hasher Hasher, generateThum
 		return nil, err
 	}
 	ms.generateThumbnailsOnDemand = generateThumbnailsOnDemand
+	if !generateThumbnailsOnDemand {
+		ms.GenerateMissingThumbnails()
+	}
 	return ms, nil
 }
 
