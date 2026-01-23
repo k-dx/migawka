@@ -6,4 +6,6 @@ plugins {
     alias(libs.plugins.google.protobuf) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     id("com.google.devtools.ksp") version "2.2.10-2.0.2" apply false
+//    id(libs.plugins.aboutLibraries.id) version "${latestAboutLibsRelease}" apply false
+    alias(libs.plugins.aboutLibraries) apply false
 }

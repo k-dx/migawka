@@ -86,4 +86,5 @@
     <string name="about">About</string>
     <string name="about_content">Migawka app - remote gallery and photo synchronization</string>
     <string name="version">Version: %1$s</string>
+    <string name="libraries_used">Libraries used</string>
 </resources>

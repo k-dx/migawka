@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.google.protobuf)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
+    alias(libs.plugins.aboutLibraries)
 }
 
 android {
@@ -124,4 +125,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.zoomable)
+
+    implementation(libs.aboutlibraries.core)
+    implementation(libs.aboutlibraries.compose.m3)
 }
