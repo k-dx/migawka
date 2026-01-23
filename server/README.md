@@ -35,5 +35,6 @@ go run . \
 -mediadir="$HOME/migawka_media2" \
 -loglevel="debug" \
 -tls-private-key="../certs/migawka_server.key.pem" \
--tls-cert="../certs/migawka_server.crt"
+-tls-cert="../certs/migawka_server.crt" \
+-generate-thumbs-on-demand=false
 ```

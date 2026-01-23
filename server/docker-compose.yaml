@@ -10,14 +10,15 @@ services:
       "--mediadir", "/media",
       "--dbpath", "/db/migawka.sqlite",
       "--loglevel", "info",
+
+      # Use plaintext (insecure!) or TLS
+      # "--insecure-no-tls"
       "--tls-private-key", "/certs/migawka_server.key.pem",
       "--tls-cert", "/certs/migawka_server.crt"
     ]
     volumes:
       - /home/kuba/migawka_media3:/media
       - /home/kuba/migawka/certs:/certs
-      - /home/kuba/migawka_server/logs:/logs
       - /home/kuba/migawka_server/db:/db
     environment:
-      # TODO: should use Docker's secrets
       - CLIENT_TOKENS=first-secret-token,second-secret-token
