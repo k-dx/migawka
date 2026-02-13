@@ -3,22 +3,26 @@ services:
     build: .
     ports:
       - "50051:50051"
-      # It is important to use [ CMD ] form of `command` - it correctly sends
-      # signals to the process when container is stopped. Running as `sh -c CMD`
-      # will not allow for graceful shutdown!
+    
+    # It is important to use [ CMD ] form of `command` - it correctly sends
+    # signals to the process when container is stopped. Running as `sh -c CMD`
+    # will not allow for graceful shutdown!
+    # All the available options are listed here.
     command: [ "./main", 
-      "--mediadir", "/media",
-      "--dbpath", "/db/migawka.sqlite",
-      "--loglevel", "info",
-
-      # Use plaintext (insecure!) or TLS
-      # "--insecure-no-tls"
-      "--tls-private-key", "/certs/migawka_server.key.pem",
-      "--tls-cert", "/certs/migawka_server.crt"
+      "--mediadir", "/media",              # Do not change.
+      "--dbpath", "/db/migawka.sqlite",    # Do not change.
+      "--port", "50051",                   # Do not change. Change the port mapped to the container in "ports" section if needed.
+      "--loglevel", "info",                # "info" is recommended. Available options: debug, info, warn, error, fatal, panic
+      "--logformat", "console",            # Available options: console, json
+      "--generate-thumbs-on-demand=false", # Setting this to "false" pre-generates all the thumbnails. Recommended for performance.
+      "--insecure-no-tls"                  # Use plaintext (insecure!)
     ]
+    # These options are needed for TLS and should replace "--insecure-no-tls"
+      #"--tls-private-key", "/certs/migawka_server.key.pem",
+      #"--tls-cert", "/certs/migawka_server.crt"
     volumes:
-      - /home/kuba/migawka_media3:/media
-      - /home/kuba/migawka/certs:/certs
-      - /home/kuba/migawka_server/db:/db
+      - /path/to/your/media/directory:/media
+      - /path/where/to/store/the/database_file:/db
+      #- /path/to/certificates/directory/certs:/certs # needed for TLS
     environment:
       - CLIENT_TOKENS=first-secret-token,second-secret-token

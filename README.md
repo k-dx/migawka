@@ -9,11 +9,36 @@ An application for photo browsing and synchronization.
     <img src="./assets/screenshots/single_photo.png" style="width: 24%"/>
 <div>
 
-## Client
+## Getting started
+
+Get up and running via Docker Compose, without TLS enabled. Tested on Linux and Windows.
+
+### Server
+
+1. Make sure you have `docker compose` command available in your shell. The easiest way is to install [Docker Desktop](https://docs.docker.com/get-started/get-docker/)
+2. Download or clone the repository.
+3. In [`server/docker-compose.yaml`](./server/docker-compose.yaml)
+    1. Replace `/path/to/your/media/directory` with path to the directory containing your photos, e.g. `/home/myuser/photos` or `C:\Users\myuser\photos`.
+    2. Similarly replace `/path/where/to/store/the/database_file`
+4. In `server` directory run `docker compose up`. The server should start and begin generating thumbnails.
+
+### Client
+
+1. Download the `.apk` file [from releases page](https://github.com/k-dx/migawka/releases) and install it on your phone.
+2. Go to *Menu* > *Settings*.
+    1. Fill the server address (IP or domain).
+    2. Disable TLS at the bottom of the *Settings* page.
+    3. Exit the settings.
+3. Check the *Folders* tab. It should show photos and directories on the server.
+4. Enjoy using the app!
+
+---
+
+### Client
 
 See [client2/README.md](client2/README.md).
 
-## Server
+### Server
 
 See [server/README.md](server/README.md).
 
