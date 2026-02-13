@@ -20,7 +20,7 @@ Get up and running via Docker Compose, without TLS enabled. Tested on Linux and 
 3. In [`server/docker-compose.yaml`](./server/docker-compose.yaml)
     1. Replace `/path/to/your/media/directory` with path to the directory containing your photos, e.g. `/home/myuser/photos` or `C:\Users\myuser\photos`.
     2. Similarly replace `/path/where/to/store/the/database_file`
-4. In `server` directory run `docker compose up`. The server should start and begin generating thumbnails.
+4. In the `server` directory run `docker compose up`. This will build the server and start it. **It can take a few minutes.** After starting, the server should begin generating thumbnails.
 
 ### Client
 
